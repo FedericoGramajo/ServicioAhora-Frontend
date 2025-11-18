@@ -1,0 +1,30 @@
+﻿body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+}
+
+aside {
+    top: 0;
+    left: 0;
+}
+
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.carousel img {
+    height: 300px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.btn {
+    transition: 0.2s ease;
+}
+
+    .btn:hover {
+        transform: translateY(-1px);
+    }
