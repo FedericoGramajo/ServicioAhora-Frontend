@@ -1,0 +1,219 @@
+:root {
+    --landing-primary: #6237ff;
+    --landing-secondary: #19c2ff;
+    --landing-dark: #1a1b1f;
+    --landing-muted: #6c757d;
+    --landing-surface: #ffffff;
+    --landing-accent: #ffe066;
+    color-scheme: light only;
+}
+
+body {
+    background-color: #f4f6fb;
+    color: var(--landing-dark);
+}
+
+.landing-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.hero-section {
+    background: radial-gradient(circle at top right, rgba(25, 194, 255, 0.35), transparent 50%),
+        linear-gradient(135deg, var(--landing-primary), #4f8bff);
+    color: #fff;
+    border-radius: 0 0 40px 40px;
+    padding: 4rem 0 5rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.hero-section::after {
+    content: "";
+    position: absolute;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    bottom: -80px;
+    right: 5%;
+    filter: blur(0.5px);
+}
+
+.hero-section .badge {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-weight: 500;
+    border-radius: 999px;
+    padding: 0.5rem 1.2rem;
+    letter-spacing: 0.08em;
+}
+
+.hero-section h1 {
+    font-size: clamp(2.4rem, 5vw, 3.8rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.hero-section p.lead {
+    color: rgba(255, 255, 255, 0.85);
+    max-width: 560px;
+}
+
+.hero-cta .btn-primary {
+    background: var(--landing-surface);
+    color: var(--landing-primary);
+    border: none;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    font-weight: 600;
+    padding: 0.8rem 1.8rem;
+}
+
+.hero-cta .btn-outline-light {
+    border-width: 2px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.metrics-card {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1.5rem;
+    backdrop-filter: blur(12px);
+}
+
+.section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-heading h2 {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.section-heading p {
+    color: var(--landing-muted);
+    margin: 0;
+}
+
+.section-heading .btn-link {
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.content-section {
+    padding: 4rem 0;
+}
+
+.surface-card {
+    border-radius: 1.5rem;
+    background: var(--landing-surface);
+    box-shadow: 0 25px 65px rgba(15, 23, 42, 0.08);
+    padding: 2.5rem;
+}
+
+.service-card,
+.professional-card {
+    border: none;
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    height: 100%;
+    background: #fff;
+}
+
+.service-card img,
+.professional-card img {
+    object-fit: cover;
+    height: 220px;
+}
+
+.service-card .card-body,
+.professional-card .card-body {
+    padding: 1.5rem;
+}
+
+.service-card .badge {
+    background-color: rgba(98, 55, 255, 0.12);
+    color: var(--landing-primary);
+    font-weight: 600;
+}
+
+.price-tag {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--landing-primary);
+}
+
+.professional-card h5 {
+    margin-top: 0.5rem;
+    font-weight: 600;
+}
+
+.professional-card .rating {
+    color: #f8b84e;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+    width: 48px;
+    height: 48px;
+    top: -70px;
+    opacity: 1;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    background-color: var(--landing-primary);
+    border-radius: 50%;
+    padding: 1.3rem;
+    background-size: 55%;
+}
+
+.trust-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.trust-card {
+    text-align: center;
+    padding: 1.2rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: #fff;
+    font-weight: 600;
+}
+
+.trust-card span {
+    display: block;
+    color: var(--landing-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+@media (max-width: 992px) {
+    .hero-section {
+        text-align: center;
+    }
+
+    .hero-section::after {
+        display: none;
+    }
+
+    .hero-cta {
+        justify-content: center;
+    }
+
+    .carousel-control-prev,
+    .carousel-control-next {
+        top: auto;
+        bottom: -70px;
+    }
+}

@@ -1,17 +1,196 @@
-﻿@page "/211"
+@page "/"
+@using System.Globalization
+@using System.Linq
 
-<div class="d-flex">
-    <NavMenu2 />
-
-    <div class="flex-grow-1" style="margin-left: 240px;">
-        <TopBar />
-
-        <div class="container py-4">
-            <h2 class="mb-4 text-center">Descubrí los servicios más solicitados</h2>
-            <CarouselServices />
-
-            <h2 class="mb-4 text-center mt-5">Conocé a nuestros profesionales</h2>
-            <CarouselProfessionals />
+<div class="landing-page">
+    <section class="hero-section mb-5">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-7 text-lg-start text-center">
+                    <span class="badge text-uppercase mb-3">Servicios que inspiran confianza</span>
+                    <h1>Encontrá profesionales y servicios que se adaptan a tu estilo</h1>
+                    <p class="lead mt-3">Combinamos talento local con herramientas digitales para que puedas contratar con
+                        seguridad, pagar online y hacer seguimiento en un solo lugar.</p>
+                    <div class="hero-cta d-flex flex-wrap gap-3 mt-4">
+                        <button class="btn btn-primary rounded-pill px-4 py-3 shadow">Explorar servicios</button>
+                        <button class="btn btn-outline-light rounded-pill px-4 py-3">Convertirme en profesional</button>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="metrics-card p-4 text-center text-lg-start">
+                        <div class="row g-4">
+                            <div class="col-6">
+                                <div class="h2 mb-0">+1.200</div>
+                                <p class="text-white-50 mb-0 small">Servicios entregados</p>
+                            </div>
+                            <div class="col-6">
+                                <div class="h2 mb-0">4.9/5</div>
+                                <p class="text-white-50 mb-0 small">Satisfacción promedio</p>
+                            </div>
+                            <div class="col-6">
+                                <div class="h2 mb-0">48 hs</div>
+                                <p class="text-white-50 mb-0 small">Tiempo de respuesta</p>
+                            </div>
+                            <div class="col-6">
+                                <div class="h2 mb-0">24/7</div>
+                                <p class="text-white-50 mb-0 small">Soporte al cliente</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <section class="content-section pt-0">
+        <div class="container">
+            <div class="section-heading flex-column flex-lg-row text-lg-start text-center">
+                <div>
+                    <p class="text-uppercase text-muted small mb-1">Servicios destacados</p>
+                    <h2>Soluciones a medida para tu día a día</h2>
+                </div>
+                <button class="btn btn-link text-decoration-none">Ver catálogo completo <i class="fa-solid fa-arrow-right ms-1"></i></button>
+            </div>
+
+            @{ var serviceSlides = ServiceSlides.ToList(); }
+            <div id="servicesCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="8000">
+                <div class="carousel-inner">
+                    @for (var i = 0; i < serviceSlides.Count; i++)
+                    {
+                        var slide = serviceSlides[i];
+                        <div class="carousel-item @(i == 0 ? "active" : string.Empty)">
+                            <div class="row g-4">
+                                @foreach (var service in slide)
+                                {
+                                    <div class="col-md-4">
+                                        <div class="card service-card h-100">
+                                            <img src="@service.ImageUrl" class="card-img-top" alt="Imagen de @service.Name" loading="lazy" />
+                                            <div class="card-body">
+                                                <span class="badge rounded-pill">@service.Category</span>
+                                                <h5 class="card-title mt-3">@service.Name</h5>
+                                                <p class="card-text text-muted">@service.Description</p>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="price-tag">@service.Price.ToString("C0", LocalCulture)</span>
+                                                    <button class="btn btn-sm btn-outline-primary rounded-pill">Ver detalles</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#servicesCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Anterior</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#servicesCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Siguiente</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-section pt-0">
+        <div class="container">
+            <div class="surface-card">
+                <div class="section-heading flex-column flex-lg-row text-lg-start text-center">
+                    <div>
+                        <p class="text-uppercase text-muted small mb-1">Profesionales verificados</p>
+                        <h2>Conocé a quienes dan vida a los servicios</h2>
+                    </div>
+                    <button class="btn btn-link text-decoration-none">Sumate como profesional <i class="fa-solid fa-user-plus ms-1"></i></button>
+                </div>
+
+                @{ var professionalSlides = ProfessionalSlides.ToList(); }
+                <div id="professionalsCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="9000">
+                    <div class="carousel-inner">
+                        @for (var i = 0; i < professionalSlides.Count; i++)
+                        {
+                            var slide = professionalSlides[i];
+                            <div class="carousel-item @(i == 0 ? "active" : string.Empty)">
+                                <div class="row g-4">
+                                    @foreach (var professional in slide)
+                                    {
+                                        <div class="col-md-4">
+                                            <div class="card professional-card h-100">
+                                                <img src="@professional.ImageUrl" class="card-img-top" alt="Foto de @professional.Name" loading="lazy" />
+                                                <div class="card-body">
+                                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                                        <h5 class="mb-0">@professional.Name</h5>
+                                                        <span class="rating"><i class="fa-solid fa-star me-1"></i>@professional.Rating.ToString("0.0")</span>
+                                                    </div>
+                                                    <p class="text-muted mb-1">@professional.Specialty</p>
+                                                    <p class="small text-uppercase fw-semibold text-secondary">@professional.City</p>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="text-muted small">@professional.Projects proyectos</span>
+                                                        <button class="btn btn-sm btn-outline-primary rounded-pill">Contactar</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#professionalsCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Anterior</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#professionalsCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Siguiente</span>
+                    </button>
+                </div>
+
+                <div class="trust-grid">
+                    <div class="trust-card">
+                        +500 <span>Profesionales verificados</span>
+                    </div>
+                    <div class="trust-card">
+                        12 ciudades <span>Cobertura nacional</span>
+                    </div>
+                    <div class="trust-card">
+                        72h <span>Garantía de satisfacción</span>
+                    </div>
+                    <div class="trust-card">
+                        Pagos seguros <span>Protección al comprador</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
+
+@code {
+    private sealed record ServiceModel(string Name, string Description, string Category, string ImageUrl, decimal Price);
+    private sealed record ProfessionalModel(string Name, string Specialty, string City, string ImageUrl, double Rating, int Projects);
+
+    private static readonly CultureInfo LocalCulture = new("es-AR");
+
+    private readonly IReadOnlyList<ServiceModel> Services = new List<ServiceModel>
+    {
+        new("Diseño web adaptable", "Sitios optimizados para mobile, SEO y experiencias fluidas.", "Diseño digital", "https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?auto=format&fit=crop&w=900&q=60", 85000),
+        new("Branding integral", "Identidad visual completa para potenciar tu marca.", "Branding", "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=900&q=60", 64000),
+        new("Producción de fotografía", "Sesiones profesionales para catálogos y campañas.", "Fotografía", "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=60", 42000),
+        new("Asesoría contable", "Organizá tus finanzas con reportes claros y trimestrales.", "Finanzas", "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&q=60", 53000),
+        new("Marketing en redes", "Gestión de pauta, comunidad y calendarios de contenido.", "Marketing", "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=900&q=60", 61000),
+        new("Consultoría UX", "Investigación y diseño centrado en las personas.", "Experiencia de usuario", "https://images.unsplash.com/photo-1484885192048-9696602b1a24?auto=format&fit=crop&w=900&q=60", 72000)
+    };
+
+    private readonly IReadOnlyList<ProfessionalModel> Professionals = new List<ProfessionalModel>
+    {
+        new("Laura Fernández", "Diseñadora UX/UI", "Buenos Aires", "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=900&q=60", 4.9, 128),
+        new("Mateo Álvarez", "Fotógrafo editorial", "Córdoba", "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=60", 4.8, 96),
+        new("Valentina Castro", "Estratega digital", "Rosario", "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=60", 5.0, 142),
+        new("Jeremías Luna", "Contador público", "Mendoza", "https://images.unsplash.com/photo-1544723795-432537f4aa73?auto=format&fit=crop&w=900&q=60", 4.7, 88),
+        new("Marina Quiroga", "Productora audiovisual", "La Plata", "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=900&q=60", 4.9, 77),
+        new("Andrés Rivas", "Consultor en negocios", "Neuquén", "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=60", 4.8, 109)
+    };
+
+    private IEnumerable<ServiceModel[]> ServiceSlides => Services.Chunk(3);
+    private IEnumerable<ProfessionalModel[]> ProfessionalSlides => Professionals.Chunk(3);
+}
