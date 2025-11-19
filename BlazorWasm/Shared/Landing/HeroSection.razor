@@ -1,0 +1,50 @@
+@using System
+@using BlazorWasm.Shared.Landing
+
+<section class="hero-section mb-5">
+    <div class="container">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7 text-lg-start text-center">
+                <span class="badge text-uppercase mb-3">@BadgeText</span>
+                <h1>@Title</h1>
+                <p class="lead mt-3">@Description</p>
+                <div class="hero-cta d-flex flex-wrap gap-3 mt-4">
+                    @foreach (var cta in Ctas)
+                    {
+                        <button class="@cta.CssClass">@cta.Text</button>
+                    }
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="metrics-card p-4 text-center text-lg-start">
+                    <div class="row g-4">
+                        @foreach (var metric in Metrics)
+                        {
+                            <div class="col-6">
+                                <div class="h2 mb-0">@metric.Value</div>
+                                <p class="text-white-50 mb-0 small">@metric.Caption</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public string BadgeText { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Description { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<HeroCtaModel> Ctas { get; set; } = Array.Empty<HeroCtaModel>();
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<HeroMetricModel> Metrics { get; set; } = Array.Empty<HeroMetricModel>();
+}

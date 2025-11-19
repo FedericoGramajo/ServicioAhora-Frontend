@@ -1,0 +1,56 @@
+@using System
+@using BlazorWasm.Shared.Landing
+
+<header class="landing-header" id="@HeaderId">
+    <div class="container">
+        <div class="topbar d-flex flex-column flex-lg-row align-items-center gap-3 gap-lg-4">
+            <a class="brand" href="@BrandHref">@Brand</a>
+            <form class="search-bar flex-grow-1" role="search">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input class="form-control" type="search" placeholder="@Search.Placeholder" aria-label="Buscar" />
+                    <button class="btn btn-primary" type="submit">@Search.ButtonText</button>
+                </div>
+            </form>
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                    Mi cuenta
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                    @foreach (var action in AccountLinks)
+                    {
+                        <li><a class="dropdown-item" href="@action.Href">@action.Text</a></li>
+                    }
+                </ul>
+            </div>
+        </div>
+        <nav class="nav-menu mt-3">
+            <div class="nav nav-pills justify-content-center justify-content-lg-between flex-wrap gap-2">
+                @foreach (var link in NavLinks)
+                {
+                    <a class="nav-link" href="@link.Href">@link.Text</a>
+                }
+            </div>
+        </nav>
+    </div>
+</header>
+
+@code {
+    [Parameter]
+    public string HeaderId { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Brand { get; set; } = string.Empty;
+
+    [Parameter]
+    public string BrandHref { get; set; } = "#";
+
+    [Parameter, EditorRequired]
+    public SearchConfig Search { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<MenuActionModel> AccountLinks { get; set; } = Array.Empty<MenuActionModel>();
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<NavLinkModel> NavLinks { get; set; } = Array.Empty<NavLinkModel>();
+}
