@@ -1,0 +1,357 @@
+@page "/profesionales"
+@using System.Linq
+@inject NavigationManager Navigation
+
+<PageTitle>Profesionales | ServicioAhora!</PageTitle>
+
+<div class="landing-page">
+    <LandingHeader HeaderId="profesionales"
+                   Brand="ServicioAhora!"
+                   BrandHref="/"
+                   Search="@SearchBar"
+                   AccountLinks="@AccountActions"
+                   NavLinks="@PrimaryNavLinks" />
+
+    <main class="search-page container py-5 professional-search">
+        <div class="d-flex flex-column gap-4">
+            <div class="surface-card search-hero">
+                <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-3 justify-content-between">
+                    <div>
+                        <p class="text-uppercase fw-semibold text-primary mb-2">Profesionales verificados</p>
+                        <h1 class="mb-2">Encontrá la persona ideal para tu hogar</h1>
+                        <p class="mb-0 text-muted">Mostrando coincidencias para <strong>@(string.IsNullOrWhiteSpace(searchTerm) ? "todos los rubros" : searchTerm)</strong>.</p>
+                    </div>
+                    <form class="search-bar" role="search" @onsubmit="OnSearch" @onsubmit:preventDefault>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                            <input class="form-control" type="search" placeholder="Buscar profesionales de ServicioAhora!" aria-label="Buscar" @bind="searchTerm" />
+                            <button class="btn btn-primary" type="submit">Buscar</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="d-flex flex-wrap gap-3 align-items-center mt-3">
+                    <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#customProfessionalSearch">
+                        <i class="fa-solid fa-sliders me-2"></i> Búsqueda personalizada
+                    </button>
+                    <div class="d-flex flex-wrap gap-2 small text-muted filter-badges">
+                        <span class="badge bg-primary-subtle text-primary">Rubro: @FilterLabel(selectedCategory)</span>
+                        <span class="badge bg-secondary-subtle text-secondary">Ciudad: @FilterLabel(selectedCity)</span>
+                        <span class="badge bg-info-subtle text-info">Calificación: @RatingLabel(selectedRating)</span>
+                        @if (onlyExpress)
+                        {
+                            <span class="badge bg-success-subtle text-success">Urgencias 48h</span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="surface-card">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-column flex-lg-row gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <h5 class="mb-0">@FilteredResults.Count() profesionales</h5>
+                        <span class="text-muted">Mostrando especialistas hogareños listos para ayudar</span>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#customProfessionalSearch">
+                        Ajustar filtros
+                    </button>
+                </div>
+                <div class="row g-3">
+                    @foreach (var professional in FilteredResults)
+                    {
+                        <div class="col-12">
+                            <div class="card professional-result">
+                                <div class="row g-0 align-items-center">
+                                    <div class="col-12 col-md-3">
+                                        <div class="ratio ratio-1x1">
+                                            <img src="@professional.ImageUrl" alt="@professional.Name" class="rounded-start" />
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                                                <span class="badge rounded-pill bg-primary-subtle text-primary">@professional.Category</span>
+                                                <span class="badge rounded-pill bg-secondary-subtle text-secondary">@professional.City</span>
+                                                <span class="badge rounded-pill bg-warning-subtle text-warning"><i class="fa-solid fa-star me-1"></i>@professional.Rating.ToString("0.0")</span>
+                                            </div>
+                                            <h5 class="card-title mb-1">@professional.Name</h5>
+                                            <p class="mb-1 text-muted">@professional.Specialty</p>
+                                            <p class="card-text text-muted mb-2">@professional.Summary</p>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                @foreach (var tag in professional.Services.Take(3))
+                                                {
+                                                    <span class="pill small">@tag</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-3 d-flex flex-column align-items-start align-items-md-end gap-2 p-3">
+                                        <span class="text-muted small">@professional.Projects proyectos</span>
+                                        <button class="btn btn-outline-primary w-100" @onclick="() => GoToProfessional(professional.Slug)">Ver perfil</button>
+                                        <button class="btn btn-primary w-100" @onclick="() => GoToProfessional(professional.Slug)">Contactar ahora</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (!FilteredResults.Any())
+                    {
+                        <div class="col-12">
+                            <div class="alert alert-info mb-0">No encontramos profesionales con esos filtros. Probá ampliar la búsqueda personalizada.</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal fade" id="customProfessionalSearch" tabindex="-1" aria-labelledby="customProfessionalSearchLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="customProfessionalSearchLabel">Búsqueda personalizada</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Rubro</label>
+                            <select class="form-select" @bind="selectedCategory">
+                                <option value="todas">Todos</option>
+                                @foreach (var category in Categories)
+                                {
+                                    <option value="@category">@category</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Ciudad</label>
+                            <select class="form-select" @bind="selectedCity">
+                                <option value="todas">Todas</option>
+                                @foreach (var city in Cities)
+                                {
+                                    <option value="@city">@city</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Calificación mínima</label>
+                            <select class="form-select" @bind="selectedRating">
+                                <option value="cualquiera">Cualquiera</option>
+                                <option value="4">4.0+</option>
+                                <option value="4.5">4.5+</option>
+                                <option value="4.8">4.8+</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="expressProfessional" @bind="onlyExpress" />
+                                <label class="form-check-label" for="expressProfessional">Atención en menos de 48h</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="ApplyFilters">Aplicar filtros</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <LandingFooter FooterId="contacto-profesionales"
+                   Brand="ServicioAhora!"
+                   Description="Coordinamos servicios hogareños confiables con soporte humano y seguimiento en tiempo real."
+                   ContactLines="@FooterContact"
+                   LinkGroups="@FooterGroups"
+                   CurrentYear="@CurrentYear" />
+</div>
+
+@code {
+    private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
+
+    private readonly IReadOnlyList<MenuActionModel> AccountActions = new List<MenuActionModel>
+    {
+        new("Iniciar sesión", "/login"),
+        new("Registrarse", "/register")
+    };
+
+    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = new List<NavLinkModel>
+    {
+        new("Inicio", "/#inicio"),
+        new("Servicios", "/#services"),
+        new("Profesionales", "/profesionales"),
+        new("Garantías", "/#garantias"),
+        new("Contacto", "/#contacto")
+    };
+
+    private readonly IReadOnlyList<string> FooterContact = new List<string>
+    {
+        "Tel: +54 11 5555 1111",
+        "Email: hola@servicioahora.com",
+        "Horario: Lunes a domingo 8 a 22 h"
+    };
+
+    private readonly IReadOnlyList<FooterGroupModel> FooterGroups = new List<FooterGroupModel>
+    {
+        new("Explorá más", new []
+        {
+            new FooterLinkModel("Servicios", "/#services"),
+            new FooterLinkModel("Profesionales", "/profesionales"),
+            new FooterLinkModel("Garantías", "/#garantias")
+        })
+    };
+
+    [SupplyParameterFromQuery(Name = "query")]
+    public string? Query { get; set; }
+
+    private string searchTerm = string.Empty;
+    private string selectedCategory = "todas";
+    private string selectedCity = "todas";
+    private string selectedRating = "cualquiera";
+    private bool onlyExpress;
+
+    private readonly IReadOnlyList<ProfessionalResult> Professionals = new List<ProfessionalResult>
+    {
+        new(
+            "laura-fernandez",
+            "Laura Fernández",
+            "Especialista en organización y limpieza",
+            "Buenos Aires",
+            "Limpieza y orden",
+            4.9,
+            128,
+            "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=900&q=60",
+            "Protocolos seguros para familias y mascotas con foco en limpiezas profundas y orden integral.",
+            new [] { "Limpieza profunda integral", "Plomería express", "Reparación eléctrica segura", "Asistencia para electrodomésticos" },
+            true
+        ),
+        new(
+            "mateo-alvarez",
+            "Mateo Álvarez",
+            "Electricista matriculado",
+            "Córdoba",
+            "Electricidad",
+            4.8,
+            96,
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=60",
+            "Instalaciones ordenadas, diagnósticos rápidos y soluciones seguras para tu hogar.",
+            new [] { "Reparación eléctrica segura", "Asistencia para electrodomésticos", "Plomería express" },
+            true
+        ),
+        new(
+            "valentina-castro",
+            "Valentina Castro",
+            "Paisajista y jardinera",
+            "Rosario",
+            "Jardinería",
+            5.0,
+            142,
+            "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=60",
+            "Diseño y mantenimiento sustentable de patios y balcones con asesoría de especies.",
+            new [] { "Mantenimiento de jardines", "Pintura y retoques", "Limpieza profunda integral" },
+            false
+        ),
+        new(
+            "jeremias-luna",
+            "Jeremías Luna",
+            "Plomero certificado",
+            "Mendoza",
+            "Plomería",
+            4.7,
+            88,
+            "https://images.unsplash.com/photo-1544723795-432537f4aa73?auto=format&fit=crop&w=900&q=60",
+            "Reparaciones rápidas con mínimo impacto y garantías en instalaciones de agua.",
+            new [] { "Plomería express", "Reparación eléctrica segura", "Mantenimiento de jardines" },
+            true
+        ),
+        new(
+            "marina-quiroga",
+            "Marina Quiroga",
+            "Pintora y decoradora",
+            "La Plata",
+            "Decoración",
+            4.9,
+            77,
+            "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=900&q=60",
+            "Terminaciones prolijas, asesoría de color y combinaciones cálidas para cada ambiente.",
+            new [] { "Pintura y retoques", "Limpieza profunda integral", "Mantenimiento de jardines" },
+            false
+        ),
+        new(
+            "andres-rivas",
+            "Andrés Rivas",
+            "Técnico de electrodomésticos",
+            "Neuquén",
+            "Electrodomésticos",
+            4.8,
+            109,
+            "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=60",
+            "Diagnóstico técnico con repuestos originales y seguimiento posterior a cada visita.",
+            new [] { "Asistencia para electrodomésticos", "Reparación eléctrica segura", "Plomería express" },
+            true
+        )
+    };
+
+    private IEnumerable<string> Categories => Professionals.Select(p => p.Category).Distinct().OrderBy(c => c);
+    private IEnumerable<string> Cities => Professionals.Select(p => p.City).Distinct().OrderBy(c => c);
+
+    private IEnumerable<ProfessionalResult> FilteredResults => Professionals
+        .Where(p => string.IsNullOrWhiteSpace(searchTerm) || p.Name.Contains(searchTerm, StringComparison.InvariantCultureIgnoreCase) || p.Specialty.Contains(searchTerm, StringComparison.InvariantCultureIgnoreCase) || p.Summary.Contains(searchTerm, StringComparison.InvariantCultureIgnoreCase))
+        .Where(p => selectedCategory == "todas" || string.Equals(p.Category, selectedCategory, StringComparison.InvariantCultureIgnoreCase))
+        .Where(p => selectedCity == "todas" || string.Equals(p.City, selectedCity, StringComparison.InvariantCultureIgnoreCase))
+        .Where(MatchesRating)
+        .Where(p => !onlyExpress || p.ExpressWindow);
+
+    protected override void OnParametersSet()
+    {
+        searchTerm = Query ?? string.Empty;
+    }
+
+    private void OnSearch()
+    {
+        var term = searchTerm?.Trim();
+        var queryString = string.IsNullOrWhiteSpace(term) ? string.Empty : $"?query={Uri.EscapeDataString(term)}";
+        Navigation.NavigateTo($"/profesionales{queryString}");
+    }
+
+    private void ApplyFilters() => StateHasChanged();
+
+    private string FilterLabel(string value) => string.Equals(value, "todas", StringComparison.OrdinalIgnoreCase) ? "Todas" : value;
+
+    private string RatingLabel(string value) => value switch
+    {
+        "4" => "4.0+",
+        "4.5" => "4.5+",
+        "4.8" => "4.8+",
+        _ => "Cualquiera"
+    };
+
+    private void GoToProfessional(string slug) => Navigation.NavigateTo($"/profesional/{slug}");
+
+    private bool MatchesRating(ProfessionalResult result)
+    {
+        return selectedRating switch
+        {
+            "4" => result.Rating >= 4.0,
+            "4.5" => result.Rating >= 4.5,
+            "4.8" => result.Rating >= 4.8,
+            _ => true
+        };
+    }
+
+    private int CurrentYear => DateTime.Now.Year;
+
+    private record ProfessionalResult(
+        string Slug,
+        string Name,
+        string Specialty,
+        string City,
+        string Category,
+        double Rating,
+        int Projects,
+        string ImageUrl,
+        string Summary,
+        IEnumerable<string> Services,
+        bool ExpressWindow);
+}
