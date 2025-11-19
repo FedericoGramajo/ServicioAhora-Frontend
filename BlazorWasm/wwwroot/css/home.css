@@ -400,3 +400,38 @@ body {
         padding-top: 1rem;
     }
 }
+
+/* Search page */
+.search-page {
+    min-height: 100vh;
+}
+
+.search-hero {
+    border: 1px solid rgba(15, 42, 60, 0.08);
+}
+
+.search-hero h1 {
+    font-weight: 700;
+}
+
+.search-filters .form-select,
+.search-filters .form-check-input {
+    border-radius: 0.75rem;
+}
+
+.search-result {
+    border: 1px solid rgba(15, 42, 60, 0.08);
+    border-radius: 1rem;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+}
+
+.search-result img {
+    object-fit: cover;
+}
+
+.search-result .price-tag {
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--landing-primary);
+}
