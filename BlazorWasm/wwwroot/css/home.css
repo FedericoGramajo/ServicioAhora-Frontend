@@ -1,22 +1,25 @@
 :root {
-    --landing-primary: #f97316;
-    --landing-secondary: #0d9488;
-    --landing-dark: #1f2933;
-    --landing-muted: #64748b;
-    --landing-surface: #fffdf8;
-    --landing-accent: #facc15;
-    --landing-footer: #0f2a3c;
+    --landing-primary: #7c3aed;
+    --landing-secondary: #0ea5e9;
+    --landing-dark: #0f172a;
+    --landing-muted: #667085;
+    --landing-surface: #f7f7ff;
+    --landing-accent: #a855f7;
+    --landing-footer: #0b1021;
     color-scheme: light only;
 }
 
 body {
-    background-color: #fff6ef;
+    background: radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.06), transparent 35%),
+        radial-gradient(circle at 80% 0%, rgba(14, 165, 233, 0.08), transparent 40%),
+        #f4f5fb;
     color: var(--landing-dark);
 }
 
 .landing-header {
-    background: var(--landing-surface);
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    background: rgba(247, 247, 255, 0.92);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+    backdrop-filter: blur(12px);
     padding: 1.5rem 0 1rem;
     position: sticky;
     top: 0;
@@ -25,16 +28,17 @@ body {
 
 .topbar .brand {
     font-size: 1.5rem;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--landing-primary);
     text-decoration: none;
 }
 
 .search-bar .input-group {
     border-radius: 999px;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-    background: var(--landing-surface);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+    background: #ffffff;
     overflow: hidden;
+    border: 1px solid rgba(14, 165, 233, 0.15);
 }
 
 .search-bar .form-control,
@@ -46,48 +50,49 @@ body {
 .search-bar .form-control:focus,
 .search-bar .btn:focus,
 .search-bar .input-group-text:focus {
-    box-shadow: 0 0 0 0.18rem rgba(249, 115, 22, 0.25);
+    box-shadow: 0 0 0 0.18rem rgba(124, 58, 237, 0.3);
     outline: none;
 }
 
 .nav-menu .nav-link {
     border-radius: 999px;
     color: var(--landing-dark);
-    font-weight: 600;
+    font-weight: 700;
     padding: 0.4rem 1.2rem;
 }
 
 .nav-menu .nav-link:hover,
 .nav-menu .nav-link:focus {
-    background: rgba(249, 115, 22, 0.12);
+    background: rgba(124, 58, 237, 0.12);
     color: var(--landing-primary);
 }
 
 .dropdown .btn {
     border-radius: 999px;
     border-width: 2px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .landing-page .btn-primary {
-    background-color: var(--landing-primary);
-    border-color: var(--landing-primary);
+    background: linear-gradient(135deg, var(--landing-primary), #5b21b6);
+    border-color: transparent;
+    box-shadow: 0 14px 34px rgba(124, 58, 237, 0.3);
 }
 
 .landing-page .btn-primary:hover,
 .landing-page .btn-primary:focus {
-    background-color: #ea580c;
-    border-color: #ea580c;
+    background: linear-gradient(135deg, #6930c3, #4c1d95);
+    border-color: transparent;
 }
 
 .landing-page .btn-outline-primary {
     color: var(--landing-primary);
-    border-color: var(--landing-primary);
+    border-color: rgba(124, 58, 237, 0.6);
 }
 
 .landing-page .btn-outline-primary:hover,
 .landing-page .btn-outline-primary:focus {
-    background-color: var(--landing-primary);
+    background: var(--landing-primary);
     color: #fff;
 }
 
@@ -98,10 +103,11 @@ body {
 }
 
 .hero-section {
-    background: radial-gradient(circle at top right, rgba(13, 148, 136, 0.35), transparent 55%),
-        linear-gradient(135deg, var(--landing-primary), #ea580c);
+    background: radial-gradient(circle at 20% 20%, rgba(168, 85, 247, 0.16), transparent 35%),
+        radial-gradient(circle at 75% 10%, rgba(14, 165, 233, 0.15), transparent 40%),
+        linear-gradient(140deg, #7c3aed, #4338ca 50%, #0ea5e9);
     color: #fff;
-    border-radius: 0 0 40px 40px;
+    border-radius: 0 0 48px 48px;
     padding: 4rem 0 5rem;
     overflow: hidden;
     position: relative;
@@ -113,7 +119,7 @@ body {
     width: 320px;
     height: 320px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.08);
     bottom: -80px;
     right: 5%;
     filter: blur(0.5px);
@@ -122,10 +128,11 @@ body {
 .hero-section .badge {
     background: rgba(255, 255, 255, 0.15);
     color: #fff;
-    font-weight: 500;
+    font-weight: 600;
     border-radius: 999px;
     padding: 0.5rem 1.2rem;
     letter-spacing: 0.08em;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
 .hero-section h1 {
@@ -140,25 +147,25 @@ body {
 }
 
 .hero-cta .btn-primary {
-    background: var(--landing-surface);
+    background: #ffffff;
     color: var(--landing-primary);
     border: none;
-    box-shadow: 0 20px 40px rgba(249, 115, 22, 0.35);
-    font-weight: 600;
+    box-shadow: 0 20px 40px rgba(124, 58, 237, 0.35);
+    font-weight: 700;
     padding: 0.8rem 1.8rem;
 }
 
 .hero-cta .btn-outline-light {
     border-width: 2px;
-    font-weight: 600;
+    font-weight: 700;
     color: #fff;
 }
 
 .metrics-card {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.24);
     border-radius: 1.5rem;
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(14px);
 }
 
 .section-heading {
@@ -190,9 +197,10 @@ body {
 
 .surface-card {
     border-radius: 1.5rem;
-    background: var(--landing-surface);
+    background: linear-gradient(165deg, #ffffff, rgba(124, 58, 237, 0.04));
     box-shadow: 0 25px 65px rgba(15, 23, 42, 0.08);
     padding: 2.5rem;
+    border: 1px solid rgba(124, 58, 237, 0.08);
 }
 
 .service-card,
@@ -217,14 +225,14 @@ body {
 }
 
 .service-card .badge {
-    background-color: rgba(249, 115, 22, 0.15);
+    background-color: rgba(124, 58, 237, 0.12);
     color: var(--landing-primary);
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .price-tag {
     font-size: 1.25rem;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--landing-primary);
 }
 
@@ -249,10 +257,11 @@ body {
 
 .carousel-control-prev-icon,
 .carousel-control-next-icon {
-    background-color: var(--landing-primary);
+    background-color: #0ea5e9;
     border-radius: 50%;
     padding: 1.3rem;
     background-size: 55%;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
 }
 
 .carousel-control-prev {
@@ -287,8 +296,10 @@ body {
 }
 
 .landing-footer {
-    background: var(--landing-footer);
-    color: rgba(255, 255, 255, 0.85);
+    background: radial-gradient(circle at 10% 20%, rgba(124, 58, 237, 0.18), transparent 30%),
+        radial-gradient(circle at 90% 0%, rgba(14, 165, 233, 0.12), transparent 35%),
+        var(--landing-footer);
+    color: rgba(255, 255, 255, 0.88);
     padding: 3rem 0;
     margin-top: auto;
 }
@@ -354,9 +365,9 @@ body {
 /* Auth pages */
 .auth-page {
     min-height: 100vh;
-    background: radial-gradient(circle at 20% 20%, rgba(250, 204, 21, 0.08), transparent 45%),
-        radial-gradient(circle at 80% 0%, rgba(13, 148, 136, 0.14), transparent 40%),
-        linear-gradient(135deg, #fffaf3, #ffe9d8 40%, #fff6ef 70%);
+    background: radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.12), transparent 45%),
+        radial-gradient(circle at 80% 0%, rgba(14, 165, 233, 0.14), transparent 40%),
+        linear-gradient(135deg, #f7f7ff, #eef2ff 45%, #e0f2fe 75%);
     display: flex;
     align-items: center;
 }
@@ -382,14 +393,14 @@ body {
 
 .auth-card .form-control:focus,
 .auth-card .form-select:focus {
-    box-shadow: 0 0 0 0.2rem rgba(249, 115, 22, 0.15);
+    box-shadow: 0 0 0 0.2rem rgba(124, 58, 237, 0.18);
     border-color: var(--landing-primary);
 }
 
 .auth-card .btn-primary {
-    background: linear-gradient(135deg, var(--landing-primary), #fb923c);
+    background: linear-gradient(135deg, var(--landing-primary), #4338ca);
     border: none;
-    box-shadow: 0 12px 30px rgba(249, 115, 22, 0.25);
+    box-shadow: 0 12px 30px rgba(124, 58, 237, 0.25);
 }
 
 .auth-card .btn-outline-primary {
@@ -466,7 +477,7 @@ body {
 }
 
 .professional-search .ratio-1x1 {
-    background: linear-gradient(145deg, rgba(249, 115, 22, 0.12), rgba(13, 148, 136, 0.1));
+    background: linear-gradient(145deg, rgba(124, 58, 237, 0.14), rgba(14, 165, 233, 0.12));
 }
 
 .filter-badges .badge {
@@ -489,7 +500,7 @@ body {
 /* Detail pages */
 .surface-card .pill,
 .pill {
-    background: rgba(13, 148, 136, 0.08);
+    background: rgba(14, 165, 233, 0.12);
     border-radius: 999px;
     padding: 0.35rem 0.9rem;
     font-weight: 600;
