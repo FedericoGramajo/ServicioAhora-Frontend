@@ -5,6 +5,14 @@
     {
       "library": "font-awesome@7.0.0",
       "destination": "wwwroot/font-awesome/"
+    },
+    {
+      "library": "bootstrap@5.3.3",
+      "destination": "wwwroot/lib/bootstrap/",
+      "files": [
+        "css/bootstrap.min.css",
+        "js/bootstrap.bundle.min.js"
+      ]
     }
   ]
 }
