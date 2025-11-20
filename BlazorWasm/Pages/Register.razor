@@ -1,0 +1,74 @@
+@page "/register"
+<PageTitle>Crear cuenta - ServicioAhora!</PageTitle>
+
+<section class="auth-page py-5 py-lg-6">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-7 col-xl-6">
+                <div class="card auth-card shadow-lg border-0">
+                    <div class="card-body p-4 p-lg-5">
+                        <div class="text-center mb-4">
+                            <a class="auth-brand d-inline-flex align-items-center" href="/">
+                                <i class="fa-solid fa-house-chimney me-2"></i>
+                                <span class="fw-bold">ServicioAhora!</span>
+                            </a>
+                            <p class="text-muted mb-0">Creá tu cuenta para contratar o gestionar servicios hogareños</p>
+                        </div>
+                        <form>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold" for="firstName">Nombre</label>
+                                    <input type="text" class="form-control" id="firstName" placeholder="María" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold" for="lastName">Apellido</label>
+                                    <input type="text" class="form-control" id="lastName" placeholder="Pérez" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold" for="email">Correo electrónico</label>
+                                    <input type="email" class="form-control" id="email" placeholder="tu@email.com" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold" for="phone">Teléfono</label>
+                                    <input type="tel" class="form-control" id="phone" placeholder="11 5555 1111" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold" for="password">Contraseña</label>
+                                    <input type="password" class="form-control" id="password" placeholder="Mínimo 8 caracteres" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold" for="confirmPassword">Confirmar contraseña</label>
+                                    <input type="password" class="form-control" id="confirmPassword" placeholder="Repetí tu contraseña" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold" for="city">Ciudad</label>
+                                    <input type="text" class="form-control" id="city" placeholder="Ej: Buenos Aires" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold" for="role">¿Cómo querés usar ServicioAhora?</label>
+                                    <select class="form-select" id="role" required>
+                                        <option selected disabled value="">Elegí una opción</option>
+                                        <option value="cliente">Contratar servicios</option>
+                                        <option value="profesional">Ofrecer mis servicios</option>
+                                        <option value="ambos">Ambas opciones</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 form-check">
+                                    <input class="form-check-input" type="checkbox" id="terms" required>
+                                    <label class="form-check-label" for="terms">
+                                        Acepto los <a href="#">términos y condiciones</a> y autorizo contacto para coordinación de servicios.
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">Crear cuenta</button>
+                                <a class="btn btn-outline-primary" href="/login">Ya tengo una cuenta</a>
+                                <a class="btn btn-link" href="/">Volver al inicio</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

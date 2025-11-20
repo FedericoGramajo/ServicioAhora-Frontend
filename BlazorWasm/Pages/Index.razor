@@ -1,17 +1,137 @@
-﻿@page "/211"
+@page "/"
+@using System.Collections.Generic
+@using System.Globalization
 
-<div class="d-flex">
-    <NavMenu2 />
+<div class="landing-page">
+    <LandingHeader HeaderId="inicio"
+                   Brand="ServicioAhora!"
+                   BrandHref="#inicio"
+                   Search="@SearchBar"
+                   AccountLinks="@AccountActions"
+                   NavLinks="@PrimaryNavLinks" />
 
-    <div class="flex-grow-1" style="margin-left: 240px;">
-        <TopBar />
+    <HeroSection BadgeText="Bienvenido a ServicioAhora!"
+                 Title="Soluciones hogareñas a medida para tu día a día"
+                 Description="Coordinamos especialistas confiables para limpieza, reparaciones y mantenimiento con garantías claras, pagos protegidos y seguimiento en línea."
+                 Ctas="@HeroCtas"
+                 Metrics="@HeroMetrics" />
 
-        <div class="container py-4">
-            <h2 class="mb-4 text-center">Descubrí los servicios más solicitados</h2>
-            <CarouselServices />
+    <ServicesCarousel SectionId="services"
+                      CarouselId="servicesCarousel"
+                      Subtitle="Servicios destacados"
+                      Title="Aliados de confianza para tu hogar"
+                      CtaText="Ver catálogo completo"
+                      Services="@Services"
+                      Culture="@LocalCulture" />
 
-            <h2 class="mb-4 text-center mt-5">Conocé a nuestros profesionales</h2>
-            <CarouselProfessionals />
-        </div>
-    </div>
+    <ProfessionalsSection SectionId="professionals"
+                          CarouselId="professionalsCarousel"
+                          TrustGridId="garantias"
+                          Subtitle="Profesionales verificados"
+                          Title="Conocé a quienes cuidan tu hogar"
+                          CtaText="Sumate como profesional"
+                          ProfessionalsRoot="/profesionales"
+                          Professionals="@Professionals"
+                          TrustStats="@TrustStats" />
+
+    <LandingFooter FooterId="contacto"
+                   Brand="ServicioAhora!"
+                   Description="Coordinamos servicios hogareños confiables con soporte humano y seguimiento en tiempo real."
+                   ContactLines="@FooterContact"
+                   LinkGroups="@FooterGroups"
+                   CurrentYear="@CurrentYear" />
 </div>
+
+@code {
+    private static readonly CultureInfo LocalCulture = new("es-AR");
+
+    private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
+
+    private readonly IReadOnlyList<MenuActionModel> AccountActions = new List<MenuActionModel>
+    {
+        new("Iniciar sesión", "/login"),
+        new("Registrarse", "/register")
+    };
+
+    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = new List<NavLinkModel>
+    {
+        new("Inicio", "#inicio"),
+        new("Servicios", "#services"),
+        new("Profesionales", "/profesionales"),
+        new("Garantías", "#garantias"),
+        new("Contacto", "#contacto")
+    };
+
+    private readonly IReadOnlyList<HeroCtaModel> HeroCtas = new List<HeroCtaModel>
+    {
+        new("Explorar servicios", "btn btn-primary rounded-pill px-4 py-3 shadow"),
+        new("Convertirme en profesional", "btn btn-outline-light rounded-pill px-4 py-3")
+    };
+
+    private readonly IReadOnlyList<HeroMetricModel> HeroMetrics = new List<HeroMetricModel>
+    {
+        new("+2.400", "Intervenciones hogareñas"),
+        new("4.9/5", "Satisfacción promedio"),
+        new("36 hs", "Tiempo de respuesta"),
+        new("24/7", "Soporte al cliente")
+    };
+
+    private readonly IReadOnlyList<ServiceModel> Services = new List<ServiceModel>
+    {
+        new("limpieza-profunda-integral", "Limpieza profunda integral", "Equipos especializados para dejar tu casa impecable en horas.", "Limpieza",
+            "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=60", 32000),
+        new("mantenimiento-de-jardines", "Mantenimiento de jardines", "Corte, fertilización y diseño sustentable para tus espacios verdes.", "Jardinería",
+            "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=900&q=60", 28000),
+        new("reparacion-electrica-segura", "Reparación eléctrica segura", "Diagnóstico y solución de instalaciones, tableros y luminarias.", "Electricidad",
+            "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=60", 45000),
+        new("plomeria-express", "Plomería express", "Resolución de fugas, destapaciones y cambio de griferías en el día.", "Plomería",
+            "https://images.unsplash.com/photo-1481241999043-63e7ebd5a675?auto=format&fit=crop&w=900&q=60", 36000),
+        new("pintura-y-retoques", "Pintura y retoques", "Renová ambientes con combinaciones modernas y materiales lavables.", "Decoración",
+            "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=900&q=60", 52000),
+        new("asistencia-para-electrodomesticos", "Asistencia para electrodomésticos", "Servicio técnico para heladeras, lavarropas y climatización.", "Electrodomésticos",
+            "https://images.unsplash.com/photo-1523419409543-0c1df022bddb?auto=format&fit=crop&w=900&q=60", 40000)
+    };
+
+    private readonly IReadOnlyList<ProfessionalModel> Professionals = new List<ProfessionalModel>
+    {
+        new("laura-fernandez", "Laura Fernández", "Especialista en organización y limpieza", "Buenos Aires",
+            "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=900&q=60", 4.9, 128),
+        new("mateo-alvarez", "Mateo Álvarez", "Electricista matriculado", "Córdoba",
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=60", 4.8, 96),
+        new("valentina-castro", "Valentina Castro", "Paisajista y jardinera", "Rosario",
+            "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=60", 5.0, 142),
+        new("jeremias-luna", "Jeremías Luna", "Plomero certificado", "Mendoza",
+            "https://images.unsplash.com/photo-1544723795-432537f4aa73?auto=format&fit=crop&w=900&q=60", 4.7, 88),
+        new("marina-quiroga", "Marina Quiroga", "Pintora y decoradora", "La Plata",
+            "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=900&q=60", 4.9, 77),
+        new("andres-rivas", "Andrés Rivas", "Técnico de electrodomésticos", "Neuquén",
+            "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=60", 4.8, 109)
+    };
+
+    private readonly IReadOnlyList<TrustStatModel> TrustStats = new List<TrustStatModel>
+    {
+        new("+500", "Profesionales verificados"),
+        new("12 ciudades", "Cobertura nacional"),
+        new("72h", "Garantía de satisfacción"),
+        new("Pagos seguros", "Protección al comprador")
+    };
+
+    private readonly IReadOnlyList<string> FooterContact = new List<string>
+    {
+        "Tel: +54 11 5555 1111",
+        "Email: hola@servicioahora.com",
+        "Horario: Lunes a domingo 8 a 22 h"
+    };
+
+    private readonly IReadOnlyList<FooterGroupModel> FooterGroups = new List<FooterGroupModel>
+    {
+        new("Explorá más", new []
+        {
+            new FooterLinkModel("Servicios", "#services"),
+            new FooterLinkModel("Profesionales", "/profesionales"),
+            new FooterLinkModel("Garantías", "#garantias")
+        })
+    };
+
+    private int CurrentYear => DateTime.Now.Year;
+}

@@ -1,0 +1,310 @@
+@page "/profesional/{Slug}"
+@using System.Globalization
+@using System.Linq
+@inject NavigationManager Navigation
+
+<PageTitle>Profesional - ServicioAhora!</PageTitle>
+
+<div class="landing-page">
+    <LandingHeader HeaderId="profesional"
+                   Brand="ServicioAhora!"
+                   BrandHref="/"
+                   Search="@SearchBar"
+                   AccountLinks="@AccountActions"
+                   NavLinks="@PrimaryNavLinks" />
+
+    <main class="container py-5">
+        @if (Profile is null)
+        {
+            <div class="alert alert-warning mt-4">No encontramos a este profesional. <a href="/search">Volver a buscar</a>.</div>
+        }
+        else
+        {
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="surface-card h-100 text-center">
+                        <div class="ratio ratio-1x1 mb-3 rounded overflow-hidden">
+                            <img src="@Profile.ImageUrl" alt="@Profile.Name" />
+                        </div>
+                        <h2 class="mb-1">@Profile.Name</h2>
+                        <p class="text-muted mb-1">@Profile.Specialty</p>
+                        <p class="small text-secondary text-uppercase">@Profile.City</p>
+                        <div class="d-flex justify-content-center gap-3 my-3">
+                            <span class="pill"><i class="fa-solid fa-star text-warning me-1"></i>@Profile.Rating.ToString("0.0")</span>
+                            <span class="pill">@Profile.Projects proyectos</span>
+                        </div>
+                        <p class="mb-3">@Profile.Bio</p>
+                        <div class="d-grid gap-2">
+                            <a class="btn btn-primary" href="#servicios">Ver servicios</a>
+                            <a class="btn btn-outline-primary" href="/">Volver al inicio</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="surface-card h-100">
+                        <div class="section-heading flex-column flex-lg-row text-lg-start text-center">
+                            <div>
+                                <p class="text-uppercase text-muted small mb-1">Servicios ofrecidos</p>
+                                <h3 class="mb-0">Rubros y soluciones</h3>
+                            </div>
+                        </div>
+                        @foreach (var group in Profile.ServiceGroups)
+                        {
+                            <div class="service-group" id="servicios">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                                    <h5 class="mb-0">@group.Category</h5>
+                                    <span class="badge bg-primary-subtle text-primary">@group.Services.Count servicio(s)</span>
+                                </div>
+                                <div id="carousel-@group.Category.Replace(" ", "-").ToLower()" class="carousel slide" data-bs-ride="carousel" data-bs-interval="9000">
+                                    <div class="carousel-inner">
+                                        @foreach (var (slide, index) in group.Services.Chunk(6).Select((value, idx) => (value, idx)))
+                                        {
+                                            <div class="carousel-item @(index == 0 ? "active" : string.Empty)">
+                                                <div class="row g-3">
+                                                    @foreach (var service in slide)
+                                                    {
+                                                        <div class="col-md-4">
+                                                            <div class="card professional-service-card h-100">
+                                                                <div class="card-body d-flex flex-column">
+                                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary">@group.Category</span>
+                                                                        <span class="price-tag">@service.Price.ToString("C0", LocalCulture)</span>
+                                                                    </div>
+                                                                    <h6 class="fw-semibold">@service.Name</h6>
+                                                                    <p class="text-muted small flex-grow-1">@service.Description</p>
+                                                                    <button class="btn btn-outline-primary btn-sm mt-2" @onclick="() => GoToService(service.Slug)">Ver detalles</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-@group.Category.Replace(" ", "-").ToLower()" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Anterior</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#carousel-@group.Category.Replace(" ", "-").ToLower()" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Siguiente</span>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </main>
+
+    <LandingFooter FooterId="contacto-profesional"
+                   Brand="ServicioAhora!"
+                   Description="Coordinamos servicios hogareños confiables con soporte humano y seguimiento en tiempo real."
+                   ContactLines="@FooterContact"
+                   LinkGroups="@FooterGroups"
+                   CurrentYear="@CurrentYear" />
+</div>
+
+@code {
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    private static readonly CultureInfo LocalCulture = new("es-AR");
+
+    private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
+
+    private readonly IReadOnlyList<MenuActionModel> AccountActions = new List<MenuActionModel>
+    {
+        new("Iniciar sesión", "/login"),
+        new("Registrarse", "/register")
+    };
+
+    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = new List<NavLinkModel>
+    {
+        new("Inicio", "/#inicio"),
+        new("Servicios", "/#services"),
+        new("Profesionales", "/profesionales"),
+        new("Garantías", "/#garantias"),
+        new("Contacto", "/#contacto")
+    };
+
+    private readonly IReadOnlyList<string> FooterContact = new List<string>
+    {
+        "Tel: +54 11 5555 1111",
+        "Email: hola@servicioahora.com",
+        "Horario: Lunes a domingo 8 a 22 h"
+    };
+
+    private readonly IReadOnlyList<FooterGroupModel> FooterGroups = new List<FooterGroupModel>
+    {
+        new("Explorá más", new []
+        {
+            new FooterLinkModel("Servicios", "/#services"),
+            new FooterLinkModel("Profesionales", "/profesionales"),
+            new FooterLinkModel("Garantías", "/#garantias")
+        })
+    };
+
+    private ProfessionalProfile? Profile;
+
+    protected override void OnParametersSet()
+    {
+        Profiles.TryGetValue(Slug, out Profile);
+    }
+
+    private void GoToService(string slug) => Navigation.NavigateTo($"/servicio/{slug}");
+
+    private static readonly IReadOnlyDictionary<string, ProfessionalProfile> Profiles = new Dictionary<string, ProfessionalProfile>
+    {
+        ["laura-fernandez"] = new(
+            "laura-fernandez",
+            "Laura Fernández",
+            "Especialista en organización y limpieza",
+            "Buenos Aires",
+            "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=900&q=60",
+            4.9,
+            128,
+            "Me enfoco en limpiezas profundas con protocolos seguros para familias y mascotas.",
+            new List<ServiceCategoryGroup>
+            {
+                new("Limpieza y orden", new()
+                {
+                    new("limpieza-profunda-integral", "Limpieza profunda integral", 32000, "Equipos especializados para dejar tu casa impecable en horas."),
+                    new("plomeria-express", "Plomería express", 36000, "Resolución de fugas, destapaciones y cambio de griferías en el día."),
+                    new("reparacion-electrica-segura", "Reparación eléctrica segura", 45000, "Diagnóstico y solución de instalaciones, tableros y luminarias."),
+                    new("asistencia-para-electrodomesticos", "Asistencia para electrodomésticos", 40000, "Servicio técnico para heladeras, lavarropas y climatización."),
+                    new("mantenimiento-de-jardines", "Mantenimiento de jardines", 28000, "Corte, fertilización y diseño sustentable para tus espacios verdes."),
+                    new("pintura-y-retoques", "Pintura y retoques", 52000, "Renová ambientes con combinaciones modernas y materiales lavables.")
+                })
+            }
+        ),
+        ["mateo-alvarez"] = new(
+            "mateo-alvarez",
+            "Mateo Álvarez",
+            "Electricista matriculado",
+            "Córdoba",
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=60",
+            4.8,
+            96,
+            "Instalaciones seguras y ordenadas para que cada equipo funcione a la primera.",
+            new List<ServiceCategoryGroup>
+            {
+                new("Electricidad", new()
+                {
+                    new("reparacion-electrica-segura", "Reparación eléctrica segura", 45000, "Diagnóstico y solución de instalaciones, tableros y luminarias."),
+                    new("asistencia-para-electrodomesticos", "Asistencia para electrodomésticos", 40000, "Servicio técnico para heladeras, lavarropas y climatización."),
+                    new("plomeria-express", "Plomería express", 36000, "Resolución de fugas, destapaciones y cambio de griferías en el día."),
+                    new("pintura-y-retoques", "Pintura y retoques", 52000, "Renová ambientes con combinaciones modernas y materiales lavables."),
+                    new("limpieza-profunda-integral", "Limpieza profunda integral", 32000, "Equipos especializados para dejar tu casa impecable en horas."),
+                    new("mantenimiento-de-jardines", "Mantenimiento de jardines", 28000, "Corte, fertilización y diseño sustentable para tus espacios verdes.")
+                })
+            }
+        ),
+        ["valentina-castro"] = new(
+            "valentina-castro",
+            "Valentina Castro",
+            "Paisajista y jardinera",
+            "Rosario",
+            "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=60",
+            5.0,
+            142,
+            "Diseño espacios verdes con foco en sustentabilidad y bajo mantenimiento.",
+            new List<ServiceCategoryGroup>
+            {
+                new("Jardinería", new()
+                {
+                    new("mantenimiento-de-jardines", "Mantenimiento de jardines", 28000, "Corte, fertilización y diseño sustentable para tus espacios verdes."),
+                    new("pintura-y-retoques", "Pintura y retoques", 52000, "Renová ambientes con combinaciones modernas y materiales lavables."),
+                    new("limpieza-profunda-integral", "Limpieza profunda integral", 32000, "Equipos especializados para dejar tu casa impecable en horas."),
+                    new("reparacion-electrica-segura", "Reparación eléctrica segura", 45000, "Diagnóstico y solución de instalaciones, tableros y luminarias."),
+                    new("plomeria-express", "Plomería express", 36000, "Resolución de fugas, destapaciones y cambio de griferías en el día."),
+                    new("asistencia-para-electrodomesticos", "Asistencia para electrodomésticos", 40000, "Servicio técnico para heladeras, lavarropas y climatización.")
+                })
+            }
+        ),
+        ["jeremias-luna"] = new(
+            "jeremias-luna",
+            "Jeremías Luna",
+            "Plomero certificado",
+            "Mendoza",
+            "https://images.unsplash.com/photo-1544723795-432537f4aa73?auto=format&fit=crop&w=900&q=60",
+            4.7,
+            88,
+            "Soluciono fugas y renovaciones de agua fría/caliente con mínimo impacto en tu hogar.",
+            new List<ServiceCategoryGroup>
+            {
+                new("Plomería", new()
+                {
+                    new("plomeria-express", "Plomería express", 36000, "Resolución de fugas, destapaciones y cambio de griferías en el día."),
+                    new("reparacion-electrica-segura", "Reparación eléctrica segura", 45000, "Diagnóstico y solución de instalaciones, tableros y luminarias."),
+                    new("asistencia-para-electrodomesticos", "Asistencia para electrodomésticos", 40000, "Servicio técnico para heladeras, lavarropas y climatización."),
+                    new("mantenimiento-de-jardines", "Mantenimiento de jardines", 28000, "Corte, fertilización y diseño sustentable para tus espacios verdes."),
+                    new("pintura-y-retoques", "Pintura y retoques", 52000, "Renová ambientes con combinaciones modernas y materiales lavables."),
+                    new("limpieza-profunda-integral", "Limpieza profunda integral", 32000, "Equipos especializados para dejar tu casa impecable en horas.")
+                })
+            }
+        ),
+        ["marina-quiroga"] = new(
+            "marina-quiroga",
+            "Marina Quiroga",
+            "Pintora y decoradora",
+            "La Plata",
+            "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=900&q=60",
+            4.9,
+            77,
+            "Interiores cálidos con terminaciones prolijas y asesoría de color personalizada.",
+            new List<ServiceCategoryGroup>
+            {
+                new("Decoración", new()
+                {
+                    new("pintura-y-retoques", "Pintura y retoques", 52000, "Renová ambientes con combinaciones modernas y materiales lavables."),
+                    new("limpieza-profunda-integral", "Limpieza profunda integral", 32000, "Equipos especializados para dejar tu casa impecable en horas."),
+                    new("mantenimiento-de-jardines", "Mantenimiento de jardines", 28000, "Corte, fertilización y diseño sustentable para tus espacios verdes."),
+                    new("reparacion-electrica-segura", "Reparación eléctrica segura", 45000, "Diagnóstico y solución de instalaciones, tableros y luminarias."),
+                    new("asistencia-para-electrodomesticos", "Asistencia para electrodomésticos", 40000, "Servicio técnico para heladeras, lavarropas y climatización."),
+                    new("plomeria-express", "Plomería express", 36000, "Resolución de fugas, destapaciones y cambio de griferías en el día.")
+                })
+            }
+        ),
+        ["andres-rivas"] = new(
+            "andres-rivas",
+            "Andrés Rivas",
+            "Técnico de electrodomésticos",
+            "Neuquén",
+            "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=60",
+            4.8,
+            109,
+            "Diagnóstico técnico y reparaciones que priorizan repuestos originales y garantías.",
+            new List<ServiceCategoryGroup>
+            {
+                new("Electrodomésticos", new()
+                {
+                    new("asistencia-para-electrodomesticos", "Asistencia para electrodomésticos", 40000, "Servicio técnico para heladeras, lavarropas y climatización."),
+                    new("reparacion-electrica-segura", "Reparación eléctrica segura", 45000, "Diagnóstico y solución de instalaciones, tableros y luminarias."),
+                    new("plomeria-express", "Plomería express", 36000, "Resolución de fugas, destapaciones y cambio de griferías en el día."),
+                    new("limpieza-profunda-integral", "Limpieza profunda integral", 32000, "Equipos especializados para dejar tu casa impecable en horas."),
+                    new("pintura-y-retoques", "Pintura y retoques", 52000, "Renová ambientes con combinaciones modernas y materiales lavables."),
+                    new("mantenimiento-de-jardines", "Mantenimiento de jardines", 28000, "Corte, fertilización y diseño sustentable para tus espacios verdes.")
+                })
+            }
+        )
+    };
+
+    private int CurrentYear => DateTime.Now.Year;
+
+    private record ProfessionalProfile(
+        string Slug,
+        string Name,
+        string Specialty,
+        string City,
+        string ImageUrl,
+        double Rating,
+        int Projects,
+        string Bio,
+        IReadOnlyList<ServiceCategoryGroup> ServiceGroups);
+
+    private record ServiceCategoryGroup(string Category, IReadOnlyList<ServiceSummary> Services);
+
+    private record ServiceSummary(string Slug, string Name, decimal Price, string Description);
+}
