@@ -1,0 +1,44 @@
+@page "/login"
+<PageTitle>Iniciar sesión - ServicioAhora!</PageTitle>
+
+<section class="auth-page py-5 py-lg-6">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-xl-5">
+                <div class="card auth-card shadow-lg border-0">
+                    <div class="card-body p-4 p-lg-5">
+                        <div class="text-center mb-4">
+                            <a class="auth-brand d-inline-flex align-items-center" href="/">
+                                <i class="fa-solid fa-house-chimney me-2"></i>
+                                <span class="fw-bold">ServicioAhora!</span>
+                            </a>
+                            <p class="text-muted mb-0">Accedé a tus reservas y seguimientos</p>
+                        </div>
+                        <form>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" for="loginEmail">Correo electrónico</label>
+                                <input type="email" class="form-control" id="loginEmail" placeholder="tu@email.com" required>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label class="form-label fw-semibold mb-0" for="loginPassword">Contraseña</label>
+                                    <a class="small" href="#">¿Olvidaste tu contraseña?</a>
+                                </div>
+                                <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" required>
+                            </div>
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" id="rememberMe">
+                                <label class="form-check-label" for="rememberMe">Mantener sesión iniciada</label>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">Iniciar sesión</button>
+                                <a class="btn btn-outline-primary" href="/register">Crear cuenta nueva</a>
+                                <a class="btn btn-link" href="/">Volver al inicio</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
