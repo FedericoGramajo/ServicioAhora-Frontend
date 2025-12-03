@@ -645,7 +645,8 @@ body {
     left: 0;
     top: 0;
     bottom: 0;
-    min-width: 6%;
+    width: var(--bar-width, 0%);
+    min-width: 4%;
     background: linear-gradient(90deg, #0ea370, #1cc57e 50%, #57d6a2);
     border-radius: 999px;
     box-shadow: 0 6px 18px rgba(14, 163, 112, 0.25);

@@ -272,7 +272,7 @@
                                 <div class="bar-row">
                                     <div class="bar-label">@item.Label</div>
                                     <div class="bar-track" aria-hidden="true">
-                                        <div class="bar-fill" style=$"width: {item.Percentage(CategoryMax)}%;"></div>
+                                        <div class="bar-fill" style=$"--bar-width: {item.Percentage(CategoryMax)}%;"></div>
                                     </div>
                                     <div class="bar-value">@item.Count</div>
                                 </div>
@@ -294,7 +294,7 @@
                                 <div class="bar-row">
                                     <div class="bar-label">@item.Label</div>
                                     <div class="bar-track" aria-hidden="true">
-                                        <div class="bar-fill" style=$"width: {item.Percentage(StatusMax)}%;"></div>
+                                        <div class="bar-fill" style=$"--bar-width: {item.Percentage(StatusMax)}%;"></div>
                                     </div>
                                     <div class="bar-value">@item.Count</div>
                                 </div>
@@ -448,14 +448,14 @@
     private record ProfessionalRow(string Name, string Specialty, int Services);
     private record ReportBar(string Label, int Count)
     {
-        public int Percentage(int max)
+        public double Percentage(int max)
         {
             if (max <= 0)
             {
                 return 0;
             }
 
-            return (int)Math.Round((double)Count / max * 100);
+            return Math.Round((double)Count / max * 100, 1);
         }
     }
 

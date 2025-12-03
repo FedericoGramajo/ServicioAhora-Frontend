@@ -165,7 +165,7 @@
                                 <div class="bar-row">
                                     <div class="bar-label">@bar.Label</div>
                                     <div class="bar-track" aria-hidden="true">
-                                        <div class="bar-fill" style=$"width: {bar.Percentage(RevenueMax)}%;"></div>
+                                        <div class="bar-fill" style=$"--bar-width: {bar.Percentage(RevenueMax)}%;"></div>
                                     </div>
                                     <div class="bar-value">@bar.Count.ToString("C0", LocalCulture)</div>
                                 </div>
@@ -187,7 +187,7 @@
                                 <div class="bar-row">
                                     <div class="bar-label">@bar.Label</div>
                                     <div class="bar-track" aria-hidden="true">
-                                        <div class="bar-fill" style=$"width: {bar.Percentage(StatusMax)}%;"></div>
+                                        <div class="bar-fill" style=$"--bar-width: {bar.Percentage(StatusMax)}%;"></div>
                                     </div>
                                     <div class="bar-value">@bar.Count</div>
                                 </div>
@@ -284,14 +284,14 @@
 
     private record ReportBar(string Label, int Count)
     {
-        public int Percentage(int max)
+        public double Percentage(int max)
         {
             if (max <= 0)
             {
                 return 0;
             }
 
-            return (int)Math.Round((double)Count / max * 100);
+            return Math.Round((double)Count / max * 100, 1);
         }
     }
 
