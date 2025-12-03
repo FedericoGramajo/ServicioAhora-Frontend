@@ -1,0 +1,105 @@
+@using System
+@using System.Linq
+@using BlazorWasm.Shared.Landing
+
+<section class="content-section pt-0" id="@SectionId">
+    <div class="container">
+        <div class="surface-card">
+            <div class="section-heading flex-column flex-lg-row text-lg-start text-center">
+                <div>
+                    <p class="text-uppercase text-muted small mb-1">@Subtitle</p>
+                    <h2>@Title</h2>
+                </div>
+                <button class="btn btn-link text-decoration-none" @onclick="() => Navigation.NavigateTo(ProfessionalsRoot)">@CtaText <i class="@CtaIconClass ms-1"></i></button>
+            </div>
+
+            <div id="@CarouselId" class="carousel slide" data-bs-ride="carousel" data-bs-interval="9000">
+                <div class="carousel-inner">
+                    @foreach (var (slide, index) in Slides.Select((value, idx) => (value, idx)))
+                    {
+                        <div class="carousel-item @(index == 0 ? "active" : string.Empty)">
+                            <div class="row g-4">
+                                @foreach (var professional in slide)
+                                {
+                                    <div class="col-md-4">
+                                        <div class="card professional-card h-100">
+                                            <img src="@professional.ImageUrl" class="card-img-top" alt="Foto de @professional.Name" loading="lazy" />
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                                    <h5 class="mb-0">@professional.Name</h5>
+                                                    <span class="rating"><i class="fa-solid fa-star me-1"></i>@professional.Rating.ToString("0.0")</span>
+                                                </div>
+                                                <p class="text-muted mb-1">@professional.Specialty</p>
+                                                <p class="small text-uppercase fw-semibold text-secondary">@professional.City</p>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="text-muted small">@professional.Projects proyectos</span>
+                                                    <button class="btn btn-sm btn-outline-primary rounded-pill" @onclick="() => NavigateToProfessional(professional.Slug)">Contactar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#@CarouselId" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Anterior</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#@CarouselId" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Siguiente</span>
+                </button>
+            </div>
+
+            <div class="trust-grid" id="@TrustGridId">
+                @foreach (var stat in TrustStats)
+                {
+                    <div class="trust-card">
+                        @stat.Value <span>@stat.Caption</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    [Parameter]
+    public string SectionId { get; set; } = string.Empty;
+
+    [Parameter]
+    public string CarouselId { get; set; } = string.Empty;
+
+    [Parameter]
+    public string TrustGridId { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Subtitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string CtaText { get; set; } = string.Empty;
+
+    [Parameter]
+    public string CtaIconClass { get; set; } = "fa-solid fa-user-plus";
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<ProfessionalModel> Professionals { get; set; } = Array.Empty<ProfessionalModel>();
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TrustStatModel> TrustStats { get; set; } = Array.Empty<TrustStatModel>();
+
+    [Parameter]
+    public string ProfessionalsRoot { get; set; } = "/profesionales";
+
+    private IEnumerable<ProfessionalModel[]> Slides => Professionals.Chunk(3);
+
+    private void NavigateToProfessional(string slug) => Navigation.NavigateTo($"/profesional/{slug}");
+}

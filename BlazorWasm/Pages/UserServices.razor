@@ -1,0 +1,184 @@
+@page "/mis-servicios"
+@using System.Collections.Generic
+@using System.Globalization
+
+<PageTitle>Mis servicios - ServicioAhora!</PageTitle>
+
+<div class="landing-page">
+    <LandingHeader HeaderId="mis-servicios"
+                   Brand="ServicioAhora!"
+                   BrandHref="/"
+                   Search="@SearchBar"
+                   AccountLinks="@AccountActions"
+                   NavLinks="@PrimaryNavLinks" />
+
+    <main class="container py-5 account-layout">
+        <div class="section-heading flex-column flex-lg-row">
+            <div>
+                <p class="text-uppercase text-muted small mb-1">Historial</p>
+                <h2 class="mb-0">Tus pedidos y estados</h2>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary">Descargar resumen</button>
+                <a class="btn btn-primary" href="/search">Buscar nuevos servicios</a>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="dashboard-card">
+                    <p class="text-muted mb-1">Próximos</p>
+                    <h4 class="mb-0">@UpcomingCount</h4>
+                    <small class="text-secondary">Agendados para esta semana</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="dashboard-card">
+                    <p class="text-muted mb-1">En curso</p>
+                    <h4 class="mb-0">@InProgressCount</h4>
+                    <small class="text-secondary">Profesionales trabajando ahora</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="dashboard-card">
+                    <p class="text-muted mb-1">Finalizados</p>
+                    <h4 class="mb-0">@CompletedCount</h4>
+                    <small class="text-secondary">Servicios cerrados con feedback</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="surface-card">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center mb-3">
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <span class="fw-semibold">Filtros rápidos:</span>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => FilterStatus = \"todas\"">Todos</button>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => FilterStatus = \"pendiente\"">Pendientes</button>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => FilterStatus = \"en-progreso\"">En progreso</button>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => FilterStatus = \"completado\"">Completados</button>
+                </div>
+                <div class="search-bar small" role="search">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input class="form-control" type="search" placeholder="Buscar por servicio o profesional" @bind="Term" />
+                        <button class="btn btn-primary" type="button">Aplicar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle table-borderless mb-0">
+                    <thead class="text-muted small">
+                        <tr>
+                            <th>Servicio</th>
+                            <th>Profesional</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in FilteredHistory)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">@item.Service</div>
+                                    <small class="text-secondary">@item.Category</small>
+                                </td>
+                                <td>@item.Professional</td>
+                                <td>@item.Date.ToString("dd MMM", LocalCulture)</td>
+                                <td>
+                                    <span class="status-pill @item.Status">@StatusLabel(item.Status)</span>
+                                </td>
+                                <td class="text-end fw-semibold">@item.Total.ToString("C0", LocalCulture)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <LandingFooter FooterId="contacto-mis-servicios"
+                   Brand="ServicioAhora!"
+                   Description="Coordinamos servicios hogareños confiables con soporte humano y seguimiento en tiempo real."
+                   ContactLines="@FooterContact"
+                   LinkGroups="@FooterGroups"
+                   CurrentYear="@CurrentYear" />
+</div>
+
+@code {
+    private readonly CultureInfo LocalCulture = new("es-AR");
+
+    private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
+
+    private readonly IReadOnlyList<MenuActionModel> AccountActions = new List<MenuActionModel>
+    {
+        new("Mi perfil", "/perfil"),
+        new("Historial de servicios", "/mis-servicios"),
+        new("Panel profesional", "/panel-profesional"),
+        new("Panel administrador", "/panel-administrador"),
+        new("Iniciar sesión", "/login"),
+        new("Registrarse", "/register")
+    };
+
+    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = new List<NavLinkModel>
+    {
+        new("Inicio", "/#inicio"),
+        new("Servicios", "/#services"),
+        new("Profesionales", "/profesionales"),
+        new("Garantías", "/#garantias"),
+        new("Contacto", "/#contacto")
+    };
+
+    private readonly IReadOnlyList<string> FooterContact = new List<string>
+    {
+        "Tel: +54 11 5555 1111",
+        "Email: hola@servicioahora.com",
+        "Horario: Lunes a domingo 8 a 22 h"
+    };
+
+    private readonly IReadOnlyList<FooterGroupModel> FooterGroups = new List<FooterGroupModel>
+    {
+        new("Explorá más", new []
+        {
+            new FooterLinkModel("Servicios", "/#services"),
+            new FooterLinkModel("Profesionales", "/profesionales"),
+            new FooterLinkModel("Garantías", "/#garantias")
+        })
+    };
+
+    private readonly IReadOnlyList<ServiceHistoryItem> History = new List<ServiceHistoryItem>
+    {
+        new("Limpieza profunda integral", "Limpieza", "Laura Fernández", DateTime.Today.AddDays(1), "pendiente", 32000),
+        new("Plomería express", "Plomería", "Jeremías Luna", DateTime.Today.AddDays(-2), "en-progreso", 24000),
+        new("Pintura y retoques", "Decoración", "Marina Quiroga", DateTime.Today.AddDays(-10), "completado", 52000),
+        new("Mantenimiento de jardines", "Jardinería", "Valentina Castro", DateTime.Today.AddDays(3), "pendiente", 28000),
+        new("Asistencia para electrodomésticos", "Electrodomésticos", "Andrés Rivas", DateTime.Today.AddDays(-30), "completado", 40000)
+    };
+
+    private string Term { get; set; } = string.Empty;
+    private string FilterStatus { get; set; } = "todas";
+
+    private int UpcomingCount => History.Count(h => h.Date >= DateTime.Today && h.Status != "completado");
+    private int InProgressCount => History.Count(h => h.Status == "en-progreso");
+    private int CompletedCount => History.Count(h => h.Status == "completado");
+
+    private IEnumerable<ServiceHistoryItem> FilteredHistory => History
+        .Where(h => FilterStatus == "todas" || h.Status == FilterStatus)
+        .Where(h => string.IsNullOrWhiteSpace(Term)
+            || h.Service.Contains(Term, StringComparison.OrdinalIgnoreCase)
+            || h.Professional.Contains(Term, StringComparison.OrdinalIgnoreCase));
+
+    private static string StatusLabel(string status) => status switch
+    {
+        "pendiente" => "Pendiente",
+        "en-progreso" => "En progreso",
+        "completado" => "Completado",
+        _ => status
+    };
+
+    private record ServiceHistoryItem(string Service, string Category, string Professional, DateTime Date, string Status, decimal Total);
+
+    private int CurrentYear => DateTime.Now.Year;
+}
