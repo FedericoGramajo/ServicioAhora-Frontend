@@ -1,0 +1,283 @@
+@page "/servicio/{Slug}"
+@using System.Globalization
+@inject NavigationManager Navigation
+
+<PageTitle>Servicio - ServicioAhora!</PageTitle>
+
+<div class="landing-page">
+    <LandingHeader HeaderId="servicio"
+                   Brand="ServicioAhora!"
+                   BrandHref="/"
+                   Search="@SearchBar"
+                   AccountLinks="@AccountActions"
+                   NavLinks="@PrimaryNavLinks" />
+
+    <main class="container py-5">
+        @if (Service is null)
+        {
+            <div class="alert alert-warning mt-4">No encontramos el servicio solicitado. <a href="/search">Volver a buscar</a>.</div>
+        }
+        else
+        {
+            <div class="row g-4 align-items-start">
+                <div class="col-lg-7">
+                    <div class="surface-card h-100">
+                        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                            <span class="badge bg-primary-subtle text-primary">@Service.Category</span>
+                            <span class="badge bg-secondary-subtle text-secondary">@Service.City</span>
+                            <span class="badge bg-success-subtle text-success">Garantía @Service.Guarantee</span>
+                        </div>
+                        <h1 class="mb-2">@Service.Name</h1>
+                        <p class="text-muted mb-3">@Service.Description</p>
+                        <div class="d-flex flex-wrap gap-3 mb-4">
+                            <div class="pill">@Service.Duration</div>
+                            <div class="pill">Cobertura: @Service.Availability</div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="feature-tile">
+                                    <i class="fa-solid fa-shield-heart text-primary"></i>
+                                    <div>
+                                        <p class="fw-semibold mb-0">Garantía clara</p>
+                                        <small class="text-muted">Revisión y ajuste sin costo dentro de @Service.Guarantee.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="feature-tile">
+                                    <i class="fa-solid fa-user-gear text-secondary"></i>
+                                    <div>
+                                        <p class="fw-semibold mb-0">Profesionales asignados</p>
+                                        <small class="text-muted">Seleccionamos técnicos verificados para tu barrio.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            @foreach (var highlight in Service.Highlights)
+                            {
+                                <div class="col-md-6">
+                                    <div class="feature-tile">
+                                        <i class="fa-regular fa-circle-check text-success"></i>
+                                        <div>
+                                            <p class="fw-semibold mb-0">@highlight.Title</p>
+                                            <small class="text-muted">@highlight.Description</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="surface-card service-summary sticky-top">
+                        <div class="ratio ratio-4x3 rounded overflow-hidden mb-3">
+                            <img src="@Service.ImageUrl" alt="@Service.Name" />
+                        </div>
+                        <p class="text-muted mb-1">Precio estimado</p>
+                        <h3 class="mb-3">@Service.Price.ToString("C0", LocalCulture)</h3>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary btn-lg" type="button">Solicitar turno</button>
+                            <button class="btn btn-outline-primary" type="button" @onclick="BackToSearch">Seguir explorando</button>
+                        </div>
+                        <hr class="my-4" />
+                        <p class="fw-semibold mb-2">Incluye</p>
+                        <ul class="list-unstyled small text-muted">
+                            <li><i class="fa-solid fa-check text-success me-2"></i>Materiales sugeridos antes de la visita</li>
+                            <li><i class="fa-solid fa-check text-success me-2"></i>Seguimiento en vivo con el profesional</li>
+                            <li><i class="fa-solid fa-check text-success me-2"></i>Pago protegido hasta que apruebes el trabajo</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        }
+    </main>
+
+    <LandingFooter FooterId="contacto-servicio"
+                   Brand="ServicioAhora!"
+                   Description="Coordinamos servicios hogareños confiables con soporte humano y seguimiento en tiempo real."
+                   ContactLines="@FooterContact"
+                   LinkGroups="@FooterGroups"
+                   CurrentYear="@CurrentYear" />
+</div>
+
+@code {
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    private static readonly CultureInfo LocalCulture = new("es-AR");
+
+    private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
+
+    private readonly IReadOnlyList<MenuActionModel> AccountActions = new List<MenuActionModel>
+    {
+        new("Mi perfil", "/perfil"),
+        new("Historial de servicios", "/mis-servicios"),
+        new("Panel profesional", "/panel-profesional"),
+        new("Panel administrador", "/panel-administrador"),
+        new("Iniciar sesión", "/login"),
+        new("Registrarse", "/register")
+    };
+
+    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = new List<NavLinkModel>
+    {
+        new("Inicio", "/#inicio"),
+        new("Servicios", "/#services"),
+        new("Profesionales", "/profesionales"),
+        new("Garantías", "/#garantias"),
+        new("Contacto", "/#contacto")
+    };
+
+    private readonly IReadOnlyList<string> FooterContact = new List<string>
+    {
+        "Tel: +54 11 5555 1111",
+        "Email: hola@servicioahora.com",
+        "Horario: Lunes a domingo 8 a 22 h"
+    };
+
+    private readonly IReadOnlyList<FooterGroupModel> FooterGroups = new List<FooterGroupModel>
+    {
+        new("Explorá más", new []
+        {
+            new FooterLinkModel("Servicios", "/#services"),
+            new FooterLinkModel("Profesionales", "/profesionales"),
+            new FooterLinkModel("Garantías", "/#garantias")
+        })
+    };
+
+    private ServiceDetailModel? Service;
+
+    protected override void OnParametersSet()
+    {
+        ServicesCatalog.TryGetValue(Slug, out Service);
+    }
+
+    private void BackToSearch() => Navigation.NavigateTo("/search");
+
+    private static readonly IReadOnlyDictionary<string, ServiceDetailModel> ServicesCatalog = new Dictionary<string, ServiceDetailModel>
+    {
+        ["limpieza-profunda-integral"] = new(
+            "limpieza-profunda-integral",
+            "Limpieza profunda integral",
+            "Equipos especializados para dejar tu casa impecable en horas con insumos hipoalergénicos y protocolos de cuidado familiar.",
+            "Limpieza",
+            "Buenos Aires",
+            "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=60",
+            32000,
+            "4 horas promedio",
+            "72h",
+            "Zonas norte, oeste y sur",
+            new []
+            {
+                new Highlight("Desinfección profunda", "Incluye vapor y sanitización de superficies de alto contacto."),
+                new Highlight("Organización básica", "Ordenamos y dejamos cada ambiente listo para el uso diario."),
+                new Highlight("Equipo doble", "Dos especialistas coordinados para reducir tiempos.")
+            }
+        ),
+        ["mantenimiento-de-jardines"] = new(
+            "mantenimiento-de-jardines",
+            "Mantenimiento de jardines",
+            "Corte, fertilización y diseño sustentable para tus espacios verdes sin residuos sobrantes.",
+            "Jardinería",
+            "Rosario",
+            "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=900&q=60",
+            28000,
+            "Visita de 2 a 3 horas",
+            "5 días",
+            "Radio de 30 km",
+            new []
+            {
+                new Highlight("Asesoría botánica", "Revisión de riego, tierra y especies que mejor se adaptan."),
+                new Highlight("Herramientas incluidas", "Llegamos con equipamiento profesional y bolsas reutilizables."),
+                new Highlight("Mantenimiento mensual", "Podés reservar agenda recurrente con el mismo especialista.")
+            }
+        ),
+        ["reparacion-electrica-segura"] = new(
+            "reparacion-electrica-segura",
+            "Reparación eléctrica segura",
+            "Diagnóstico y solución de instalaciones, tableros y luminarias con materiales certificados.",
+            "Electricidad",
+            "Córdoba",
+            "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=60",
+            45000,
+            "3 horas aprox.",
+            "90 días",
+            "Capital y alrededores",
+            new []
+            {
+                new Highlight("Chequeo de tablero", "Verificamos térmicas y disyuntor para prevenir cortes."),
+                new Highlight("Seguridad primero", "Trabajamos con elementos de protección y normas IRAM."),
+                new Highlight("Pruebas finales", "Incluye medición de tensión y correcto funcionamiento.")
+            }
+        ),
+        ["plomeria-express"] = new(
+            "plomeria-express",
+            "Plomería express",
+            "Resolución de fugas, destapaciones y cambio de griferías con diagnóstico en el acto.",
+            "Plomería",
+            "Mendoza",
+            "https://images.unsplash.com/photo-1544723795-432537f4aa73?auto=format&fit=crop&w=900&q=60",
+            36000,
+            "Visita 2 horas",
+            "72h",
+            "Gran Mendoza",
+            new []
+            {
+                new Highlight("Detección sin rotura", "Usamos herramientas para localizar filtraciones rápidamente."),
+                new Highlight("Reposición opcional", "Podemos llevar repuestos sugeridos según tu grifería."),
+                new Highlight("Limpieza posterior", "Dejamos la zona seca y ordenada al finalizar.")
+            }
+        ),
+        ["pintura-y-retoques"] = new(
+            "pintura-y-retoques",
+            "Pintura y retoques",
+            "Renová ambientes con combinaciones modernas, protección antihongos y terminaciones prolijas.",
+            "Decoración",
+            "La Plata",
+            "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=900&q=60",
+            52000,
+            "1 a 2 días según m²",
+            "10 días",
+            "La Plata y alrededores",
+            new []
+            {
+                new Highlight("Asesoría de color", "Te ayudamos a elegir paletas cálidas que combinen con tu hogar."),
+                new Highlight("Protección de muebles", "Cubrimos superficies y retiramos residuos al terminar."),
+                new Highlight("Materiales premium", "Trabajamos con pinturas lavables y selladores incluidos.")
+            }
+        ),
+        ["asistencia-para-electrodomesticos"] = new(
+            "asistencia-para-electrodomesticos",
+            "Asistencia para electrodomésticos",
+            "Servicio técnico para heladeras, lavarropas y climatización con diagnóstico previo.",
+            "Electrodomésticos",
+            "Neuquén",
+            "https://images.unsplash.com/photo-1523419409543-0c1df022bddb?auto=format&fit=crop&w=900&q=60",
+            40000,
+            "Entre 1 y 2 horas",
+            "60 días",
+            "Zona centro y oeste",
+            new []
+            {
+                new Highlight("Chequeo completo", "Revisión eléctrica y mecánica antes de reemplazar piezas."),
+                new Highlight("Repuestos originales", "Trabajamos con insumos garantizados y factura."),
+                new Highlight("Consejos de uso", "Te dejamos recomendaciones para alargar la vida útil.")
+            }
+        )
+    };
+
+    private int CurrentYear => DateTime.Now.Year;
+
+    private record ServiceDetailModel(
+        string Slug,
+        string Name,
+        string Description,
+        string Category,
+        string City,
+        string ImageUrl,
+        decimal Price,
+        string Duration,
+        string Guarantee,
+        string Availability,
+        IReadOnlyList<Highlight> Highlights);
+
+    private record Highlight(string Title, string Description);
+}
