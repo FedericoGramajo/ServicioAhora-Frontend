@@ -215,7 +215,7 @@
     private string selectedRating = "cualquiera";
     private bool onlyExpress;
 
-    private readonly IReadOnlyList<ProfessionalResult> Professionals = new List<ProfessionalResult>
+    private readonly IReadOnlyList<ProfessionalResult> Professionalss = new List<ProfessionalResult>
     {
         new(
             "laura-fernandez",
@@ -297,10 +297,10 @@
         )
     };
 
-    private IEnumerable<string> Categories => Professionals.Select(p => p.Category).Distinct().OrderBy(c => c);
-    private IEnumerable<string> Cities => Professionals.Select(p => p.City).Distinct().OrderBy(c => c);
+    private IEnumerable<string> Categories => Professionalss.Select(p => p.Category).Distinct().OrderBy(c => c);
+    private IEnumerable<string> Cities => Professionalss.Select(p => p.City).Distinct().OrderBy(c => c);
 
-    private IEnumerable<ProfessionalResult> FilteredResults => Professionals
+    private IEnumerable<ProfessionalResult> FilteredResults => Professionalss
         .Where(p => string.IsNullOrWhiteSpace(searchTerm) || p.Name.Contains(searchTerm, StringComparison.InvariantCultureIgnoreCase) || p.Specialty.Contains(searchTerm, StringComparison.InvariantCultureIgnoreCase) || p.Summary.Contains(searchTerm, StringComparison.InvariantCultureIgnoreCase))
         .Where(p => selectedCategory == "todas" || string.Equals(p.Category, selectedCategory, StringComparison.InvariantCultureIgnoreCase))
         .Where(p => selectedCity == "todas" || string.Equals(p.City, selectedCity, StringComparison.InvariantCultureIgnoreCase))
