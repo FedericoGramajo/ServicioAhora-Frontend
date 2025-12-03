@@ -308,7 +308,7 @@
         string Bio,
         IReadOnlyList<ServiceCategoryGroup> ServiceGroups);
 
-    private record ServiceCategoryGroup(string Category, IReadOnlyList<ServiceSummary> Services);
+    private record ServiceCategoryGroup(string Category, List<ServiceSummary> Services);
 
     private record ServiceSummary(string Slug, string Name, decimal Price, string Description);
 }
