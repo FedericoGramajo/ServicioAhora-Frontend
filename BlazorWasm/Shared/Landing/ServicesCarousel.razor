@@ -1,0 +1,89 @@
+@using System
+@using System.Globalization
+@using System.Linq
+@using BlazorWasm.Shared.Landing
+
+<section class="content-section pt-0" id="@SectionId">
+    <div class="container">
+        <div class="section-heading flex-column flex-lg-row text-lg-start text-center">
+            <div>
+                <p class="text-uppercase text-muted small mb-1">@Subtitle</p>
+                <h2>@Title</h2>
+            </div>
+            <button class="btn btn-link text-decoration-none" @onclick="() => Navigation.NavigateTo(ServicesRoot)">@CtaText <i class="@CtaIconClass ms-1"></i></button>
+        </div>
+
+        <div id="@CarouselId" class="carousel slide" data-bs-ride="carousel" data-bs-interval="8000">
+            <div class="carousel-inner">
+                @foreach (var (slide, index) in Slides.Select((value, idx) => (value, idx)))
+                {
+                    <div class="carousel-item @(index == 0 ? "active" : string.Empty)">
+                        <div class="row g-4">
+                            @foreach (var service in slide)
+                            {
+                                <div class="col-md-4">
+                                    <div class="card service-card h-100">
+                                        <img src="@service.ImageUrl" class="card-img-top" alt="Imagen de @service.Name" loading="lazy" />
+                                        <div class="card-body">
+                                            <span class="badge rounded-pill">@service.Category</span>
+                                            <h5 class="card-title mt-3">@service.Name</h5>
+                                            <p class="card-text text-muted">@service.Description</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="price-tag">@service.Price.ToString("C0", Culture)</span>
+                                                <button class="btn btn-sm btn-outline-primary rounded-pill" @onclick="() => NavigateToService(service.Slug)">Ver detalles</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#@CarouselId" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Anterior</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#@CarouselId" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Siguiente</span>
+            </button>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    [Parameter]
+    public string SectionId { get; set; } = string.Empty;
+
+    [Parameter]
+    public string CarouselId { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Subtitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string CtaText { get; set; } = string.Empty;
+
+    [Parameter]
+    public string CtaIconClass { get; set; } = "fa-solid fa-arrow-right";
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<ServiceModel> Services { get; set; } = Array.Empty<ServiceModel>();
+
+    [Parameter]
+    public string ServicesRoot { get; set; } = "/search";
+
+    [Parameter]
+    public CultureInfo Culture { get; set; } = CultureInfo.CurrentCulture;
+
+    private IEnumerable<ServiceModel[]> Slides => Services.Chunk(3);
+
+    private void NavigateToService(string slug) => Navigation.NavigateTo($"/servicio/{slug}");
+}
