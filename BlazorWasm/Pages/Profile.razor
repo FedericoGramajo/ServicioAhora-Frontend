@@ -1,0 +1,157 @@
+@page "/perfil"
+@using System.Collections.Generic
+
+<PageTitle>Mi perfil - ServicioAhora!</PageTitle>
+
+<div class="landing-page">
+    <LandingHeader HeaderId="perfil"
+                   Brand="ServicioAhora!"
+                   BrandHref="/"
+                   Search="@SearchBar"
+                   AccountLinks="@AccountActions"
+                   NavLinks="@PrimaryNavLinks" />
+
+    <main class="container py-5 account-layout">
+        <div class="d-flex flex-column flex-lg-row gap-4 align-items-start">
+            <div class="surface-card flex-grow-1">
+                <div class="section-heading flex-column flex-lg-row">
+                    <div>
+                        <p class="text-uppercase text-muted small mb-1">Datos personales</p>
+                        <h2 class="mb-0">Gestioná tu perfil</h2>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary">Cancelar</button>
+                        <button class="btn btn-primary">Guardar cambios</button>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Nombre completo</label>
+                        <input class="form-control" placeholder="Tu nombre" value="María Rodríguez" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Correo electrónico</label>
+                        <input class="form-control" type="email" placeholder="correo@ejemplo.com" value="maria.r@correo.com" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Teléfono</label>
+                        <input class="form-control" type="tel" placeholder="11 4444 9999" value="11 5555 2222" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Ciudad</label>
+                        <input class="form-control" placeholder="Ciudad" value="Buenos Aires" />
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold">Dirección</label>
+                        <input class="form-control" placeholder="Calle, número y piso" value="Av. Siempre Viva 742" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Preferencia de contacto</label>
+                        <select class="form-select">
+                            <option>WhatsApp</option>
+                            <option>Email</option>
+                            <option>Llamada</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Disponibilidad</label>
+                        <select class="form-select">
+                            <option>Mañana</option>
+                            <option>Tarde</option>
+                            <option>Noche</option>
+                            <option>Fines de semana</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Notas adicionales</label>
+                        <textarea class="form-control" rows="3" placeholder="Indicaciones para los profesionales">Ingreso por cochera y preferir productos eco.</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="account-sidebar">
+                <div class="surface-card">
+                    <h6 class="fw-bold mb-3">Preferencias</h6>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>Recibir recordatorios</span>
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" checked />
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>Confirmaciones por SMS</span>
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" />
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>Notificaciones de nuevas ofertas</span>
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" checked />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="surface-card">
+                    <h6 class="fw-bold mb-2">Mantenimiento rápido</h6>
+                    <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+                        <li class="d-flex align-items-center gap-2"><i class="fa-solid fa-key text-primary"></i> Cambiar contraseña</li>
+                        <li class="d-flex align-items-center gap-2"><i class="fa-solid fa-map-location-dot text-primary"></i> Direcciones guardadas</li>
+                        <li class="d-flex align-items-center gap-2"><i class="fa-solid fa-credit-card text-primary"></i> Medios de pago</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <LandingFooter FooterId="contacto-perfil"
+                   Brand="ServicioAhora!"
+                   Description="Coordinamos servicios hogareños confiables con soporte humano y seguimiento en tiempo real."
+                   ContactLines="@FooterContact"
+                   LinkGroups="@FooterGroups"
+                   CurrentYear="@CurrentYear" />
+</div>
+
+@code {
+    private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
+
+    private readonly IReadOnlyList<MenuActionModel> AccountActions = new List<MenuActionModel>
+    {
+        new("Mi perfil", "/perfil"),
+        new("Historial de servicios", "/mis-servicios"),
+        new("Panel profesional", "/panel-profesional"),
+        new("Panel administrador", "/panel-administrador"),
+        new("Iniciar sesión", "/login"),
+        new("Registrarse", "/register")
+    };
+
+    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = new List<NavLinkModel>
+    {
+        new("Inicio", "/#inicio"),
+        new("Servicios", "/#services"),
+        new("Profesionales", "/profesionales"),
+        new("Garantías", "/#garantias"),
+        new("Contacto", "/#contacto")
+    };
+
+    private readonly IReadOnlyList<string> FooterContact = new List<string>
+    {
+        "Tel: +54 11 5555 1111",
+        "Email: hola@servicioahora.com",
+        "Horario: Lunes a domingo 8 a 22 h"
+    };
+
+    private readonly IReadOnlyList<FooterGroupModel> FooterGroups = new List<FooterGroupModel>
+    {
+        new("Explorá más", new []
+        {
+            new FooterLinkModel("Servicios", "/#services"),
+            new FooterLinkModel("Profesionales", "/profesionales"),
+            new FooterLinkModel("Garantías", "/#garantias")
+        })
+    };
+
+    private int CurrentYear => DateTime.Now.Year;
+}
