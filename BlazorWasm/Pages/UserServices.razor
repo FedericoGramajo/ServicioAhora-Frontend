@@ -49,22 +49,33 @@
         </div>
 
         <div class="surface-card">
-            <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center mb-3">
-                <div class="d-flex flex-wrap gap-2 align-items-center">
-                    <span class="fw-semibold">Filtros rápidos:</span>
-                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => FilterStatus = \"todas\"">Todos</button>
-                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => FilterStatus = \"pendiente\"">Pendientes</button>
-                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => FilterStatus = \"en-progreso\"">En progreso</button>
-                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => FilterStatus = \"completado\"">Completados</button>
-                </div>
-                <div class="search-bar small" role="search">
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input class="form-control" type="search" placeholder="Buscar por servicio o profesional" @bind="Term" />
-                        <button class="btn btn-primary" type="button">Aplicar</button>
-                    </div>
-                </div>
+    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center mb-3">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="fw-semibold">Filtros rápidos:</span>
+
+                    <button class="btn btn-sm btn-outline-secondary" @onclick='() => FilterStatus = "todas"'>
+                        Todos
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick='() => FilterStatus = "pendiente"'>
+                        Pendientes
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick='() => FilterStatus = "en-progreso"'>
+                        En progreso
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick='() => FilterStatus = "completado"'>
+                        Completados
+                    </button>
+        </div>
+
+        <div class="search-bar small" role="search">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input class="form-control" type="search" placeholder="Buscar por servicio o profesional" @bind="Term" />
+                <button class="btn btn-primary" type="button">Aplicar</button>
             </div>
+        </div>
+    </div>
+
 
             <div class="table-responsive">
                 <table class="table align-middle table-borderless mb-0">
