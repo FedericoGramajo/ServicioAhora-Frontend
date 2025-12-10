@@ -48,9 +48,9 @@
 
     <CategoryModals ShowAddCategoryModal="ShowAddCategoryModal"
                     ShowEditCategoryModal="ShowEditCategoryModal"
-                    CategoryToEdit="CategoryToEdit"
                     @bind-NewCategoryName="NewCategoryName"
                     @bind-EditingCategoryName="EditingCategoryName"
+                    OriginalCategoryName="@OriginalCategoryName"
                     OnClose="CloseModals"
                     OnSaveNew="SaveNewCategory"
                     OnSaveEdit="SaveEditedCategory" />
@@ -136,6 +136,7 @@
     private bool ShowEditCategoryModal { get; set; }
     private string NewCategoryName { get; set; } = string.Empty;
     private string EditingCategoryName { get; set; } = string.Empty;
+    private string OriginalCategoryName { get; set; } = string.Empty;
     private GetCategory? CategoryToEdit { get; set; }
 
     private int CurrentYear => DateTime.Now.Year;
@@ -165,6 +166,7 @@
     private void OpenEditCategory(GetCategory category)
     {
         CategoryToEdit = category;
+        OriginalCategoryName = category.Name;
         EditingCategoryName = category.Name;
         ShowEditCategoryModal = true;
         ShowAddCategoryModal = false;
@@ -179,10 +181,7 @@
 
     private async Task SaveNewCategory()
     {
-        if (string.IsNullOrWhiteSpace(NewCategoryName))
-        {
-            return;
-        }
+        if (string.IsNullOrWhiteSpace(NewCategoryName)) return;
 
         var result = await categoryService.AddAsync(new CreateCategory { Name = NewCategoryName.Trim() });
 
@@ -195,16 +194,15 @@
 
     private async Task SaveEditedCategory()
     {
-        if (CategoryToEdit is null || string.IsNullOrWhiteSpace(EditingCategoryName))
-        {
-            return;
-        }
+        if (CategoryToEdit is null || string.IsNullOrWhiteSpace(EditingCategoryName)) return;
 
-        var result = await categoryService.UpdateAsync(new UpdateCategory
+        var categoryUpdate = new UpdateCategory
         {
             Id = CategoryToEdit.Id,
             Name = EditingCategoryName.Trim()
-        });
+        };
+
+        var result = await categoryService.UpdateAsync(categoryUpdate);
 
         if (result.success)
         {
@@ -218,9 +216,7 @@
         var result = await categoryService.DeleteAsync(categoryId);
 
         if (result.success)
-        {
             await LoadCategories();
-        }
     }
 
     private void BuildSampleServices()
