@@ -97,11 +97,11 @@
     private readonly IReadOnlyList<FooterGroupModel> FooterGroups = new List<FooterGroupModel>
     {
         new("Explorá más", new []
-        {
+    {
             new FooterLinkModel("Servicios", "/#services"),
             new FooterLinkModel("Profesionales", "/profesionales"),
             new FooterLinkModel("Garantías", "/#garantias")
-        })
+    })
     };
 
     private List<GetCategory> Categories { get; set; } = new();
@@ -146,14 +146,20 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadCategories();
+        await LoadServices();
+        //BuildSampleServices();
+        BuildSampleProfessionals();
     }
 
     private async Task LoadCategories()
     {
         var categories = await categoryService.GetAllAsync();
         Categories = categories?.ToList() ?? new List<GetCategory>();
-        BuildSampleServices();
-        BuildSampleProfessionals();
+    }
+    private async Task LoadServices()
+    {
+        var servOffering = await servOfferingService.GetAllAsync();
+        Services = servOffering?.ToList() ?? new List<GetServiceOffering>();
     }
 
     private void OpenAddCategory()

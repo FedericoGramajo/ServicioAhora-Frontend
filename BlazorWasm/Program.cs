@@ -28,6 +28,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IPaymentMethodService, PaymentMethodService>();
+builder.Services.AddScoped<IServOfferingService, ServOfferingService>();
 builder.Services.AddVirtualizationService();
 
 await builder.Build().RunAsync();

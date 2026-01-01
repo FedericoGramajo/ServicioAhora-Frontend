@@ -12,6 +12,14 @@ namespace ClientLibrary.Helper
             public const string Update  = "product/update";
             public const string Delete  = "product/delete";
         }
+        public static class ServiceOffering
+        {
+            public const string GetAll = "serviceofering/all";
+            public const string Get = "serviceofering/single";
+            public const string Add = "serviceofering/add";
+            public const string Update = "serviceofering/update";
+            public const string Delete = "serviceofering/delete";
+        }
         public static class Category
         {
             public const string GetAll                  = "category/all";
@@ -19,7 +27,7 @@ namespace ClientLibrary.Helper
             public const string Add                     = "category/add";
             public const string Update                  = "category/update";
             public const string Delete                  = "category/delete";
-            public const string GetProductByCategory    = "category/products-by-category";
+            public const string GetServiceByCategory    = "category/service-by-category";
         }
         public static class Authentication
         {

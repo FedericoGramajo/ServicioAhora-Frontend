@@ -12,7 +12,6 @@
 @using Microsoft.JSInterop
 @using BlazorWasm
 @using BlazorWasm.Layout
-@inject ICategoryService categoryService
 @inject IProductService productService
 @inject NavigationManager NavManager
 @using ClientLibrary.Models.Authentication
@@ -31,3 +30,4 @@
 @attribute [Authorize(Roles = Constant.Administration.AdminRole)]
 @using ClientLibrary.Models
 @using NetcodeHub.Packages.Components.FileUpload
+@inject IServOfferingService servOfferingService
