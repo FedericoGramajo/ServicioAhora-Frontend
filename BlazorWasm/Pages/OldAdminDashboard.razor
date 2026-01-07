@@ -1,0 +1,660 @@
+@page "/oldpanel-administrador"
+@using System.Collections.Generic
+@using System.Globalization
+@using System.Linq
+@using ClientLibrary.Models.Authentication.Rol.Professional
+@using ClientLibrary.Models.ServicioAhora.ServOffering
+
+<PageTitle>Panel administrador - ServicioAhora!</PageTitle>
+
+<div class="landing-page">
+    <LandingHeader HeaderId="panel-admin"
+                   Brand="ServicioAhora!"
+                   BrandHref="/"
+                   Search="@SearchBar"
+                   AccountLinks="@AccountActions"
+                   NavLinks="@PrimaryNavLinks" />
+
+    <main class="container py-5 account-layout">
+        <div class="section-heading flex-column flex-lg-row">
+            <div>
+                <p class="text-uppercase text-muted small mb-1">Administración</p>
+                <h2 class="mb-0">Control general de rubros, servicios y profesionales</h2>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary">Descargar reportes</button>
+                <button class="btn btn-primary">Crear registro</button>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <p class="text-muted mb-1">Rubros</p>
+                    <h4 class="mb-0">@Categories.Count</h4>
+                    <small class="text-secondary">Con ABM habilitado</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <p class="text-muted mb-1">Servicios</p>
+                    <h4 class="mb-0">68</h4>
+                    <small class="text-secondary">Publicados en catálogo</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <p class="text-muted mb-1">Profesionales</p>
+                    <h4 class="mb-0">512</h4>
+                    <small class="text-secondary">Verificados</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <p class="text-muted mb-1">Tasa de resolución</p>
+                    <h4 class="mb-0">94%</h4>
+                    <small class="text-secondary">Últimos 30 días</small>
+                </div>
+            </div>
+        </div>
+
+        <section class="surface-card mb-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center mb-3">
+                <div>
+                    <h4 class="mb-1">Rubros</h4>
+                    <p class="text-muted mb-0">Alta, baja y modificación de categorías</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <input class="form-control" placeholder="Buscar rubro" />
+                    <button class="btn btn-primary" @onclick="OpenAddCategory">Agregar rubro</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle table-borderless mb-0">
+                    <thead class="text-muted small">
+                        <tr>
+                            <th>Nombre</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Categories.Any())
+                        {
+                            @foreach (var category in Categories)
+                            {
+                                <tr>
+                                    <td>@category.Name</td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <button class="btn btn-outline-primary btn-sm" @onclick="() => OpenEditCategory(category)">Editar</button>
+                                            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteCategory(category.Id)">Eliminar</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="2" class="text-center text-muted">No hay rubros disponibles.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="surface-card mb-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center mb-3">
+                <div>
+                    <h4 class="mb-1">Servicios</h4>
+                    <p class="text-muted mb-0">ABM y seguimiento de catálogo</p>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <select class="form-select">
+                        <option>Todos los rubros</option>
+                        @foreach (var category in Categories)
+                        {
+                            <option>@category.Name</option>
+                        }
+                    </select>
+                    <select class="form-select">
+                        <option>Estado</option>
+                        <option>Publicado</option>
+                        <option>Borrador</option>
+                        <option>Oculto</option>
+                    </select>
+                    <button class="btn btn-primary">Filtrar</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle table-borderless mb-0">
+                    <thead class="text-muted small">
+                        <tr>
+                            <th>Servicio</th>
+                            <th>Rubro</th>
+                            <th>Precio</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var service in Services)
+                        {
+                            <tr>
+                                <td>@service.Name</td>
+                                <td>@service.CategoryName</td>
+                                <td>@service.BasePrice.ToString("C0", LocalCulture)</td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button class="btn btn-outline-primary btn-sm">Editar</button>
+                                        <button class="btn btn-outline-danger btn-sm">Eliminar</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="surface-card mb-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center mb-3">
+                <div>
+                    <h4 class="mb-1">Profesionales</h4>
+                    <p class="text-muted mb-0">Gestión y reportes por especialidad</p>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <input class="form-control" placeholder="Buscar profesional" />
+                    <select class="form-select">
+                        <option>Ciudad</option>
+                        <option>Buenos Aires</option>
+                        <option>Córdoba</option>
+                        <option>Rosario</option>
+                    </select>
+                    <button class="btn btn-primary">Buscar</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle table-borderless mb-0">
+                    <thead class="text-muted small">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Especialidad</th>
+                            <th>Servicios</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var professional in Professionals)
+                        {
+                            <tr>
+                                <td>@professional.FullName</td>
+                                <td>@string.Join(", ", professional.Categories)</td>
+                                <td>@professional.ServicesCount</td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button class="btn btn-outline-primary btn-sm">Ver perfil</button>
+                                        <button class="btn btn-outline-danger btn-sm">Suspender</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="surface-card">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+                <div>
+                    <h4 class="mb-1">Reportes consolidado</h4>
+                    <p class="text-muted mb-0">Filtrá por rubro, periodo y estado</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <select class="form-select">
+                        <option>Todos los rubros</option>
+                        @foreach (var category in Categories)
+                        {
+                            <option>@category.Name</option>
+                        }
+                    </select>
+                    <select class="form-select">
+                        <option>Periodo</option>
+                        <option>Últimos 7 días</option>
+                        <option>Últimos 30 días</option>
+                        <option>Últimos 12 meses</option>
+                    </select>
+                    <select class="form-select">
+                        <option>Estado</option>
+                        <option>Activos</option>
+                        <option>En revisión</option>
+                        <option>Inactivos</option>
+                    </select>
+                    <button class="btn btn-primary">Aplicar</button>
+                </div>
+            </div>
+            <div class="row g-3 mt-3">
+                <div class="col-md-3">
+                    <div class="chart-card">
+                        <div class="chart-value">152</div>
+                        <p class="mb-0">Órdenes nuevas</p>
+                        <small class="text-secondary">Últimos 30 días</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="chart-card">
+                        <div class="chart-value">92%</div>
+                        <p class="mb-0">Publicaciones activas</p>
+                        <small class="text-secondary">Sin incidencias</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="chart-card">
+                        <div class="chart-value">36</div>
+                        <p class="mb-0">Profesionales nuevos</p>
+                        <small class="text-secondary">Ingresaron este mes</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="chart-card">
+                        <div class="chart-value">4.8</div>
+                        <p class="mb-0">Calificación global</p>
+                        <small class="text-secondary">Promedio de clientes</small>
+                    </div>
+                </div>
+            </div>
+            <div class="row g-3 mt-3 align-items-start">
+                <div class="col-lg-8">
+                    <div class="bar-chart-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <h6 class="mb-0">Órdenes por rubro</h6>
+                                <small class="text-muted">Últimos 30 días</small>
+                            </div>
+                            <span class="text-muted small">Total: @CategoryReportData.Sum(r => r.Count)</span>
+                        </div>
+                        <div class="bar-chart">
+                            @foreach (var item in CategoryReportData)
+                            {
+                                <div class="bar-row">
+                                    <div class="bar-label">@item.Label</div>
+                                    <div class="bar-track" aria-hidden="true">
+                                        <div class="bar-fill" style=$"--bar-width: {item.Percentage(CategoryMax)}%;"></div>
+                                    </div>
+                                    <div class="bar-value">@item.Count</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="bar-chart-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <h6 class="mb-0">Estado de órdenes</h6>
+                                <small class="text-muted">Última semana</small>
+                            </div>
+                        </div>
+                        <div class="bar-chart compact">
+                            @foreach (var item in StatusReportData)
+                            {
+                                <div class="bar-row">
+                                    <div class="bar-label">@item.Label</div>
+                                    <div class="bar-track" aria-hidden="true">
+                                        <div class="bar-fill" style=$"--bar-width: {item.Percentage(StatusMax)}%;"></div>
+                                    </div>
+                                    <div class="bar-value">@item.Count</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    @if (ShowAddCategoryModal)
+    {
+        <div class="modal fade show" style="display:block;" tabindex="-1" role="dialog" aria-modal="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Agregar rubro</h5>
+                        <button type="button" class="btn-close" aria-label="Cerrar" @onclick="CloseModals"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label">Nombre del rubro</label>
+                        <input class="form-control" placeholder="Ej: Pintura decorativa" @bind="NewCategoryName" />
+                        <small class="text-muted">Creá un nombre claro para el nuevo rubro disponible en catálogo.</small>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline-secondary" @onclick="CloseModals">Cancelar</button>
+                        <button class="btn btn-primary" @onclick="SaveNewCategory">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop fade show"></div>
+    }
+
+    @if (ShowEditCategoryModal && CategoryToEdit is not null)
+    {
+        <div class="modal fade show" style="display:block;" tabindex="-1" role="dialog" aria-modal="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar rubro</h5>
+                        <button type="button" class="btn-close" aria-label="Cerrar" @onclick="CloseModals"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label">Nombre del rubro</label>
+                        <input class="form-control" @bind="EditingCategoryName" />
+                        <small class="text-muted">Actualizá el nombre visible de @CategoryToEdit.Name.</small>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline-secondary" @onclick="CloseModals">Cancelar</button>
+                        <button class="btn btn-primary" @onclick="SaveEditedCategory">Guardar cambios</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop fade show"></div>
+    }
+
+    <LandingFooter FooterId="contacto-panel-administrador"
+                   Brand="ServicioAhora!"
+                   Description="Coordinamos servicios hogareños confiables con soporte humano y seguimiento en tiempo real."
+                   ContactLines="@FooterContact"
+                   LinkGroups="@FooterGroups"
+                   CurrentYear="@CurrentYear" />
+</div>
+
+@code {
+    private readonly CultureInfo LocalCulture = new("es-AR");
+
+    private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
+
+    private readonly IReadOnlyList<MenuActionModel> AccountActions = new List<MenuActionModel>
+    {
+        new("Mi perfil", "/perfil"),
+        new("Historial de servicios", "/mis-servicios"),
+        new("Panel profesional", "/panel-profesional"),
+        new("Panel administrador", "/panel-administrador"),
+        new("Iniciar sesión", "/login"),
+        new("Registrarse", "/register")
+    };
+
+    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = new List<NavLinkModel>
+    {
+        new("Inicio", "/#inicio"),
+        new("Servicios", "/#services"),
+        new("Profesionales", "/profesionales"),
+        new("Garantías", "/#garantias"),
+        new("Contacto", "/#contacto")
+    };
+
+    private readonly IReadOnlyList<string> FooterContact = new List<string>
+    {
+        "Tel: +54 11 5555 1111",
+        "Email: hola@servicioahora.com",
+        "Horario: Lunes a domingo 8 a 22 h"
+    };
+
+    private readonly IReadOnlyList<FooterGroupModel> FooterGroups = new List<FooterGroupModel>
+    {
+        new("Explorá más", new []
+        {
+            new FooterLinkModel("Servicios", "/#services"),
+            new FooterLinkModel("Profesionales", "/profesionales"),
+            new FooterLinkModel("Garantías", "/#garantias")
+        })
+    };
+
+    private List<GetCategory> Categories { get; set; } = new();
+    private List<GetServiceOffering> Services { get; set; } = new();
+    private List<GetProfessional> Professionals { get; set; } = new();
+
+    private readonly IReadOnlyList<ReportBar> CategoryReportData = new List<ReportBar>
+    {
+        new("Limpieza y orden", 45),
+        new("Mantenimiento y reparaciones", 38),
+        new("Jardinería", 27),
+        new("Decoración", 12)
+    };
+
+    private readonly IReadOnlyList<ReportBar> StatusReportData = new List<ReportBar>
+    {
+        new("Completadas", 62),
+        new("En curso", 18),
+        new("Reprogramadas", 9),
+        new("Canceladas", 5)
+    };
+
+    private record ReportBar(string Label, int Count)
+    {
+        public double Percentage(int max)
+        {
+            if (max <= 0)
+            {
+                return 0;
+            }
+
+            return Math.Round((double)Count / max * 100, 1);
+        }
+    }
+
+    private bool ShowAddCategoryModal { get; set; }
+    private bool ShowEditCategoryModal { get; set; }
+    private string NewCategoryName { get; set; } = string.Empty;
+    private string EditingCategoryName { get; set; } = string.Empty;
+    private GetCategory? CategoryToEdit { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+    }
+
+    private async Task LoadCategories()
+    {
+        var categories = await categoryService.GetAllAsync();
+        Categories = categories?.ToList() ?? new List<GetCategory>();
+        BuildSampleServices();
+        BuildSampleProfessionals();
+    }
+
+    private void OpenAddCategory()
+    {
+        ShowAddCategoryModal = true;
+        NewCategoryName = string.Empty;
+        ShowEditCategoryModal = false;
+    }
+
+    private void OpenEditCategory(GetCategory category)
+    {
+        CategoryToEdit = category;
+        EditingCategoryName = category.Name;
+        ShowEditCategoryModal = true;
+        ShowAddCategoryModal = false;
+    }
+
+    private void CloseModals()
+    {
+        ShowAddCategoryModal = false;
+        ShowEditCategoryModal = false;
+        CategoryToEdit = null;
+    }
+
+    private async Task SaveNewCategory()
+    {
+        if (string.IsNullOrWhiteSpace(NewCategoryName))
+        {
+            return;
+        }
+
+        var result = await categoryService.AddAsync(new CreateCategory { Name = NewCategoryName.Trim() });
+
+        if (result.success)
+        {
+            await LoadCategories();
+            CloseModals();
+        }
+    }
+
+    private async Task SaveEditedCategory()
+    {
+        if (CategoryToEdit is null || string.IsNullOrWhiteSpace(EditingCategoryName))
+        {
+            return;
+        }
+
+        var result = await categoryService.UpdateAsync(new UpdateCategory
+        {
+            Id = CategoryToEdit.Id,
+            Name = EditingCategoryName.Trim()
+        });
+
+        if (result.success)
+        {
+            await LoadCategories();
+            CloseModals();
+        }
+    }
+
+    private async Task DeleteCategory(Guid categoryId)
+    {
+        var result = await categoryService.DeleteAsync(categoryId);
+
+        if (result.success)
+        {
+            await LoadCategories();
+        }
+    }
+
+    private int CurrentYear => DateTime.Now.Year;
+    private int CategoryMax => CategoryReportData.Max(r => r.Count);
+    private int StatusMax => StatusReportData.Max(r => r.Count);
+
+    private void BuildSampleServices()
+    {
+        var defaultCategory = Categories.FirstOrDefault();
+        var cleaning = Categories.FirstOrDefault(c => c.Name.Contains("Limpieza", StringComparison.OrdinalIgnoreCase)) ?? defaultCategory;
+        var maintenance = Categories.FirstOrDefault(c => c.Name.Contains("Mantenimiento", StringComparison.OrdinalIgnoreCase)) ?? defaultCategory;
+        var garden = Categories.FirstOrDefault(c => c.Name.Contains("Jardiner", StringComparison.OrdinalIgnoreCase)) ?? defaultCategory;
+
+        Services = new List<GetServiceOffering>
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Limpieza profunda integral",
+                Description = "Limpieza completa de ambientes y superficies.",
+                BasePrice = 32000m,
+                EstimatedDuration = 3,
+                Status = true,
+                CategoryId = cleaning?.Id ?? Guid.Empty,
+                CategoryName = cleaning?.Name ?? "Limpieza",
+                ProfessionalId = "prof-001",
+                ProfessionalFullName = "Laura Fernández",
+                CreatedAt = DateTime.Now.AddDays(-15),
+                UpdatedAt = DateTime.Now.AddDays(-2)
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Retoques finos y protección",
+                Description = "Sellado y terminaciones delicadas para paredes y techos.",
+                BasePrice = 22000m,
+                EstimatedDuration = 2,
+                Status = true,
+                CategoryId = maintenance?.Id ?? cleaning?.Id ?? Guid.Empty,
+                CategoryName = maintenance?.Name ?? cleaning?.Name ?? "Mantenimiento",
+                ProfessionalId = "prof-002",
+                ProfessionalFullName = "Mateo Álvarez",
+                CreatedAt = DateTime.Now.AddDays(-22),
+                UpdatedAt = DateTime.Now.AddDays(-5)
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Asistencia para electrodomésticos",
+                Description = "Chequeo y limpieza de filtros y drenajes.",
+                BasePrice = 26000m,
+                EstimatedDuration = 2,
+                Status = true,
+                CategoryId = cleaning?.Id ?? Guid.Empty,
+                CategoryName = cleaning?.Name ?? "Limpieza",
+                ProfessionalId = "prof-003",
+                ProfessionalFullName = "Valentina Castro",
+                CreatedAt = DateTime.Now.AddDays(-10),
+                UpdatedAt = DateTime.Now.AddDays(-1)
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Orden de patios y balcones",
+                Description = "Organización y limpieza de espacios exteriores.",
+                BasePrice = 20000m,
+                EstimatedDuration = 3,
+                Status = true,
+                CategoryId = garden?.Id ?? Guid.Empty,
+                CategoryName = garden?.Name ?? "Jardinería",
+                ProfessionalId = "prof-004",
+                ProfessionalFullName = "Jeremías Luna",
+                CreatedAt = DateTime.Now.AddDays(-30),
+                UpdatedAt = DateTime.Now.AddDays(-3)
+            }
+        };
+    }
+
+    private void BuildSampleProfessionals()
+    {
+        var cleaning = Categories.FirstOrDefault(c => c.Name.Contains("Limpieza", StringComparison.OrdinalIgnoreCase))?.Name ?? "Limpieza";
+        var maintenance = Categories.FirstOrDefault(c => c.Name.Contains("Mantenimiento", StringComparison.OrdinalIgnoreCase))?.Name ?? "Mantenimiento";
+        var garden = Categories.FirstOrDefault(c => c.Name.Contains("Jardiner", StringComparison.OrdinalIgnoreCase))?.Name ?? "Jardinería";
+        var plumbing = Categories.FirstOrDefault(c => c.Name.Contains("Plomer", StringComparison.OrdinalIgnoreCase))?.Name ?? "Plomería";
+
+        Professionals = new List<GetProfessional>
+        {
+            new()
+            {
+                AppUserId = "prof-001",
+                FullName = "Laura Fernández",
+                Email = "laura@servicioahora.com",
+                Licenses = new List<string> { "LIC-9081" },
+                Categories = new List<string> { cleaning },
+                ServicesCount = 4,
+                AvgRating = 4.7
+            },
+            new()
+            {
+                AppUserId = "prof-002",
+                FullName = "Mateo Álvarez",
+                Email = "mateo@servicioahora.com",
+                Licenses = new List<string> { "LIC-7712" },
+                Categories = new List<string> { maintenance },
+                ServicesCount = 5,
+                AvgRating = 4.8
+            },
+            new()
+            {
+                AppUserId = "prof-003",
+                FullName = "Valentina Castro",
+                Email = "valentina@servicioahora.com",
+                Licenses = new List<string> { "LIC-6625" },
+                Categories = new List<string> { cleaning, garden },
+                ServicesCount = 3,
+                AvgRating = 4.6
+            },
+            new()
+            {
+                AppUserId = "prof-004",
+                FullName = "Jeremías Luna",
+                Email = "jeremias@servicioahora.com",
+                Licenses = new List<string> { "LIC-5540" },
+                Categories = new List<string> { plumbing },
+                ServicesCount = 4,
+                AvgRating = 4.5
+            }
+        };
+    }
+}

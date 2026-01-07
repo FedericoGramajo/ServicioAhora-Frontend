@@ -145,14 +145,20 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadCategories();
+        await LoadServices();
+        //BuildSampleServices();
+        BuildSampleProfessionals();
     }
 
     private async Task LoadCategories()
     {
         var categories = await categoryService.GetAllAsync();
         Categories = categories?.ToList() ?? new List<GetCategory>();
-        BuildSampleServices();
-        BuildSampleProfessionals();
+    }
+    private async Task LoadServices()
+    {
+        var servOffering = await servOfferingService.GetAllAsync();
+        Services = servOffering?.ToList() ?? new List<GetServiceOffering>();
     }
 
     private void OpenAddCategory()
@@ -165,6 +171,7 @@
     private void OpenEditCategory(GetCategory category)
     {
         CategoryToEdit = category;
+        OriginalCategoryName = category.Name;
         EditingCategoryName = category.Name;
         ShowEditCategoryModal = true;
         ShowAddCategoryModal = false;
@@ -179,10 +186,7 @@
 
     private async Task SaveNewCategory()
     {
-        if (string.IsNullOrWhiteSpace(NewCategoryName))
-        {
-            return;
-        }
+        if (string.IsNullOrWhiteSpace(NewCategoryName)) return;
 
         var result = await categoryService.AddAsync(new CreateCategory { Name = NewCategoryName.Trim() });
 
@@ -195,16 +199,15 @@
 
     private async Task SaveEditedCategory()
     {
-        if (CategoryToEdit is null || string.IsNullOrWhiteSpace(EditingCategoryName))
-        {
-            return;
-        }
+        if (CategoryToEdit is null || string.IsNullOrWhiteSpace(EditingCategoryName)) return;
 
-        var result = await categoryService.UpdateAsync(new UpdateCategory
+        var categoryUpdate = new UpdateCategory
         {
             Id = CategoryToEdit.Id,
             Name = EditingCategoryName.Trim()
-        });
+        };
+
+        var result = await categoryService.UpdateAsync(categoryUpdate);
 
         if (result.success)
         {
@@ -218,9 +221,7 @@
         var result = await categoryService.DeleteAsync(categoryId);
 
         if (result.success)
-        {
             await LoadCategories();
-        }
     }
 
     private void BuildSampleServices()

@@ -13,7 +13,7 @@ namespace ClientLibrary.Helper
                 {
                     case "post":
                         return await apiCall.Client!.PostAsJsonAsync(apiCall.Route, (TModel)apiCall.Model!);
-                    case "update":
+                    case "put":
                         return await apiCall.Client!.PutAsJsonAsync(apiCall.Route, (TModel)apiCall.Model!);
                     case "delete":
                         return await apiCall.Client!.DeleteAsync($"{apiCall.Route}/{apiCall.Id}");
