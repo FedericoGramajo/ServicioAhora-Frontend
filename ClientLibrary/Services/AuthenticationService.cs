@@ -45,7 +45,7 @@ namespace ClientLibrary.Services
             var apiCall = new ApiCall
             {
                 Route = Constant.Authentication.RequestPasswordReset,
-                Type = Constant.ApiCallType.Get,
+                Type = Constant.ApiCallType.Post,
                 Client = client,
                 Id = null!,
                 Model = user
