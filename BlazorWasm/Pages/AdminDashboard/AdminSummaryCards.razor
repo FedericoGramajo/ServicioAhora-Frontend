@@ -1,0 +1,21 @@
+@using BlazorWasm.Pages.AdminDashboard
+
+@if (Metrics?.Any() == true)
+{
+    <div class="row g-3 mb-4">
+        @foreach (var metric in Metrics)
+        {
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <p class="text-muted mb-1">@metric.Label</p>
+                    <h4 class="mb-0">@metric.Value</h4>
+                    <small class="text-secondary">@metric.Subtitle</small>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<AdminMetric> Metrics { get; set; } = Array.Empty<AdminMetric>();
+}

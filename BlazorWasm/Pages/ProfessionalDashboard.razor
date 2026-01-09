@@ -1,0 +1,304 @@
+@page "/panel-profesional"
+@using System.Collections.Generic
+@using System.Globalization
+@using System.Linq
+
+<PageTitle>Panel profesional - ServicioAhora!</PageTitle>
+
+<div class="landing-page">
+    <LandingHeader HeaderId="panel-profesional"
+                   Brand="ServicioAhora!"
+                   BrandHref="/"
+                   Search="@SearchBar"
+                   AccountLinks="@AccountActions"
+                   NavLinks="@PrimaryNavLinks" />
+
+    <main class="container py-5 account-layout">
+        <div class="section-heading flex-column flex-lg-row">
+            <div>
+                <p class="text-uppercase text-muted small mb-1">Panel profesional</p>
+                <h2 class="mb-0">Gestioná tus servicios y reportes</h2>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary">Agregar servicio</button>
+                <button class="btn btn-primary">Exportar reporte</button>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <p class="text-muted mb-1">Servicios activos</p>
+                    <h4 class="mb-0">@ServiceCount</h4>
+                    <small class="text-secondary">Publicados por categoría</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <p class="text-muted mb-1">Solicitudes</p>
+                    <h4 class="mb-0">38</h4>
+                    <small class="text-secondary">Nuevas esta semana</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <p class="text-muted mb-1">En curso</p>
+                    <h4 class="mb-0">12</h4>
+                    <small class="text-secondary">Intervenciones abiertas</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <p class="text-muted mb-1">Satisfacción</p>
+                    <h4 class="mb-0">4.9 ★</h4>
+                    <small class="text-secondary">Promedio de clientes</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="surface-card">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
+                <div>
+                    <h4 class="mb-1">Servicios por rubro</h4>
+                    <p class="text-muted mb-0">Mostrando tus publicaciones por categoría</p>
+                </div>
+                <button class="btn btn-outline-primary btn-sm">Nuevo rubro</button>
+            </div>
+            @foreach (var group in ServiceGroups)
+            {
+                <div class="service-group mb-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                        <div>
+                            <h5 class="mb-0">@group.Category</h5>
+                            <small class="text-secondary">@group.Services.Count servicio(s)</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-secondary btn-sm">Editar rubro</button>
+                            <button class="btn btn-outline-danger btn-sm">Eliminar</button>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        @foreach (var service in group.Services)
+                        {
+                            <div class="col-md-4">
+                                <div class="card professional-service-card h-100">
+                                    <div class="card-body d-flex flex-column">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <span class="badge rounded-pill bg-secondary-subtle text-secondary">@group.Category</span>
+                                            <span class="price-tag">@service.Price.ToString("C0", LocalCulture)</span>
+                                        </div>
+                                        <h6 class="fw-semibold">@service.Name</h6>
+                                        <p class="text-muted small flex-grow-1">@service.Description</p>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-outline-primary btn-sm flex-grow-1">Editar</button>
+                                            <button class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="surface-card mt-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+                <div>
+                    <h4 class="mb-1">Reportes de servicios</h4>
+                    <p class="text-muted mb-0">Filtrá por fechas, ciudad y estado</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <input type="date" class="form-control" />
+                    <select class="form-select">
+                        <option>Todos los estados</option>
+                        <option>Confirmados</option>
+                        <option>En curso</option>
+                        <option>Completados</option>
+                        <option>Cancelados</option>
+                    </select>
+                    <select class="form-select">
+                        <option>Todas las ciudades</option>
+                        <option>Buenos Aires</option>
+                        <option>Córdoba</option>
+                        <option>Rosario</option>
+                    </select>
+                    <button class="btn btn-primary">Aplicar</button>
+                </div>
+            </div>
+            <div class="row g-3 mt-3">
+                <div class="col-md-4">
+                    <div class="chart-card">
+                        <div class="chart-value">82%</div>
+                        <p class="mb-0">Órdenes completadas</p>
+                        <small class="text-secondary">Últimos 30 días</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="chart-card">
+                        <div class="chart-value">12</div>
+                        <p class="mb-0">Servicios en curso</p>
+                        <small class="text-secondary">Con seguimiento activo</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="chart-card">
+                        <div class="chart-value">4.9</div>
+                        <p class="mb-0">Satisfacción promedio</p>
+                        <small class="text-secondary">Basado en 210 reseñas</small>
+                    </div>
+                </div>
+            </div>
+            <div class="row g-3 mt-3 align-items-start">
+                <div class="col-lg-7">
+                    <div class="bar-chart-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <h6 class="mb-0">Ingresos por rubro</h6>
+                                <small class="text-muted">Últimos 90 días</small>
+                            </div>
+                            <span class="text-muted small">Total: @RevenueBars.Sum(r => r.Count).ToString("C0", LocalCulture)</span>
+                        </div>
+                        <div class="bar-chart">
+                            @foreach (var bar in RevenueBars)
+                            {
+                                <div class="bar-row">
+                                    <div class="bar-label">@bar.Label</div>
+                                    <div class="bar-track" aria-hidden="true">
+                                        <div class="bar-fill" style=$"--bar-width: {bar.Percentage(RevenueMax)}%;"></div>
+                                    </div>
+                                    <div class="bar-value">@bar.Count.ToString("C0", LocalCulture)</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="bar-chart-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <h6 class="mb-0">Estados de servicios</h6>
+                                <small class="text-muted">Últimos 30 días</small>
+                            </div>
+                        </div>
+                        <div class="bar-chart compact">
+                            @foreach (var bar in StatusBars)
+                            {
+                                <div class="bar-row">
+                                    <div class="bar-label">@bar.Label</div>
+                                    <div class="bar-track" aria-hidden="true">
+                                        <div class="bar-fill" style=$"--bar-width: {bar.Percentage(StatusMax)}%;"></div>
+                                    </div>
+                                    <div class="bar-value">@bar.Count</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <LandingFooter FooterId="contacto-panel-profesional"
+                   Brand="ServicioAhora!"
+                   Description="Coordinamos servicios hogareños confiables con soporte humano y seguimiento en tiempo real."
+                   ContactLines="@FooterContact"
+                   LinkGroups="@FooterGroups"
+                   CurrentYear="@CurrentYear" />
+</div>
+
+@code {
+    private readonly CultureInfo LocalCulture = new("es-AR");
+
+    private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
+
+    private readonly IReadOnlyList<MenuActionModel> AccountActions = new List<MenuActionModel>
+    {
+        new("Mi perfil", "/perfil"),
+        new("Historial de servicios", "/mis-servicios"),
+        new("Panel profesional", "/panel-profesional"),
+        new("Panel administrador", "/panel-administrador"),
+        new("Iniciar sesión", "/login"),
+        new("Registrarse", "/register")
+    };
+
+    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = new List<NavLinkModel>
+    {
+        new("Inicio", "/#inicio"),
+        new("Servicios", "/#services"),
+        new("Profesionales", "/profesionales"),
+        new("Garantías", "/#garantias"),
+        new("Contacto", "/#contacto")
+    };
+
+    private readonly IReadOnlyList<string> FooterContact = new List<string>
+    {
+        "Tel: +54 11 5555 1111",
+        "Email: hola@servicioahora.com",
+        "Horario: Lunes a domingo 8 a 22 h"
+    };
+
+    private readonly IReadOnlyList<FooterGroupModel> FooterGroups = new List<FooterGroupModel>
+    {
+        new("Explorá más", new []
+        {
+            new FooterLinkModel("Servicios", "/#services"),
+            new FooterLinkModel("Profesionales", "/profesionales"),
+            new FooterLinkModel("Garantías", "/#garantias")
+        })
+    };
+
+    private readonly IReadOnlyList<ReportBar> RevenueBars = new List<ReportBar>
+    {
+        new("Limpieza y orden", 185000),
+        new("Mantenimiento y reparaciones", 162000),
+        new("Jardinería", 118000),
+        new("Decoración", 76000)
+    };
+
+    private readonly IReadOnlyList<ReportBar> StatusBars = new List<ReportBar>
+    {
+        new("Completadas", 44),
+        new("En curso", 12),
+        new("Reprogramadas", 7),
+        new("Canceladas", 3)
+    };
+
+    private readonly IReadOnlyList<ServiceGroup> ServiceGroups = new List<ServiceGroup>
+    {
+        new("Limpieza y orden", new List<ServiceSummary>
+        {
+            new("limpieza-profunda-integral", "Limpieza profunda integral", 32000, "Limpieza completa de ambientes y superficies."),
+            new("asistencia-para-electrodomesticos", "Mantenimiento de electrodomésticos", 26000, "Chequeo básico de filtros y drenajes."),
+            new("plomeria-express", "Limpieza y desobstrucción", 24000, "Apoyo en destapaciones menores sin obra."),
+        }),
+        new("Mantenimiento y reparaciones", new List<ServiceSummary>
+        {
+            new("reparacion-electrica-segura", "Chequeo de luminarias", 18000, "Revisión de lámparas, plafones y reemplazo simple."),
+            new("pintura-y-retoques", "Retoques finos y protección", 22000, "Reparación de manchas y terminaciones delicadas."),
+            new("mantenimiento-de-jardines", "Orden de patios y balcones", 20000, "Organización y limpieza de espacios exteriores."),
+        })
+    };
+
+    private int ServiceCount => ServiceGroups.Sum(g => g.Services.Count);
+
+    private record ReportBar(string Label, int Count)
+    {
+        public double Percentage(int max)
+        {
+            if (max <= 0)
+            {
+                return 0;
+            }
+
+            return Math.Round((double)Count / max * 100, 1);
+        }
+    }
+
+    private record ServiceGroup(string Category, IReadOnlyList<ServiceSummary> Services);
+    private record ServiceSummary(string Slug, string Name, decimal Price, string Description);
+
+    private int RevenueMax => RevenueBars.Max(r => r.Count);
+    private int StatusMax => StatusBars.Max(r => r.Count);
+    private int CurrentYear => DateTime.Now.Year;
+}

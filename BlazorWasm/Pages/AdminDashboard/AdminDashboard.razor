@@ -1,0 +1,349 @@
+@page "/panel-administrador"
+@using System.Globalization
+@using ClientLibrary.Models.Authentication.Rol.Professional
+@using ClientLibrary.Models.ServicioAhora.ServOffering
+@using BlazorWasm.Pages.AdminDashboard
+
+<PageTitle>Panel administrador - ServicioAhora!</PageTitle>
+
+<div class="landing-page">
+    <LandingHeader HeaderId="panel-admin"
+                   Brand="ServicioAhora!"
+                   BrandHref="/"
+                   Search="@SearchBar"
+                   AccountLinks="@AccountActions"
+                   NavLinks="@PrimaryNavLinks" />
+
+    <main class="container py-5 account-layout">
+        <div class="section-heading flex-column flex-lg-row">
+            <div>
+                <p class="text-uppercase text-muted small mb-1">Administración</p>
+                <h2 class="mb-0">Control general de rubros, servicios y profesionales</h2>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary">Descargar reportes</button>
+                <button class="btn btn-primary">Crear registro</button>
+            </div>
+        </div>
+
+        <AdminSummaryCards Metrics="SummaryMetrics" />
+
+        <CategoryTableSection Categories="Categories"
+                              OnAddCategory="OpenAddCategory"
+                              OnEditCategory="OpenEditCategory"
+                              OnDeleteCategory="DeleteCategory" />
+
+        <ServiceTableSection Categories="Categories"
+                             Services="Services"
+                             LocalCulture="LocalCulture" />
+
+        <ProfessionalTableSection Professionals="Professionals" />
+
+        <AdminReportsSection Categories="Categories"
+                             CategoryReportData="CategoryReportData"
+                             StatusReportData="StatusReportData"
+                             CategoryMax="CategoryMax"
+                             StatusMax="StatusMax" />
+    </main>
+
+    <CategoryModals ShowAddCategoryModal="ShowAddCategoryModal"
+                    ShowEditCategoryModal="ShowEditCategoryModal"
+                    CategoryToEdit="CategoryToEdit"
+                    @bind-NewCategoryName="NewCategoryName"
+                    @bind-EditingCategoryName="EditingCategoryName"
+                    OnClose="CloseModals"
+                    OnSaveNew="SaveNewCategory"
+                    OnSaveEdit="SaveEditedCategory" />
+
+    <LandingFooter FooterId="contacto-panel-administrador"
+                   Brand="ServicioAhora!"
+                   Description="Coordinamos servicios hogareños confiables con soporte humano y seguimiento en tiempo real."
+                   ContactLines="@FooterContact"
+                   LinkGroups="@FooterGroups"
+                   CurrentYear="@CurrentYear" />
+</div>
+
+@code {
+    private readonly CultureInfo LocalCulture = new("es-AR");
+
+    private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
+
+    private readonly IReadOnlyList<MenuActionModel> AccountActions = new List<MenuActionModel>
+    {
+        new("Mi perfil", "/perfil"),
+        new("Historial de servicios", "/mis-servicios"),
+        new("Panel profesional", "/panel-profesional"),
+        new("Panel administrador", "/panel-administrador"),
+        new("Iniciar sesión", "/login"),
+        new("Registrarse", "/register")
+    };
+
+    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = new List<NavLinkModel>
+    {
+        new("Inicio", "/#inicio"),
+        new("Servicios", "/#services"),
+        new("Profesionales", "/profesionales"),
+        new("Garantías", "/#garantias"),
+        new("Contacto", "/#contacto")
+    };
+
+    private readonly IReadOnlyList<string> FooterContact = new List<string>
+    {
+        "Tel: +54 11 5555 1111",
+        "Email: hola@servicioahora.com",
+        "Horario: Lunes a domingo 8 a 22 h"
+    };
+
+    private readonly IReadOnlyList<FooterGroupModel> FooterGroups = new List<FooterGroupModel>
+    {
+        new("Explorá más", new []
+        {
+            new FooterLinkModel("Servicios", "/#services"),
+            new FooterLinkModel("Profesionales", "/profesionales"),
+            new FooterLinkModel("Garantías", "/#garantias")
+        })
+    };
+
+    private List<GetCategory> Categories { get; set; } = new();
+    private List<GetServiceOffering> Services { get; set; } = new();
+    private List<GetProfessional> Professionals { get; set; } = new();
+
+    private readonly IReadOnlyList<AdminMetric> SummaryMetrics = new List<AdminMetric>
+    {
+        new("Rubros", "24", "Con ABM habilitado"),
+        new("Servicios", "68", "Publicados en catálogo"),
+        new("Profesionales", "512", "Verificados"),
+        new("Tasa de resolución", "94%", "Últimos 30 días")
+    };
+
+    private readonly IReadOnlyList<ReportBar> CategoryReportData = new List<ReportBar>
+    {
+        new("Limpieza y orden", 45),
+        new("Mantenimiento y reparaciones", 38),
+        new("Jardinería", 27),
+        new("Decoración", 12)
+    };
+
+    private readonly IReadOnlyList<ReportBar> StatusReportData = new List<ReportBar>
+    {
+        new("Completadas", 62),
+        new("En curso", 18),
+        new("Reprogramadas", 9),
+        new("Canceladas", 5)
+    };
+
+    private bool ShowAddCategoryModal { get; set; }
+    private bool ShowEditCategoryModal { get; set; }
+    private string NewCategoryName { get; set; } = string.Empty;
+    private string EditingCategoryName { get; set; } = string.Empty;
+    private GetCategory? CategoryToEdit { get; set; }
+
+    private int CurrentYear => DateTime.Now.Year;
+    private int CategoryMax => CategoryReportData.Max(r => r.Count);
+    private int StatusMax => StatusReportData.Max(r => r.Count);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+    }
+
+    private async Task LoadCategories()
+    {
+        var categories = await categoryService.GetAllAsync();
+        Categories = categories?.ToList() ?? new List<GetCategory>();
+        BuildSampleServices();
+        BuildSampleProfessionals();
+    }
+
+    private void OpenAddCategory()
+    {
+        ShowAddCategoryModal = true;
+        NewCategoryName = string.Empty;
+        ShowEditCategoryModal = false;
+    }
+
+    private void OpenEditCategory(GetCategory category)
+    {
+        CategoryToEdit = category;
+        EditingCategoryName = category.Name;
+        ShowEditCategoryModal = true;
+        ShowAddCategoryModal = false;
+    }
+
+    private void CloseModals()
+    {
+        ShowAddCategoryModal = false;
+        ShowEditCategoryModal = false;
+        CategoryToEdit = null;
+    }
+
+    private async Task SaveNewCategory()
+    {
+        if (string.IsNullOrWhiteSpace(NewCategoryName))
+        {
+            return;
+        }
+
+        var result = await categoryService.AddAsync(new CreateCategory { Name = NewCategoryName.Trim() });
+
+        if (result.success)
+        {
+            await LoadCategories();
+            CloseModals();
+        }
+    }
+
+    private async Task SaveEditedCategory()
+    {
+        if (CategoryToEdit is null || string.IsNullOrWhiteSpace(EditingCategoryName))
+        {
+            return;
+        }
+
+        var result = await categoryService.UpdateAsync(new UpdateCategory
+        {
+            Id = CategoryToEdit.Id,
+            Name = EditingCategoryName.Trim()
+        });
+
+        if (result.success)
+        {
+            await LoadCategories();
+            CloseModals();
+        }
+    }
+
+    private async Task DeleteCategory(Guid categoryId)
+    {
+        var result = await categoryService.DeleteAsync(categoryId);
+
+        if (result.success)
+        {
+            await LoadCategories();
+        }
+    }
+
+    private void BuildSampleServices()
+    {
+        var defaultCategory = Categories.FirstOrDefault();
+        var cleaning = Categories.FirstOrDefault(c => c.Name.Contains("Limpieza", StringComparison.OrdinalIgnoreCase)) ?? defaultCategory;
+        var maintenance = Categories.FirstOrDefault(c => c.Name.Contains("Mantenimiento", StringComparison.OrdinalIgnoreCase)) ?? defaultCategory;
+        var garden = Categories.FirstOrDefault(c => c.Name.Contains("Jardiner", StringComparison.OrdinalIgnoreCase)) ?? defaultCategory;
+
+        Services = new List<GetServiceOffering>
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Limpieza profunda integral",
+                Description = "Limpieza completa de ambientes y superficies.",
+                BasePrice = 32000m,
+                EstimatedDuration = 3,
+                Status = true,
+                CategoryId = cleaning?.Id ?? Guid.Empty,
+                CategoryName = cleaning?.Name ?? "Limpieza",
+                ProfessionalId = "prof-001",
+                ProfessionalFullName = "Laura Fernández",
+                CreatedAt = DateTime.Now.AddDays(-15),
+                UpdatedAt = DateTime.Now.AddDays(-2)
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Retoques finos y protección",
+                Description = "Sellado y terminaciones delicadas para paredes y techos.",
+                BasePrice = 22000m,
+                EstimatedDuration = 2,
+                Status = true,
+                CategoryId = maintenance?.Id ?? cleaning?.Id ?? Guid.Empty,
+                CategoryName = maintenance?.Name ?? cleaning?.Name ?? "Mantenimiento",
+                ProfessionalId = "prof-002",
+                ProfessionalFullName = "Mateo Álvarez",
+                CreatedAt = DateTime.Now.AddDays(-22),
+                UpdatedAt = DateTime.Now.AddDays(-5)
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Asistencia para electrodomésticos",
+                Description = "Chequeo y limpieza de filtros y drenajes.",
+                BasePrice = 26000m,
+                EstimatedDuration = 2,
+                Status = true,
+                CategoryId = cleaning?.Id ?? Guid.Empty,
+                CategoryName = cleaning?.Name ?? "Limpieza",
+                ProfessionalId = "prof-003",
+                ProfessionalFullName = "Valentina Castro",
+                CreatedAt = DateTime.Now.AddDays(-10),
+                UpdatedAt = DateTime.Now.AddDays(-1)
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Orden de patios y balcones",
+                Description = "Organización y limpieza de espacios exteriores.",
+                BasePrice = 20000m,
+                EstimatedDuration = 3,
+                Status = true,
+                CategoryId = garden?.Id ?? Guid.Empty,
+                CategoryName = garden?.Name ?? "Jardinería",
+                ProfessionalId = "prof-004",
+                ProfessionalFullName = "Jeremías Luna",
+                CreatedAt = DateTime.Now.AddDays(-30),
+                UpdatedAt = DateTime.Now.AddDays(-3)
+            }
+        };
+    }
+
+    private void BuildSampleProfessionals()
+    {
+        var cleaning = Categories.FirstOrDefault(c => c.Name.Contains("Limpieza", StringComparison.OrdinalIgnoreCase))?.Name ?? "Limpieza";
+        var maintenance = Categories.FirstOrDefault(c => c.Name.Contains("Mantenimiento", StringComparison.OrdinalIgnoreCase))?.Name ?? "Mantenimiento";
+        var garden = Categories.FirstOrDefault(c => c.Name.Contains("Jardiner", StringComparison.OrdinalIgnoreCase))?.Name ?? "Jardinería";
+        var plumbing = Categories.FirstOrDefault(c => c.Name.Contains("Plomer", StringComparison.OrdinalIgnoreCase))?.Name ?? "Plomería";
+
+        Professionals = new List<GetProfessional>
+        {
+            new()
+            {
+                AppUserId = "prof-001",
+                FullName = "Laura Fernández",
+                Email = "laura@servicioahora.com",
+                Licenses = new List<string> { "LIC-9081" },
+                Categories = new List<string> { cleaning },
+                ServicesCount = 4,
+                AvgRating = 4.7
+            },
+            new()
+            {
+                AppUserId = "prof-002",
+                FullName = "Mateo Álvarez",
+                Email = "mateo@servicioahora.com",
+                Licenses = new List<string> { "LIC-7712" },
+                Categories = new List<string> { maintenance },
+                ServicesCount = 5,
+                AvgRating = 4.8
+            },
+            new()
+            {
+                AppUserId = "prof-003",
+                FullName = "Valentina Castro",
+                Email = "valentina@servicioahora.com",
+                Licenses = new List<string> { "LIC-6625" },
+                Categories = new List<string> { cleaning, garden },
+                ServicesCount = 3,
+                AvgRating = 4.6
+            },
+            new()
+            {
+                AppUserId = "prof-004",
+                FullName = "Jeremías Luna",
+                Email = "jeremias@servicioahora.com",
+                Licenses = new List<string> { "LIC-5540" },
+                Categories = new List<string> { plumbing },
+                ServicesCount = 4,
+                AvgRating = 4.5
+            }
+        };
+    }
+}

@@ -1,0 +1,59 @@
+@using System
+@using BlazorWasm.Shared.Landing
+
+<footer class="landing-footer" id="@FooterId">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <h5>@Brand</h5>
+                <p>@Description</p>
+            </div>
+            <div class="col-md-4">
+                <h6>Contacto</h6>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var line in ContactLines)
+                    {
+                        <li>@line</li>
+                    }
+                </ul>
+            </div>
+            <div class="col-md-4">
+                @foreach (var group in LinkGroups)
+                {
+                    <div class="mb-3">
+                        <h6>@group.Title</h6>
+                        <ul class="list-unstyled mb-0">
+                            @foreach (var link in group.Links)
+                            {
+                                <li><a href="@link.Href">@link.Text</a></li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="footer-bottom mt-4">
+            <small>© @CurrentYear @Brand. Todos los derechos reservados.</small>
+        </div>
+    </div>
+</footer>
+
+@code {
+    [Parameter]
+    public string FooterId { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Brand { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Description { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<string> ContactLines { get; set; } = Array.Empty<string>();
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<FooterGroupModel> LinkGroups { get; set; } = Array.Empty<FooterGroupModel>();
+
+    [Parameter]
+    public int CurrentYear { get; set; } = DateTime.Now.Year;
+}

@@ -1,0 +1,62 @@
+@using ClientLibrary.Models.Category
+
+@if (ShowAddCategoryModal)
+{
+    <div class="modal fade show" style="display:block;" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Agregar rubro</h5>
+                    <button type="button" class="btn-close" aria-label="Cerrar" @onclick="OnClose"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label">Nombre del rubro</label>
+                    <input class="form-control" placeholder="Ej: Pintura decorativa" @bind="NewCategoryName" />
+                    <small class="text-muted">Creá un nombre claro para el nuevo rubro disponible en catálogo.</small>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" @onclick="OnClose">Cancelar</button>
+                    <button class="btn btn-primary" @onclick="OnSaveNew">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@if (ShowEditCategoryModal && CategoryToEdit is not null)
+{
+    <div class="modal fade show" style="display:block;" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar rubro</h5>
+                    <button type="button" class="btn-close" aria-label="Cerrar" @onclick="OnClose"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label">Nombre del rubro</label>
+                    <input class="form-control" @bind="EditingCategoryName" />
+                    <small class="text-muted">Actualizá el nombre visible de @CategoryToEdit.Name.</small>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" @onclick="OnClose">Cancelar</button>
+                    <button class="btn btn-primary" @onclick="OnSaveEdit">Guardar cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter] public bool ShowAddCategoryModal { get; set; }
+    [Parameter] public bool ShowEditCategoryModal { get; set; }
+    [Parameter] public string NewCategoryName { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> NewCategoryNameChanged { get; set; }
+    [Parameter] public string EditingCategoryName { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> EditingCategoryNameChanged { get; set; }
+    [Parameter] public GetCategory? CategoryToEdit { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnSaveNew { get; set; }
+    [Parameter] public EventCallback OnSaveEdit { get; set; }
+}
