@@ -7,7 +7,7 @@
             <p class="text-muted mb-0">Alta, baja y modificación de categorías</p>
         </div>
         <div class="d-flex gap-2">
-            <input class="form-control" placeholder="Buscar rubro" />
+            <input class="form-control" placeholder="Buscar rubro" @bind="SearchTerm" @bind:event="oninput" />
             <button class="btn btn-primary" @onclick="OnAddCategory">Agregar rubro</button>
         </div>
     </div>
@@ -20,12 +20,24 @@
                 </tr>
             </thead>
             <tbody>
-                @if (Categories?.Any() == true)
+                @if (FilteredCategories?.Any() == true)
                 {
-                    @foreach (var category in Categories)
+                    @foreach (var category in FilteredCategories)
                     {
                         <tr>
-                            <td>@category.Name</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    @if (!string.IsNullOrEmpty(category.Icon))
+                                    {
+                                        <i class="@category.Icon text-muted"></i>
+                                    }
+                                    @category.Name
+                                    @if (category.IsFeatured)
+                                    {
+                                        <span class="badge bg-primary-subtle text-primary rounded-pill ms-2">Destacado</span>
+                                    }
+                                </div>
+                            </td>
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2">
                                     <button class="btn btn-outline-primary btn-sm" @onclick="() => OnEditCategory.InvokeAsync(category)">Editar</button>
@@ -38,7 +50,9 @@
                 else
                 {
                     <tr>
-                        <td colspan="2" class="text-center text-muted">No hay rubros disponibles.</td>
+                        <td colspan="2" class="text-center text-muted">
+                            @(string.IsNullOrWhiteSpace(SearchTerm) ? "No hay rubros disponibles." : "No se encontraron rubros con ese nombre.")
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -51,4 +65,11 @@
     [Parameter] public EventCallback OnAddCategory { get; set; }
     [Parameter] public EventCallback<GetCategory> OnEditCategory { get; set; }
     [Parameter] public EventCallback<Guid> OnDeleteCategory { get; set; }
+
+    private string SearchTerm { get; set; } = string.Empty;
+
+    private IEnumerable<GetCategory> FilteredCategories => 
+        string.IsNullOrWhiteSpace(SearchTerm) 
+            ? Categories 
+            : Categories.Where(c => c.Name.Contains(SearchTerm, StringComparison.InvariantCultureIgnoreCase));
 }

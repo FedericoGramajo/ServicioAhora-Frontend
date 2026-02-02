@@ -22,7 +22,9 @@ builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>
 builder.Services.AddScoped<RefreshTokenHandler>();
 builder.Services.AddHttpClient(Constant.ApiClient.Name, option =>
 {
-    option.BaseAddress = new Uri("https://localhost:7132/api/");
+
+    var apiUrl = builder.Configuration["ApiUrl"] ?? "https://localhost:7132/api/";
+    option.BaseAddress = new Uri(apiUrl);
 }).AddHttpMessageHandler<RefreshTokenHandler>();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthorizationCore();

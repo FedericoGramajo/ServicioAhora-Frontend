@@ -42,9 +42,29 @@
                         <label class="form-label fw-semibold">Ciudad</label>
                         <input class="form-control" placeholder="Ciudad" value="Buenos Aires" />
                     </div>
-                    <div class="col-md-12">
-                        <label class="form-label fw-semibold">Dirección</label>
-                        <input class="form-control" placeholder="Calle, número y piso" value="Av. Siempre Viva 742" />
+                    <div class="col-12">
+                        <label class="form-label fw-semibold d-block mb-2">Direcciones guardadas</label>
+                        @foreach (var address in Addresses)
+                        {
+                            <div class="card mb-2 border-0 shadow-sm">
+                                <div class="card-body d-flex justify-content-between align-items-center py-2">
+                                    <div>
+                                        <i class="fa-solid fa-map-pin text-primary me-2"></i>
+                                        <span>@address.Street, @address.City</span>
+                                        @if (address.IsPrimary)
+                                        {
+                                            <span class="badge bg-success-subtle text-success ms-2">Principal</span>
+                                        }
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger border-0" @onclick="() => DeleteAddress(address)">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        <button class="btn btn-outline-primary btn-sm mt-1" @onclick="ShowAddAddressModal">
+                            <i class="fa-solid fa-plus me-1"></i> Agregar dirección
+                        </button>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Preferencia de contacto</label>
@@ -106,6 +126,40 @@
         </div>
     </main>
 
+    @if (showAddressModal)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nueva dirección</h5>
+                        <button type="button" class="btn-close" @onclick="CloseAddressModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Calle y número</label>
+                            <input type="text" class="form-control" @bind="newAddress.Street" placeholder="Ej. Av. Libertador 1234" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ciudad</label>
+                            <input type="text" class="form-control" @bind="newAddress.City" placeholder="Ej. Buenos Aires" />
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="newAddress.IsPrimary" id="isPrimaryCheck">
+                            <label class="form-check-label" for="isPrimaryCheck">
+                                Establecer como principal
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseAddressModal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" @onclick="SaveAddress">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     <LandingFooter FooterId="contacto-perfil"
                    Brand="ServicioAhora!"
                    Description="Coordinamos servicios hogareños confiables con soporte humano y seguimiento en tiempo real."
@@ -154,4 +208,46 @@
     };
 
     private int CurrentYear => DateTime.Now.Year;
+
+    private List<AddressModel> Addresses = new()
+    {
+        new AddressModel { Street = "Av. Siempre Viva 742", City = "Buenos Aires", IsPrimary = true },
+        new AddressModel { Street = "Calle Falsa 123", City = "Córdoba", IsPrimary = false }
+    };
+
+    private bool showAddressModal = false;
+    private AddressModel newAddress = new();
+
+    private void ShowAddAddressModal()
+    {
+        newAddress = new();
+        showAddressModal = true;
+    }
+
+    private void CloseAddressModal()
+    {
+        showAddressModal = false;
+    }
+
+    private void SaveAddress()
+    {
+        if (newAddress.IsPrimary)
+        {
+            foreach (var addr in Addresses) addr.IsPrimary = false;
+        }
+        Addresses.Add(newAddress);
+        showAddressModal = false;
+    }
+
+    private void DeleteAddress(AddressModel address)
+    {
+        Addresses.Remove(address);
+    }
+
+    public class AddressModel
+    {
+        public string Street { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public bool IsPrimary { get; set; }
+    }
 }

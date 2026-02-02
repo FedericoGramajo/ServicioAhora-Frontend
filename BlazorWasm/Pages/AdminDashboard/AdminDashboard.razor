@@ -48,9 +48,12 @@
 
     <CategoryModals ShowAddCategoryModal="ShowAddCategoryModal"
                     ShowEditCategoryModal="ShowEditCategoryModal"
-                    CategoryToEdit="CategoryToEdit"
                     @bind-NewCategoryName="NewCategoryName"
+                    @bind-NewCategoryIcon="NewCategoryIcon"
+                    @bind-NewCategoryIsFeatured="NewCategoryIsFeatured"
                     @bind-EditingCategoryName="EditingCategoryName"
+                    @bind-EditingCategoryIcon="EditingCategoryIcon"
+                    @bind-EditingCategoryIsFeatured="EditingCategoryIsFeatured"
                     OnClose="CloseModals"
                     OnSaveNew="SaveNewCategory"
                     OnSaveEdit="SaveEditedCategory" />
@@ -135,7 +138,12 @@
     private bool ShowAddCategoryModal { get; set; }
     private bool ShowEditCategoryModal { get; set; }
     private string NewCategoryName { get; set; } = string.Empty;
+    private string NewCategoryIcon { get; set; } = string.Empty;
+    private bool NewCategoryIsFeatured { get; set; }
+
     private string EditingCategoryName { get; set; } = string.Empty;
+    private string EditingCategoryIcon { get; set; } = string.Empty;
+    private bool EditingCategoryIsFeatured { get; set; }
     private GetCategory? CategoryToEdit { get; set; }
     private string OriginalCategoryName { get; set; } = string.Empty;
 
@@ -166,6 +174,8 @@
     {
         ShowAddCategoryModal = true;
         NewCategoryName = string.Empty;
+        NewCategoryIcon = string.Empty;
+        NewCategoryIsFeatured = false;
         ShowEditCategoryModal = false;
     }
 
@@ -174,6 +184,8 @@
         CategoryToEdit = category;
         OriginalCategoryName = category.Name;
         EditingCategoryName = category.Name;
+        EditingCategoryIcon = category.Icon ?? string.Empty;
+        EditingCategoryIsFeatured = category.IsFeatured;
         ShowEditCategoryModal = true;
         ShowAddCategoryModal = false;
     }
@@ -189,7 +201,12 @@
     {
         if (string.IsNullOrWhiteSpace(NewCategoryName)) return;
 
-        var result = await categoryService.AddAsync(new CreateCategory { Name = NewCategoryName.Trim() });
+        var result = await categoryService.AddAsync(new CreateCategory 
+        { 
+            Name = NewCategoryName.Trim(),
+            Icon = NewCategoryIcon.Trim(),
+            IsFeatured = NewCategoryIsFeatured
+        });
 
         if (result.success)
         {
@@ -205,7 +222,9 @@
         var categoryUpdate = new UpdateCategory
         {
             Id = CategoryToEdit.Id,
-            Name = EditingCategoryName.Trim()
+            Name = EditingCategoryName.Trim(),
+            Icon = EditingCategoryIcon.Trim(),
+            IsFeatured = EditingCategoryIsFeatured
         };
 
         var result = await categoryService.UpdateAsync(categoryUpdate);

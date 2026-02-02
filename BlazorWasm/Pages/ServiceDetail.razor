@@ -66,6 +66,52 @@
                             }
                         </div>
                     </div>
+
+                    
+                     <div class="surface-card mt-4">
+                        <h3 class="mb-4">Opiniones de clientes</h3>
+                        <div class="row g-4">
+                            @if (Service.Reviews.Any())
+                            {
+                                @foreach (var review in Service.Reviews)
+                                {
+                                    <div class="col-12">
+                                        <div class="d-flex gap-3">
+                                            <div class="avatar-placeholder rounded-circle bg-light d-flex align-items-center justify-content-center text-muted fw-bold" style="width: 48px; height: 48px;">
+                                                @review.UserName.Substring(0, 1)
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-1">@review.UserName</h6>
+                                                <div class="mb-2 text-warning small">
+                                                    @for (int i = 0; i < 5; i++)
+                                                    {
+                                                        if (i < review.Rating)
+                                                        {
+                                                            <i class="fa-solid fa-star"></i>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="fa-regular fa-star"></i>
+                                                        }
+                                                    }
+                                                    <span class="text-muted ms-2">@review.Date.ToString("d 'de' MMMM, yyyy", LocalCulture)</span>
+                                                </div>
+                                                <p class="mb-0 text-muted">@review.Comment</p>
+                                            </div>
+                                        </div>
+                                        <hr class="my-3 opacity-25" />
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="col-12 text-center py-4">
+                                    <p class="text-muted">Aún no hay opiniones para este servicio.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
                 </div>
                 <div class="col-lg-5">
                     <div class="surface-card service-summary sticky-top">
@@ -75,7 +121,7 @@
                         <p class="text-muted mb-1">Precio estimado</p>
                         <h3 class="mb-3">@Service.Price.ToString("C0", LocalCulture)</h3>
                         <div class="d-grid gap-2">
-                            <button class="btn btn-primary btn-lg" type="button">Solicitar turno</button>
+                            <button class="btn btn-primary btn-lg" type="button" @onclick="ShowBookingModal">Solicitar turno</button>
                             <button class="btn btn-outline-primary" type="button" @onclick="BackToSearch">Seguir explorando</button>
                         </div>
                         <hr class="my-4" />
@@ -90,6 +136,54 @@
             </div>
         }
     </main>
+
+    @if (showBookingModal)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmar solicitud</h5>
+                        <button type="button" class="btn-close" @onclick="CloseBookingModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Estás solicitando: <strong>@Service?.Name</strong></p>
+                        <p class="mb-3">Un profesional se pondrá en contacto con vos para coordinar la visita.</p>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Fecha preferida</label>
+                            <input type="date" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Dirección</label>
+                            <select class="form-select">
+                                <option>Av. Siempre Viva 742 (Principal)</option>
+                                <option>Calle Falsa 123</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseBookingModal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" @onclick="ConfirmBooking">Confirmar solicitud</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (showSuccessMessage)
+    {
+        <div class="toast-container position-fixed bottom-0 end-0 p-3">
+            <div class="toast show align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fa-solid fa-check-circle me-2"></i> Solicitud enviada con éxito.
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" @onclick="CloseSuccessMessage" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+    }
 
     <LandingFooter FooterId="contacto-servicio"
                    Brand="ServicioAhora!"
@@ -152,6 +246,31 @@
 
     private void BackToSearch() => Navigation.NavigateTo("/search");
 
+    private bool showBookingModal = false;
+    private bool showSuccessMessage = false;
+
+    private void ShowBookingModal()
+    {
+        showBookingModal = true;
+    }
+
+    private void CloseBookingModal()
+    {
+        showBookingModal = false;
+    }
+
+    private void ConfirmBooking()
+    {
+        showBookingModal = false;
+        showSuccessMessage = true;
+        // In a real app we would send the request to the backend here
+    }
+
+    private void CloseSuccessMessage()
+    {
+        showSuccessMessage = false;
+    }
+
     private static readonly IReadOnlyDictionary<string, ServiceDetailModel> ServicesCatalog = new Dictionary<string, ServiceDetailModel>
     {
         ["limpieza-profunda-integral"] = new(
@@ -170,6 +289,11 @@
                 new Highlight("Desinfección profunda", "Incluye vapor y sanitización de superficies de alto contacto."),
                 new Highlight("Organización básica", "Ordenamos y dejamos cada ambiente listo para el uso diario."),
                 new Highlight("Equipo doble", "Dos especialistas coordinados para reducir tiempos.")
+            },
+            new List<ReviewModel>
+            {
+                new("Camila Torres", 5, "Excelente servicio, dejaron todo impecable y fueron muy puntuales.", DateTime.Now.AddDays(-5)),
+                new("Roberto Gómez", 4, "Muy buen trabajo, aunque tardaron un poco más de lo estimado.", DateTime.Now.AddDays(-12))
             }
         ),
         ["mantenimiento-de-jardines"] = new(
@@ -188,6 +312,10 @@
                 new Highlight("Asesoría botánica", "Revisión de riego, tierra y especies que mejor se adaptan."),
                 new Highlight("Herramientas incluidas", "Llegamos con equipamiento profesional y bolsas reutilizables."),
                 new Highlight("Mantenimiento mensual", "Podés reservar agenda recurrente con el mismo especialista.")
+            },
+             new List<ReviewModel>
+            {
+                new("Laura Mendez", 5, "Me encantó cómo dejaron mi jardín. Súper recomendables.", DateTime.Now.AddDays(-2))
             }
         ),
         ["reparacion-electrica-segura"] = new(
@@ -206,7 +334,8 @@
                 new Highlight("Chequeo de tablero", "Verificamos térmicas y disyuntor para prevenir cortes."),
                 new Highlight("Seguridad primero", "Trabajamos con elementos de protección y normas IRAM."),
                 new Highlight("Pruebas finales", "Incluye medición de tensión y correcto funcionamiento.")
-            }
+            },
+             new List<ReviewModel>()
         ),
         ["plomeria-express"] = new(
             "plomeria-express",
@@ -224,6 +353,10 @@
                 new Highlight("Detección sin rotura", "Usamos herramientas para localizar filtraciones rápidamente."),
                 new Highlight("Reposición opcional", "Podemos llevar repuestos sugeridos según tu grifería."),
                 new Highlight("Limpieza posterior", "Dejamos la zona seca y ordenada al finalizar.")
+            },
+             new List<ReviewModel>
+            {
+                new("Esteban Quito", 5, "Rápido y efectivo. Me salvó el domingo.", DateTime.Now.AddDays(-1))
             }
         ),
         ["pintura-y-retoques"] = new(
@@ -242,6 +375,11 @@
                 new Highlight("Asesoría de color", "Te ayudamos a elegir paletas cálidas que combinen con tu hogar."),
                 new Highlight("Protección de muebles", "Cubrimos superficies y retiramos residuos al terminar."),
                 new Highlight("Materiales premium", "Trabajamos con pinturas lavables y selladores incluidos.")
+            },
+             new List<ReviewModel>
+            {
+                new("Ana García", 4, "Muy prolijos. Recomendable.", DateTime.Now.AddDays(-20)),
+                new("Carlos Ruiz", 5, "Transformaron mi living por completo.", DateTime.Now.AddDays(-15))
             }
         ),
         ["asistencia-para-electrodomesticos"] = new(
@@ -260,7 +398,8 @@
                 new Highlight("Chequeo completo", "Revisión eléctrica y mecánica antes de reemplazar piezas."),
                 new Highlight("Repuestos originales", "Trabajamos con insumos garantizados y factura."),
                 new Highlight("Consejos de uso", "Te dejamos recomendaciones para alargar la vida útil.")
-            }
+            },
+            new List<ReviewModel>()
         )
     };
 
@@ -277,7 +416,10 @@
         string Duration,
         string Guarantee,
         string Availability,
-        IReadOnlyList<Highlight> Highlights);
+        IReadOnlyList<Highlight> Highlights,
+        IReadOnlyList<ReviewModel> Reviews);
 
     private record Highlight(string Title, string Description);
+    
+    private record ReviewModel(string UserName, int Rating, string Comment, DateTime Date);
 }

@@ -20,6 +20,35 @@
                     <small class="text-muted">
                         Creá un nombre claro para el nuevo rubro disponible en catálogo.
                     </small>
+
+                    <label class="form-label mt-3">Seleccionar Icono</label>
+                    <div class="d-flex flex-wrap gap-2 mb-3 border p-2 rounded bg-light" style="max-height: 150px; overflow-y: auto;">
+                        @foreach (var icon in AvailableIcons)
+                        {
+                            <button type="button" 
+                                    class="btn btn-sm @(NewCategoryIcon == icon ? "btn-primary" : "btn-outline-secondary")"
+                                    @onclick="() => NewCategoryIconChanged.InvokeAsync(icon)">
+                                <i class="@icon"></i>
+                            </button>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(NewCategoryIcon))
+                    {
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="text-muted small">Seleccionado:</span>
+                            <i class="@NewCategoryIcon text-primary fa-lg"></i>
+                            <span class="badge bg-light text-dark border">@NewCategoryIcon</span>
+                        </div>
+                    }
+
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="newCategoryFeatured"
+                               checked="@NewCategoryIsFeatured"
+                               @onchange="@((ChangeEventArgs e) => NewCategoryIsFeaturedChanged.InvokeAsync((bool)(e.Value ?? false)))" />
+                        <label class="form-check-label" for="newCategoryFeatured">
+                            Destacar en Inicio
+                        </label>
+                    </div>
                 </div>
 
                 <div class="modal-footer">
@@ -53,6 +82,35 @@
                     <small class="text-muted">
                         Actualizá el nombre visible de @OriginalCategoryName.
                     </small>
+
+                    <label class="form-label mt-3">Seleccionar Icono</label>
+                    <div class="d-flex flex-wrap gap-2 mb-3 border p-2 rounded bg-light" style="max-height: 150px; overflow-y: auto;">
+                        @foreach (var icon in AvailableIcons)
+                        {
+                            <button type="button" 
+                                    class="btn btn-sm @(EditingCategoryIcon == icon ? "btn-primary" : "btn-outline-secondary")"
+                                    @onclick="() => EditingCategoryIconChanged.InvokeAsync(icon)">
+                                <i class="@icon"></i>
+                            </button>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(EditingCategoryIcon))
+                    {
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="text-muted small">Seleccionado:</span>
+                            <i class="@EditingCategoryIcon text-primary fa-lg"></i>
+                            <span class="badge bg-light text-dark border">@EditingCategoryIcon</span>
+                        </div>
+                    }
+
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="editingCategoryFeatured"
+                               checked="@EditingCategoryIsFeatured"
+                               @onchange="@((ChangeEventArgs e) => EditingCategoryIsFeaturedChanged.InvokeAsync((bool)(e.Value ?? false)))" />
+                        <label class="form-check-label" for="editingCategoryFeatured">
+                            Destacar en Inicio
+                        </label>
+                    </div>
                 </div>
 
                 <div class="modal-footer">
@@ -74,12 +132,36 @@
     [Parameter] public string NewCategoryName { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> NewCategoryNameChanged { get; set; }
 
+    [Parameter] public string NewCategoryIcon { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> NewCategoryIconChanged { get; set; }
+
+    [Parameter] public bool NewCategoryIsFeatured { get; set; }
+    [Parameter] public EventCallback<bool> NewCategoryIsFeaturedChanged { get; set; }
+
     [Parameter] public string EditingCategoryName { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> EditingCategoryNameChanged { get; set; }
+
+    [Parameter] public string EditingCategoryIcon { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> EditingCategoryIconChanged { get; set; }
+
+    [Parameter] public bool EditingCategoryIsFeatured { get; set; }
+    [Parameter] public EventCallback<bool> EditingCategoryIsFeaturedChanged { get; set; }
 
     [Parameter] public string OriginalCategoryName { get; set; } = string.Empty;
 
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback OnSaveNew { get; set; }
     [Parameter] public EventCallback OnSaveEdit { get; set; }
+
+    private List<string> AvailableIcons = new()
+    {
+        "fa-solid fa-broom", "fa-solid fa-wrench", "fa-solid fa-hammer", 
+        "fa-solid fa-paint-roller", "fa-solid fa-plug", "fa-solid fa-tree", 
+        "fa-solid fa-faucet", "fa-solid fa-truck", "fa-solid fa-boxes-packing",
+        "fa-solid fa-network-wired", "fa-solid fa-screwdriver-wrench", "fa-solid fa-house-chimney",
+        "fa-solid fa-snowflake", "fa-solid fa-fire", "fa-solid fa-palette",
+        "fa-solid fa-shield-cat", "fa-solid fa-paw", "fa-solid fa-lock",
+        "fa-solid fa-computer", "fa-solid fa-mobile-screen", "fa-solid fa-car",
+        "fa-solid fa-bucket", "fa-solid fa-soap", "fa-solid fa-star"
+    };
 }

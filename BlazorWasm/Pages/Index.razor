@@ -1,4 +1,5 @@
 @page "/"
+<PageTitle>Inicio - ServicioAhora!</PageTitle>
 @using System.Collections.Generic
 @using System.Globalization
 
@@ -15,6 +16,44 @@
                  Description="Coordinamos especialistas confiables para limpieza, reparaciones y mantenimiento con garantías claras, pagos protegidos y seguimiento en línea."
                  Ctas="@HeroCtas"
                  Metrics="@HeroMetrics" />
+
+    <section class="container py-5" id="rubros">
+        <div class="text-center mb-5">
+            <span class="badge rounded-pill bg-primary-subtle text-primary mb-2">Categorías</span>
+            <h2 class="fw-bold mb-3">Encontrá lo que necesitás</h2>
+            <p class="text-muted lead mx-auto" style="max-width: 600px;">Explorá nuestros rubros más populares y conectá con especialistas calificados.</p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            @if (CategoriesLoading)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            }
+            else
+            {
+                @foreach (var rubro in FeaturedCategories)
+                {
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <a href="search?categoryId=@rubro.Id" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm hover-elevate text-center py-4">
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <i class="@(string.IsNullOrEmpty(rubro.Icon) ? "fa-solid fa-layer-group" : rubro.Icon) fa-2x text-primary"></i>
+                                    </div>
+                                    <h6 class="card-title text-dark mb-0">@rubro.Name</h6>
+                                    @* <small class="text-muted">@rubro.Count profesionales</small> *@
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+            }
+        </div>
+    </section>
 
     <ServicesCarousel SectionId="services"
                       CarouselId="servicesCarousel"
@@ -43,7 +82,12 @@
 </div>
 
 @code {
+    [Inject] private ICategoryService CategoryService { get; set; } = default!;
+
     private static readonly CultureInfo LocalCulture = new("es-AR");
+
+    private IEnumerable<GetCategory> FeaturedCategories { get; set; } = Enumerable.Empty<GetCategory>();
+    private bool CategoriesLoading { get; set; } = true;
 
     private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
 
@@ -79,6 +123,8 @@
         new("36 hs", "Tiempo de respuesta"),
         new("24/7", "Soporte al cliente")
     };
+
+    // Removed hardcoded Rubros
 
     private readonly IReadOnlyList<ServiceModel> Services = new List<ServiceModel>
     {
@@ -138,4 +184,23 @@
     };
 
     private int CurrentYear => DateTime.Now.Year;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            CategoriesLoading = true;
+            var categories = await CategoryService.GetAllAsync();
+            FeaturedCategories = categories?.Where(c => c.IsFeatured).Take(6).ToList() ?? new List<GetCategory>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading categories: {ex.Message}");
+            FeaturedCategories = new List<GetCategory>();
+        }
+        finally
+        {
+            CategoriesLoading = false;
+        }
+    }
 }

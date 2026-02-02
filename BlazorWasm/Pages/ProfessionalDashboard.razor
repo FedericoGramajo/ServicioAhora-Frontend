@@ -20,7 +20,7 @@
                 <h2 class="mb-0">Gestioná tus servicios y reportes</h2>
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-primary">Agregar servicio</button>
+                <button class="btn btn-outline-primary" @onclick="ShowAddServiceModal">Agregar servicio</button>
                 <button class="btn btn-primary">Exportar reporte</button>
             </div>
         </div>
@@ -109,34 +109,34 @@
                     <p class="text-muted mb-0">Filtrá por fechas, ciudad y estado</p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
-                    <input type="date" class="form-control" />
-                    <select class="form-select">
-                        <option>Todos los estados</option>
-                        <option>Confirmados</option>
-                        <option>En curso</option>
-                        <option>Completados</option>
-                        <option>Cancelados</option>
+                    <input type="date" class="form-control" @bind="StartDate" />
+                    <input type="date" class="form-control" @bind="EndDate" />
+                    <select class="form-select" @bind="SelectedStatus">
+                        <option value="">Todos los estados</option>
+                        <option value="Confirmado">Confirmados</option>
+                        <option value="En curso">En curso</option>
+                        <option value="Completado">Completados</option>
+                        <option value="Cancelado">Cancelados</option>
                     </select>
-                    <select class="form-select">
-                        <option>Todas las ciudades</option>
-                        <option>Buenos Aires</option>
-                        <option>Córdoba</option>
-                        <option>Rosario</option>
+                    <select class="form-select" @bind="SelectedCity">
+                        <option value="">Todas las ciudades</option>
+                        <option value="Buenos Aires">Buenos Aires</option>
+                        <option value="Córdoba">Córdoba</option>
+                        <option value="Rosario">Rosario</option>
                     </select>
-                    <button class="btn btn-primary">Aplicar</button>
                 </div>
             </div>
             <div class="row g-3 mt-3">
                 <div class="col-md-4">
                     <div class="chart-card">
-                        <div class="chart-value">82%</div>
+                        <div class="chart-value">@FilteredTransactions.Count(t => t.Status == "Completado")</div>
                         <p class="mb-0">Órdenes completadas</p>
-                        <small class="text-secondary">Últimos 30 días</small>
+                        <small class="text-secondary">En el periodo seleccionado</small>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="chart-card">
-                        <div class="chart-value">12</div>
+                        <div class="chart-value">@FilteredTransactions.Count(t => t.Status == "En curso")</div>
                         <p class="mb-0">Servicios en curso</p>
                         <small class="text-secondary">Con seguimiento activo</small>
                     </div>
@@ -145,7 +145,7 @@
                     <div class="chart-card">
                         <div class="chart-value">4.9</div>
                         <p class="mb-0">Satisfacción promedio</p>
-                        <small class="text-secondary">Basado en 210 reseñas</small>
+                        <small class="text-secondary">Basado en @FilteredTransactions.Count() reseña(s)</small>
                     </div>
                 </div>
             </div>
@@ -154,50 +154,182 @@
                     <div class="bar-chart-card">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div>
-                                <h6 class="mb-0">Ingresos por rubro</h6>
-                                <small class="text-muted">Últimos 90 días</small>
+                                <h6 class="mb-0">Evolución de ingresos</h6>
+                                <small class="text-muted">Últimos 6 meses</small>
                             </div>
-                            <span class="text-muted small">Total: @RevenueBars.Sum(r => r.Count).ToString("C0", LocalCulture)</span>
+                            <span class="text-muted small">Total: @FilteredTransactions.Sum(t => t.Amount).ToString("C0", LocalCulture)</span>
                         </div>
-                        <div class="bar-chart">
-                            @foreach (var bar in RevenueBars)
+                        
+                        <!-- Line Chart SVG -->
+                         <div class="chart-container" style="height: 200px; position: relative;">
+                            <svg viewBox="0 0 100 50" preserveAspectRatio="none" style="width: 100%; height: 100%;">
+                                <!-- Grid lines -->
+                                <line x1="0" y1="40" x2="100" y2="40" stroke="#e0e0e0" stroke-width="0.5" />
+                                <line x1="0" y1="25" x2="100" y2="25" stroke="#e0e0e0" stroke-width="0.5" />
+                                <line x1="0" y1="10" x2="100" y2="10" stroke="#e0e0e0" stroke-width="0.5" />
+
+                                <!-- Path -->
+                                <polyline fill="none" stroke="#0d6efd" stroke-width="1.5" points="@RevenuePoints" />
+                                
+                                <!-- Dots -->
+                                @foreach(var point in RevenueDots)
+                                {
+                                    <circle cx="@point.X" cy="@point.Y" r="1.5" fill="#0d6efd" />
+                                }
+                            </svg>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2 text-muted small">
+                            @foreach(var label in MonthLabels)
                             {
-                                <div class="bar-row">
-                                    <div class="bar-label">@bar.Label</div>
-                                    <div class="bar-track" aria-hidden="true">
-                                        <div class="bar-fill" style=$"--bar-width: {bar.Percentage(RevenueMax)}%;"></div>
-                                    </div>
-                                    <div class="bar-value">@bar.Count.ToString("C0", LocalCulture)</div>
-                                </div>
+                                <span>@label</span>
                             }
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-5">
                     <div class="bar-chart-card">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
                             <div>
-                                <h6 class="mb-0">Estados de servicios</h6>
-                                <small class="text-muted">Últimos 30 días</small>
+                                <h6 class="mb-0">Servicios por categoría</h6>
+                                <small class="text-muted">Distribución porcentual</small>
                             </div>
                         </div>
-                        <div class="bar-chart compact">
-                            @foreach (var bar in StatusBars)
-                            {
-                                <div class="bar-row">
-                                    <div class="bar-label">@bar.Label</div>
-                                    <div class="bar-track" aria-hidden="true">
-                                        <div class="bar-fill" style=$"--bar-width: {bar.Percentage(StatusMax)}%;"></div>
+
+                        <div class="d-flex align-items-center gap-4">
+                            <!-- Doughnut Chart SVG -->
+                             <div style="width: 120px; height: 120px;">
+                                <svg viewBox="0 0 36 36" class="circular-chart">
+                                    @foreach (var segment in DoughnutSegments) {
+                                        <path class="circle"
+                                              stroke-dasharray="@segment.DashArray"
+                                              stroke="@segment.Color"
+                                              d="M18 2.0845
+                                                 a 15.9155 15.9155 0 0 1 0 31.831
+                                                 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                              style="stroke-dashoffset: @segment.Offset;" />
+                                    }
+                                </svg>
+                            </div>
+
+                            <!-- Legend -->
+                            <div class="flex-grow-1">
+                                @foreach (var segment in DoughnutSegments)
+                                {
+                                    <div class="d-flex align-items-center justify-content-between mb-2 small">
+                                        <div class="d-flex align-items-center">
+                                            <span class="d-inline-block rounded-circle me-2" style="width: 10px; height: 10px; background-color: @segment.Color;"></span>
+                                            <span>@segment.Label</span>
+                                        </div>
+                                        <span class="fw-bold">@segment.Percentage.ToString("0.0")%</span>
                                     </div>
-                                    <div class="bar-value">@bar.Count</div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+             <div class="row g-3 mt-3">
+                 <div class="col-12">
+                     <div class="bar-chart-card">
+                         <h6 class="mb-3">Estado de servicios</h6>
+                         <div class="bar-chart compact">
+                             @foreach (var bar in DynamicStatusBars)
+                             {
+                                 <div class="bar-row">
+                                     <div class="bar-label">@bar.Label</div>
+                                     <div class="bar-track" aria-hidden="true">
+                                         <div class="bar-fill" style="width: @bar.Percentage(100)%;"></div>
+                                     </div>
+                                     <div class="bar-value">@bar.Count</div>
+                                 </div>
+                             }
+                         </div>
+                     </div>
+                 </div>
+             </div>
+
+
+        <div class="row g-3 mt-4">
+                <div class="col-12">
+                    <div class="surface-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="mb-1">Tus certificaciones</h5>
+                                <p class="text-muted small mb-0">Subí tus licencias y cursos para aumentar la confianza de los clientes.</p>
+                            </div>
+                            <button class="btn btn-outline-primary btn-sm">
+                                <i class="fa-solid fa-cloud-arrow-up me-2"></i> Subir certificado
+                            </button>
+                        </div>
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="fa-solid fa-file-pdf text-danger fa-2x"></i>
+                                    <div>
+                                        <h6 class="mb-0">Matrícula Nacional de Electricista</h6>
+                                        <small class="text-success"><i class="fa-solid fa-check-circle me-1"></i> Verificado el 12/03/2024</small>
+                                    </div>
                                 </div>
-                            }
+                                <button class="btn btn-link text-muted"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                            </div>
+                            <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="fa-solid fa-file-image text-primary fa-2x"></i>
+                                    <div>
+                                        <h6 class="mb-0">Curso de Seguridad e Higiene</h6>
+                                        <small class="text-warning"><i class="fa-solid fa-clock me-1"></i> Pendiente de revisión</small>
+                                    </div>
+                                </div>
+                                <button class="btn btn-link text-muted"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </main>
+
+    @if (showAddServiceModal)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Publicar nuevo servicio</h5>
+                        <button type="button" class="btn-close" @onclick="CloseAddServiceModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre del servicio</label>
+                            <input type="text" class="form-control" @bind="newService.Name" placeholder="Ej. Limpieza de tapizados" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Rubro</label>
+                            <select class="form-select" @bind="newService.Category">
+                                @foreach (var group in ServiceGroups)
+                                {
+                                    <option value="@group.Category">@group.Category</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Precio estimado</label>
+                            <input type="number" class="form-control" @bind="newService.Price" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" rows="3" @bind="newService.Description"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseAddServiceModal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" @onclick="SaveService">Publicar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 
     <LandingFooter FooterId="contacto-panel-profesional"
                    Brand="ServicioAhora!"
@@ -210,7 +342,151 @@
 @code {
     private readonly CultureInfo LocalCulture = new("es-AR");
 
+    // Filters
+    private DateTime StartDate { get; set; } = DateTime.Today.AddMonths(-6);
+    private DateTime EndDate { get; set; } = DateTime.Today;
+    private string SelectedStatus { get; set; } = "";
+    private string SelectedCity { get; set; } = "";
+
     private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
+
+    private List<ServiceTransaction> AllTransactions = new();
+
+    protected override void OnInitialized()
+    {
+        // Generate Mock Data
+        var random = new Random();
+        var statuses = new[] { "Completado", "En curso", "Cancelado", "Confirmado" };
+        var cities = new[] { "Buenos Aires", "Córdoba", "Rosario" };
+        var categories = new[] { "Limpieza y orden", "Mantenimiento y reparaciones", "Jardinería", "Decoración" };
+        
+        for (int i = 0; i < 150; i++)
+        {
+            AllTransactions.Add(new ServiceTransaction(
+                DateTime.Today.AddDays(-random.Next(0, 180)),
+                random.Next(15000, 85000),
+                categories[random.Next(categories.Length)],
+                statuses[random.Next(statuses.Length)],
+                cities[random.Next(cities.Length)]
+            ));
+        }
+    }
+
+    private IEnumerable<ServiceTransaction> FilteredTransactions => AllTransactions
+        .Where(t => t.Date >= StartDate && t.Date <= EndDate)
+        .Where(t => string.IsNullOrEmpty(SelectedStatus) || t.Status == SelectedStatus)
+        .Where(t => string.IsNullOrEmpty(SelectedCity) || t.City == SelectedCity)
+        .ToList();
+
+    // Chart Logic: Revenue Line
+    private string RevenuePoints
+    {
+        get
+        {
+            var data = GetRevenueByMonth();
+            if (!data.Any()) return "";
+            
+            // Normalize values to 0-50 height (SVG coordinate system is inverted Y)
+            var max = data.Max(d => d.Amount) * 1.1m; // 10% buffer
+            if (max == 0) max = 1;
+
+            var points = new List<string>();
+            decimal stepX = 100m / (data.Count - 1 > 0 ? data.Count - 1 : 1);
+
+            for (int i = 0; i < data.Count; i++)
+            {
+                var x = i * stepX;
+                var y = 50 - (data[i].Amount / max * 50); // Invert Y
+                points.Add($"{x.ToString(CultureInfo.InvariantCulture)},{y.ToString(CultureInfo.InvariantCulture)}");
+            }
+            return string.Join(" ", points);
+        }
+    }
+    
+    private List<(string X, string Y)> RevenueDots
+    {
+        get
+        {
+            var data = GetRevenueByMonth();
+            var dots = new List<(string, string)>();
+             if (!data.Any()) return dots;
+
+            var max = data.Max(d => d.Amount) * 1.1m;
+            if (max == 0) max = 1;
+            
+            decimal stepX = 100m / (data.Count - 1 > 0 ? data.Count - 1 : 1);
+
+             for (int i = 0; i < data.Count; i++)
+            {
+                var x = i * stepX;
+                var y = 50 - (data[i].Amount / max * 50);
+                dots.Add((x.ToString(CultureInfo.InvariantCulture), y.ToString(CultureInfo.InvariantCulture)));
+            }
+            return dots;
+        }
+    }
+
+    private List<(string Month, decimal Amount)> GetRevenueByMonth()
+    {
+        return FilteredTransactions
+            .GroupBy(t => new { t.Date.Year, t.Date.Month })
+            .Select(g => new { Date = new DateTime(g.Key.Year, g.Key.Month, 1), Total = g.Sum(t => t.Amount) })
+            .OrderBy(x => x.Date)
+            .Select(x => (x.Date.ToString("MMM", LocalCulture), x.Total))
+            .ToList();
+    }
+    
+    private List<string> MonthLabels => GetRevenueByMonth().Select(x => x.Month).ToList();
+
+    // Chart Logic: Doughnut
+    private List<DoughnutSegment> DoughnutSegments
+    {
+        get
+        {
+            var total = FilteredTransactions.Count();
+            if (total == 0) return new List<DoughnutSegment>();
+
+            var groups = FilteredTransactions
+                .GroupBy(t => t.Category)
+                .Select(g => new { Category = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .ToList();
+
+            var segments = new List<DoughnutSegment>();
+            double currentOffset = 25; // Start at top
+            var colors = new[] { "#0d6efd", "#198754", "#ffc107", "#dc3545", "#6c757d" };
+
+            for (int i = 0; i < groups.Count; i++)
+            {
+                var percentage = (double)groups[i].Count / total * 100;
+                segments.Add(new DoughnutSegment(
+                    groups[i].Category,
+                    percentage,
+                    $"{percentage.ToString("0.0", CultureInfo.InvariantCulture)} 100",
+                    (-currentOffset).ToString(CultureInfo.InvariantCulture),
+                    colors[i % colors.Length]
+                ));
+                currentOffset -= percentage; // Accumulate negative for clockwise
+            }
+            return segments;
+        }
+    }
+    
+    private record DoughnutSegment(string Label, double Percentage, string DashArray, string Offset, string Color);
+
+    // Chart Logic: Status Bars
+     private List<ReportBar> DynamicStatusBars
+    {
+        get
+        {
+            return FilteredTransactions
+                .GroupBy(t => t.Status)
+                .Select(g => new ReportBar(g.Key, g.Count()))
+                .OrderByDescending(r => r.Count)
+                .ToList();
+        }
+    }
+
 
     private readonly IReadOnlyList<MenuActionModel> AccountActions = new List<MenuActionModel>
     {
@@ -248,21 +524,7 @@
         })
     };
 
-    private readonly IReadOnlyList<ReportBar> RevenueBars = new List<ReportBar>
-    {
-        new("Limpieza y orden", 185000),
-        new("Mantenimiento y reparaciones", 162000),
-        new("Jardinería", 118000),
-        new("Decoración", 76000)
-    };
-
-    private readonly IReadOnlyList<ReportBar> StatusBars = new List<ReportBar>
-    {
-        new("Completadas", 44),
-        new("En curso", 12),
-        new("Reprogramadas", 7),
-        new("Canceladas", 3)
-    };
+    // Removed static RevenueBars and StatusBars as they are now dynamic
 
     private readonly IReadOnlyList<ServiceGroup> ServiceGroups = new List<ServiceGroup>
     {
@@ -282,6 +544,34 @@
 
     private int ServiceCount => ServiceGroups.Sum(g => g.Services.Count);
 
+    private bool showAddServiceModal = false;
+    private ServiceFormModel newService = new();
+
+    private void ShowAddServiceModal()
+    {
+        newService = new(); 
+        showAddServiceModal = true;
+    }
+
+    private void CloseAddServiceModal()
+    {
+        showAddServiceModal = false;
+    }
+
+    private void SaveService()
+    {
+        // Mock save logic
+        showAddServiceModal = false;
+    }
+
+    private class ServiceFormModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = "Limpieza y orden";
+        public decimal Price { get; set; }
+        public string Description { get; set; } = string.Empty;
+    }
+
     private record ReportBar(string Label, int Count)
     {
         public double Percentage(int max)
@@ -294,11 +584,12 @@
             return Math.Round((double)Count / max * 100, 1);
         }
     }
+    
+    private record ServiceTransaction(DateTime Date, decimal Amount, string Category, string Status, string City);
 
     private record ServiceGroup(string Category, IReadOnlyList<ServiceSummary> Services);
     private record ServiceSummary(string Slug, string Name, decimal Price, string Description);
 
-    private int RevenueMax => RevenueBars.Max(r => r.Count);
-    private int StatusMax => StatusBars.Max(r => r.Count);
+    // Removed RevenueMax and StatusMax helpers as they are calculated within the properties or not needed globally
     private int CurrentYear => DateTime.Now.Year;
 }

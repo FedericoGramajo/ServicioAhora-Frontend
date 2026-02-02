@@ -53,9 +53,17 @@
                         <h5 class="mb-0">@FilteredResults.Count() resultados</h5>
                         <span class="text-muted">Mostrando servicios destacados para tu hogar</span>
                     </div>
-                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#customSearchModal">
-                        Ajustar filtros
-                    </button>
+                    <div class="d-flex align-items-center gap-2">
+                        <select class="form-select form-select-sm w-auto" @bind="selectedSortOrder">
+                            <option value="relevance">Relevancia</option>
+                            <option value="price_asc">Precio: Menor a Mayor</option>
+                            <option value="price_desc">Precio: Mayor a Menor</option>
+                            <option value="rating">Mejor calificados</option>
+                        </select>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#customSearchModal">
+                            <i class="fa-solid fa-sliders me-1"></i> Filtros
+                        </button>
+                    </div>
                 </div>
                 <div class="row g-3">
                     @foreach (var result in FilteredResults)
@@ -210,13 +218,19 @@
 
     private int CurrentYear => DateTime.Now.Year;
 
+    [Inject] private ICategoryService CategoryService { get; set; } = default!;
+
     [SupplyParameterFromQuery(Name = "query")]
     public string? Query { get; set; }
+
+    [SupplyParameterFromQuery(Name = "categoryId")]
+    public Guid? CategoryId { get; set; }
 
     private string searchTerm = string.Empty;
     private string selectedCategory = "todas";
     private string selectedCity = "todas";
     private string selectedPriceRange = "cualquiera";
+    private string selectedSortOrder = "relevance";
     private bool expressOnly;
 
     private readonly IReadOnlyList<SearchResult> Results = new List<SearchResult>
@@ -243,11 +257,44 @@
         .Where(r => selectedCategory == "todas" || string.Equals(r.Category, selectedCategory, StringComparison.InvariantCultureIgnoreCase))
         .Where(r => selectedCity == "todas" || string.Equals(r.City, selectedCity, StringComparison.InvariantCultureIgnoreCase))
         .Where(r => !expressOnly || r.ExpressAvailable)
-        .Where(FilterByPrice);
+        .Where(r => !expressOnly || r.ExpressAvailable)
+        .Where(FilterByPrice)
+        .OrderByDescending(r => r.Rating) // Default secondary sort
+        .OrderBy(r => GetSortKey(r));
 
-    protected override void OnParametersSet()
+    private object GetSortKey(SearchResult r) => selectedSortOrder switch
+    {
+        "price_asc" => r.Price,
+        "price_desc" => -r.Price,
+        "rating" => -r.Rating,
+        _ => (object)0 // relevance keeps original order (or randomness)
+    };
+
+    protected override async Task OnParametersSetAsync()
     {
         searchTerm = Query ?? string.Empty;
+
+        if (CategoryId.HasValue && CategoryId.Value != Guid.Empty && selectedCategory == "todas")
+        {
+            try
+            {
+                var category = await CategoryService.GetByIdAsync(CategoryId.Value);
+                if (category != null)
+                {
+                    // Attempt to match the category name with mock data
+                    // This is a bridge between real ID and mock data strings
+                    var match = Categories.FirstOrDefault(c => c.Equals(category.Name, StringComparison.OrdinalIgnoreCase));
+                    if (match != null)
+                    {
+                        selectedCategory = match;
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"Error resolving category ID: {ex.Message}");
+            }
+        }
     }
 
     private void OnSearch()

@@ -131,3 +131,17 @@ code {
     transform: translate(-50%, -50%);
     z-index: 1050;
 }
+
+/* SVG Charts */
+.circular-chart {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    max-height: 250px;
+}
+
+.circle {
+    fill: none;
+    stroke-width: 3.8; /* Thickness of the doughnut */
+    transition: stroke-dasharray 0.3s ease;
+}

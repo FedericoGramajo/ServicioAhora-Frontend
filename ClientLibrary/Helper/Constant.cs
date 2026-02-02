@@ -14,11 +14,11 @@ namespace ClientLibrary.Helper
         }
         public static class ServiceOffering
         {
-            public const string GetAll = "serviceofering/all";
-            public const string Get = "serviceofering/single";
-            public const string Add = "serviceofering/add";
-            public const string Update = "serviceofering/update";
-            public const string Delete = "serviceofering/delete";
+            public const string GetAll = "serviceoffering/all";
+            public const string Get = "serviceoffering/single";
+            public const string Add = "serviceoffering/add";
+            public const string Update = "serviceoffering/update";
+            public const string Delete = "serviceoffering/delete";
         }
         public static class Category
         {
