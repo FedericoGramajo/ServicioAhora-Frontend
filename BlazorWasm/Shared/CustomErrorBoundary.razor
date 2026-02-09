@@ -1,0 +1,82 @@
+@using Microsoft.AspNetCore.Components.Web
+@inherits ErrorBoundaryBase
+@inject NavigationManager Navigation
+
+@if (CurrentException is null)
+{
+    @ChildContent
+}
+else
+{
+    <div class="container py-5 text-center">
+        <div class="card shadow-sm border-danger mx-auto" style="max-width: 500px;">
+            <div class="card-header bg-danger text-white">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i> Algo salió mal
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-danger">Ocurrió un error inesperado</h5>
+                <p class="card-text text-muted">
+                    Lo sentimos, la aplicación ha encontrado un problema y no puede continuar con esta acción.
+                </p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-danger" @onclick="Recover">
+                        <i class="fa-solid fa-rotate-right me-2"></i> Intentar de nuevo
+                    </button>
+                    <a href="/" class="btn btn-secondary">
+                        <i class="fa-solid fa-house me-2"></i> Volver al inicio
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer text-muted small">
+                Si el problema persiste, por favor contactanos.
+            </div>
+        </div>
+        
+        @if (IsDevelopment)
+        {
+            <div class="mt-4 text-start">
+                <details class="alert alert-warning">
+                    <summary>Detalles del error (Solo desarrollo)</summary>
+                    <pre class="mt-2 small">@CurrentException?.ToString()</pre>
+                </details>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private Exception? CurrentException;
+
+    protected override void OnParametersSet()
+    {
+        base.Recover();
+        CurrentException = null;
+    }
+
+    private void Recover()
+    {
+        base.Recover();
+        CurrentException = null;
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    }
+
+    protected override Task OnErrorAsync(Exception exception)
+    {
+        CurrentException = exception;
+        // Here you would log to your telemetry service (AppInsights, Sentry, etc.)
+        Console.WriteLine($"Error capturado globalmente: {exception.Message}");
+        return Task.CompletedTask;
+    }
+
+    private bool IsDevelopment
+    {
+        get
+        {
+#if DEBUG
+            return true;
+#else
+            return false;
+#endif
+        }
+    }
+}

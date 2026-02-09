@@ -6,12 +6,15 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using NetcodeHub.Packages.Components.DataGrid;
-using NetcodeHub.Packages.WebAssembly.Storage.Cookie;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
-builder.Services.AddNetcodeHubCookieStorageService();
+
+// Add HttpClientFactory explicitly
+builder.Services.AddHttpClient();
+
+builder.Services.AddScoped<ICookieStorageService, CookieStorageService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IHttpClientHelper, HttpClientHelper>();
 builder.Services.AddScoped<IApiCallHelper, ApiCallHelper>();

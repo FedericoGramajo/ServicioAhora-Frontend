@@ -1,5 +1,6 @@
-﻿@page "/authentication/login"
-@page "/authentication/login/{route}"
+﻿@attribute [Route(RouteConstants.AuthenticationLogin)]
+@attribute [Route(RouteConstants.AuthenticationLoginPageWithRoute)]
+@using ClientLibrary.Helper
 
 <div class="container-fluid m-5 p-5">
     <div class="row">
@@ -47,8 +48,8 @@
             return;
         }
         string cookieValue = tokenService.FormToken(result.Token, result.RefreshToken);
-        await tokenService.SetCookie(Constant.Cookie.Name, cookieValue, Constant.Cookie.Seconds, Constant.Cookie.Path);
+        await tokenService.SetCookie(Constant.Cookie.Name, cookieValue, Constant.Cookie.Days, Constant.Cookie.Path);
         (authStateProvider as CustomAuthStateProvider)!.NotifyAuthenticationState();
-        NavManager.NavigateTo(Route == null? "/" : Route, true);
+        NavManager.NavigateTo(Route == null? RouteConstants.Home : Route, true);
     }
 }

@@ -1,5 +1,8 @@
 ﻿@implements IAsyncDisposable
-@page "/main/products/category/{categoryId}"
+@attribute [Route(RouteConstants.MainProductCategory)]
+@using ClientLibrary.Helper
+@inject ICookieStorageService cookieStorageService
+@inject IJSRuntime js
 @if (SelectedCategory != null || ProductsByCategory.Any())
 {
 
@@ -40,13 +43,8 @@ else
         </div>
     </div>
 }
-<NetcodeHubToast @ref="ToastComponent"
-Position="@ToastPosition.Bottom()"
-IconClass="fa fa-check"
-Persist="true"
-Duration="4000" />
+
 @code {
-    NetcodeHubToast? ToastComponent;
     [Parameter] public string CategoryId { get; set; } = string.Empty;
     public GetCategory SelectedCategory { get; set; } = new();
     IEnumerable<GetProduct> ProductsByCategory = [];
@@ -56,7 +54,7 @@ Duration="4000" />
     protected override async Task OnParametersSetAsync()
     {
         if (string.IsNullOrEmpty(CategoryId))
-            NavManager.NavigateTo("/");
+            NavManager.NavigateTo(RouteConstants.Home);
 
         SelectedCategory = await categoryService.GetByIdAsync(Guid.Parse(CategoryId));
         ProductsByCategory = await categoryService.GetServiceByCategory(Guid.Parse(CategoryId));
@@ -69,11 +67,11 @@ Duration="4000" />
         if (getCart == null)
         {
             MyCarts.Add(new ProcessCart { ProductId = productId, Quantity = 1 });
-            await ToastComponent!.ShowSuccessToast("Cart", "Product added to cart");
+            await js.ToastrSuccess("Product added to cart");
 
         }
         else
-            await ToastComponent!.ShowInfoToast("Cart", "Item already added to cart");
+            await js.ToastrInfo("Item already added to cart");
 
 
     }
@@ -82,7 +80,7 @@ Duration="4000" />
     {
         if (MyCarts.Any())
         {
-            await browserCookieStorageService.SetAsync(Constant.Cart.Name, JsonSerializer.Serialize(MyCarts), 604800, "/");
+            await cookieStorageService.SetCookieAsync(Constant.Cart.Name, JsonSerializer.Serialize(MyCarts), 7, "/");
         }
     }
 }

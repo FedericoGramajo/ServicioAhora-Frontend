@@ -1,4 +1,5 @@
 @page "/login"
+@using ClientLibrary.Helper
 
 <PageTitle>Iniciar sesión - ServicioAhora!</PageTitle>
 
@@ -10,7 +11,7 @@
                     <div class="card-body p-4 p-lg-5">
 
                         <div class="text-center mb-4">
-                            <a class="auth-brand d-inline-flex align-items-center" href="/">
+                            <a class="auth-brand d-inline-flex align-items-center" href="@RouteConstants.Home">
                                 <i class="fa-solid fa-house-chimney me-2"></i>
                                 <span class="fw-bold">ServicioAhora!</span>
                             </a>
@@ -38,7 +39,7 @@
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <label class="form-label fw-semibold mb-0" for="loginPassword">Contraseña</label>
-                                    <a class="small" href="/forgot-password">¿Olvidaste tu contraseña?</a>
+                                    <a class="small" href="@RouteConstants.ForgotPassword">¿Olvidaste tu contraseña?</a>
                                 </div>
                                 <InputText id="loginPassword"
                                            @bind-Value="Login.Password"
@@ -58,8 +59,8 @@
                                 <button type="submit" class="btn btn-primary btn-lg" disabled="@IsLoading">
                                     @(IsLoading ? "Iniciando..." : "Iniciar sesión")
                                 </button>
-                                <a class="btn btn-outline-primary" href="/register">Crear cuenta nueva</a>
-                                <a class="btn btn-link" href="/">Volver al inicio</a>
+                                <a class="btn btn-outline-primary" href="@RouteConstants.Register">Crear cuenta nueva</a>
+                                <a class="btn btn-link" href="@RouteConstants.Home">Volver al inicio</a>
                             </div>
                         </EditForm>
                     </div>
@@ -97,13 +98,13 @@
 
             // Guardar token en cookie
             string cookieValue = tokenService.FormToken(result.Token, result.RefreshToken);
-            await tokenService.SetCookie(Constant.Cookie.Name, cookieValue, Constant.Cookie.Seconds, Constant.Cookie.Path);
+            await tokenService.SetCookie(Constant.Cookie.Name, cookieValue, Constant.Cookie.Days, Constant.Cookie.Path);
 
             // Notificar autenticación
             (authStateProvider as CustomAuthStateProvider)!.NotifyAuthenticationState();
 
             // Redirigir según ruta
-            NavManager.NavigateTo(Route is null ? "/" : Route, true);
+            NavManager.NavigateTo(Route is null ? RouteConstants.Home : Route, true);
         }
         catch (Exception ex)
         {

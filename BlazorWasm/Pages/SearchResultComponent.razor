@@ -1,4 +1,5 @@
-﻿@page "/Search-result/{filter}"
+﻿@attribute [Route(RouteConstants.SearchResultPage)]
+@using ClientLibrary.Helper
 @if (SearchedProducts.Any())
 {
 
@@ -41,7 +42,7 @@
     protected override async Task OnParametersSetAsync()
     {
         if (string.IsNullOrEmpty(Filter))
-            NavManager.NavigateTo("/");
+            NavManager.NavigateTo(RouteConstants.Home);
 
         var products = await productService.GetAllAsync();
         if (products.Any())

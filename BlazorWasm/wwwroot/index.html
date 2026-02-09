@@ -11,12 +11,13 @@
     <link rel="stylesheet" href="css/app.css" />
     <link rel="stylesheet" href="css/home.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
     <link href="BlazorWasm.styles.css" rel="stylesheet" />
 
 
     <link href="_content/Blazored.Typeahead/blazored-typeahead.css" rel="stylesheet" />
     <script src="_content/Blazored.Typeahead/blazored-typeahead.js"></script>
-    <script src="_content/NetcodeHub.Packages.WebAssembly.Storage.Cookie/cookie.js"></script>
+    <script src="js/cookies.js"></script>
     <script src="_content/NetcodeHub.Packages.Components.DataGrid/event.js"></script>
     <script src="_content/NetcodeHub.Packages.Components.Modal/modal.js"></script>
 
@@ -24,11 +25,6 @@
 
 <body>
     <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
     </div>
 
     <div id="blazor-error-ui">
@@ -37,6 +33,17 @@
         <span class="dismiss">🗙</span>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
+
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <!-- Toastr -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+    <script src="js/common.js"></script>
     <script src="lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

@@ -37,7 +37,7 @@ namespace BlazorWasm.Authentication
             {
                 string cookieValue = tokenService.FormToken(result.Token, result.RefreshToken);
                 await tokenService.RemoveCookie(Constant.Cookie.Name);
-                await tokenService.SetCookie(Constant.Cookie.Name, cookieValue, Constant.Cookie.Seconds, Constant.Cookie.Path);
+                await tokenService.SetCookie(Constant.Cookie.Name, cookieValue, Constant.Cookie.Days, Constant.Cookie.Path);
                 return result;
             }
             return null!;

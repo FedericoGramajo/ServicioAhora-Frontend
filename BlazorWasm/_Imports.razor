@@ -15,6 +15,7 @@
 @inject IProductService productService
 @inject IAuthenticationService authenticationService
 @inject ITokenService tokenService
+@inject ICookieStorageService cookieStorageService
 @inject NavigationManager NavManager
 @inject AuthenticationStateProvider authStateProvider
 @using ClientLibrary.Models.Authentication
@@ -23,15 +24,16 @@
 @using System.Security.Claims
 @using ClientLibrary.Models.Product
 @using ClientLibrary.Models.Category
-@using NetcodeHub.Packages.WebAssembly.Storage.Cookie
-@inject IBrowserCookieStorageService browserCookieStorageService
+
+
 @inject IPaymentMethodService paymentService
 @inject ICartService cartService
 @using System.Text.Json
-@using NetcodeHub.Packages.Components.Toast
+
 @using NetcodeHub.Packages.Components.DataGrid
 @using NetcodeHub.Packages.Components.Modal
 @using ClientLibrary.Models.Cart
 @using BlazorWasm.Shared
 @using BlazorWasm.Shared.Landing
 @inject IServOfferingService servOfferingService
+@using ClientLibrary.Models.Landing

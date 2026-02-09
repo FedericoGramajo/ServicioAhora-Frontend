@@ -1,4 +1,5 @@
-@page "/register"
+@attribute [Route(RouteConstants.Register)]
+@using ClientLibrary.Helper
 <PageTitle>Crear cuenta - ServicioAhora!</PageTitle>
 
 <section class="auth-page py-5 py-lg-6">
@@ -8,7 +9,7 @@
                 <div class="card auth-card shadow-lg border-0">
                     <div class="card-body p-4 p-lg-5">
                         <div class="text-center mb-4">
-                            <a class="auth-brand d-inline-flex align-items-center" href="/">
+                            <a class="auth-brand d-inline-flex align-items-center" href="@RouteConstants.Home">
                                 <i class="fa-solid fa-house-chimney me-2"></i>
                                 <span class="fw-bold">ServicioAhora!</span>
                             </a>
@@ -62,8 +63,8 @@
                             </div>
                             <div class="d-grid gap-2 mt-4">
                                 <button type="submit" class="btn btn-primary btn-lg">Crear cuenta</button>
-                                <a class="btn btn-outline-primary" href="/login">Ya tengo una cuenta</a>
-                                <a class="btn btn-link" href="/">Volver al inicio</a>
+                                <a class="btn btn-outline-primary" href="@RouteConstants.Login">Ya tengo una cuenta</a>
+                                <a class="btn btn-link" href="@RouteConstants.Home">Volver al inicio</a>
                             </div>
                         </form>
                     </div>

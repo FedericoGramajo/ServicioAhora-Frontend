@@ -50,7 +50,7 @@ namespace ClientLibrary.Helper
         {
             public const string Name = "token";
             public const string Path = "/";
-            public const int Seconds = 86400; //La libreria que uso cambio de dias a segundos
+            public const int Days = 1; 
         }
         public static class ApiClient
         {

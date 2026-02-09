@@ -31,7 +31,7 @@
                 <div class="login_menu"> 
                     <ul>
                         <li>
-                            <a href="/my-cart">
+                            <a href="@RouteConstants.MyCart">
                                 <i class="fa fa-shopping-cart" aria-hidden="true"></i>
                                 <span class="padding_10">Cart</span>
                             </a>
@@ -54,7 +54,7 @@
                                 <div href="#" class="dropdown-item">
                                     <div class="hstack gap-1">
                                         <i class="fa fa-tasks"></i>
-                                        <a href="/authentication/logout"> Logout</a>
+                                        <a href="@RouteConstants.Logout"> Logout</a>
                                     </div>
                                 </div>                                
                             </Authorized>
@@ -62,13 +62,13 @@
                                 <div href="#" class="dropdown-item">
                                     <div class="hstack gap-1">
                                         <i class="fa fa-tasks"></i>
-                                        <a href="/authentication/login"> Login</a>
+                                        <a href="@RouteConstants.AuthenticationLogin"> Login</a>
                                     </div>
                                 </div>
                                 <div href="#" class="dropdown-item">
                                     <div class="hstack gap-1">
                                         <i class="fa fa-tasks"></i>
-                                        <a href="/authentication/register"> Register</a>
+                                        <a href="@RouteConstants.AuthenticationRegister"> Register</a>
                                     </div>
                                 </div>
                             </NotAuthorized>
@@ -79,6 +79,7 @@
         </div>
     </div>
 </div>
+@using ClientLibrary.Helper
 @code {
         IEnumerable<GetProduct> Products = [];
         private GetProduct _selectedProduct = new();
@@ -98,7 +99,7 @@
         {
             if (_selectedProduct == null) return;
             {
-                NavManager.NavigateTo($"search-result/{_selectedProduct.Name}");
+                NavManager.NavigateTo(RouteConstants.Create(RouteConstants.SearchResult, _selectedProduct.Name));
             }
         }
         protected override async Task OnInitializedAsync()

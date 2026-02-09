@@ -1,4 +1,7 @@
-﻿@page "/my-cart"
+﻿@attribute [Route(RouteConstants.MyCart)]
+@using ClientLibrary.Helper
+@inject ICookieStorageService cookieStorageService
+@inject IJSRuntime js
 <div class="container">
     <div class="row">
         @if (SelectedProducts.Any())
@@ -101,14 +104,8 @@
 
 
 
-<NetcodeHubToast @ref="ToastComponent" 
-    Position="@ToastPosition.Bottom()"
-    IconClass="fa fa-check"
-    Persist="true"
-    Duration="4000"/>
 @code {
     string Paying = null!;
-    NetcodeHubToast? ToastComponent;
     bool ShowPaymentDialog = false;
     IEnumerable<GetPaymentMethod> PaymentMethods = [];
     List<GetProduct> SelectedProducts = [];
@@ -119,7 +116,7 @@
     {
         PaymentMethods = await paymentService.GetPaymentMethods();
         Products = await productService.GetAllAsync();
-        string cartString = await browserCookieStorageService.GetAsync(Constant.Cart.Name);
+        string? cartString = await cookieStorageService.GetCookieAsync(Constant.Cart.Name);
         if (string.IsNullOrEmpty(cartString))
             return;
 
@@ -158,7 +155,7 @@
     }
 
     async Task SaveCart(List<ProcessCart> myCarts)
-    => await browserCookieStorageService.SetAsync(Constant.Cart.Name, JsonSerializer.Serialize(myCarts), 604800, "/");
+    => await cookieStorageService.SetCookieAsync(Constant.Cart.Name, JsonSerializer.Serialize(myCarts), 7, "/");
 
     decimal GetGrandTotal(List<GetProduct> products)
     {
@@ -169,16 +166,15 @@
         return grandTotal;
 
     }
-
     async Task DeleteCartItem(Guid producId)
     {
         var cartItem = GetCartItem(producId);
         MyCarts.Remove(cartItem);
         var product = SelectedProducts.FirstOrDefault(x => x.Id == producId);
         SelectedProducts.Remove(product!);
-        await browserCookieStorageService.RemoveAsync(Constant.Cookie.Name);
+        await cookieStorageService.RemoveCookieAsync(Constant.Cookie.Name);
         await SaveCart(MyCarts);
-        await ToastComponent!.ShowDangerToast("Cart", "Product deleted!");
+        await js.ToastrError("Product deleted!");
     }
     [CascadingParameter] public Task<AuthenticationState>? UserAuthState { get; set; }
 
@@ -188,14 +184,14 @@
         {
             var user = (await UserAuthState!).User;
             if (!user.Identity!.IsAuthenticated)
-                NavManager.NavigateTo($"authentication/login/{Constant.Cart.Name}");
+                NavManager.NavigateTo($"{RouteConstants.AuthenticationLogin}/{Constant.Cart.Name}");
             else
                 ShowPaymentDialog = true;
         }
         catch
         {
 
-            NavManager.NavigateTo($"authentication/login/{Constant.Cart.Name}");
+            NavManager.NavigateTo($"{RouteConstants.AuthenticationLogin}/{Constant.Cart.Name}");
         }
     }
 
@@ -217,7 +213,7 @@
         }
         else
         {
-            await ToastComponent!.ShowDangerToast("Checkout", paymentLink);
+            await js.ToastrError(paymentLink);
             return;
         }
 

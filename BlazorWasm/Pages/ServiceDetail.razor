@@ -1,21 +1,18 @@
-@page "/servicio/{Slug}"
+@attribute [Route(RouteConstants.ServiceDetailPage)]
 @using System.Globalization
+@using ClientLibrary.Helper
+@using ClientLibrary.Models.Landing
 @inject NavigationManager Navigation
 
 <PageTitle>Servicio - ServicioAhora!</PageTitle>
 
 <div class="landing-page">
-    <LandingHeader HeaderId="servicio"
-                   Brand="ServicioAhora!"
-                   BrandHref="/"
-                   Search="@SearchBar"
-                   AccountLinks="@AccountActions"
-                   NavLinks="@PrimaryNavLinks" />
+
 
     <main class="container py-5">
         @if (Service is null)
         {
-            <div class="alert alert-warning mt-4">No encontramos el servicio solicitado. <a href="/search">Volver a buscar</a>.</div>
+            <div class="alert alert-warning mt-4">No encontramos el servicio solicitado. <a href="@RouteConstants.Search">Volver a buscar</a>.</div>
         }
         else
         {
@@ -185,12 +182,7 @@
         </div>
     }
 
-    <LandingFooter FooterId="contacto-servicio"
-                   Brand="ServicioAhora!"
-                   Description="Coordinamos servicios hogareños confiables con soporte humano y seguimiento en tiempo real."
-                   ContactLines="@FooterContact"
-                   LinkGroups="@FooterGroups"
-                   CurrentYear="@CurrentYear" />
+
 </div>
 
 @code {
@@ -201,24 +193,8 @@
 
     private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
 
-    private readonly IReadOnlyList<MenuActionModel> AccountActions = new List<MenuActionModel>
-    {
-        new("Mi perfil", "/perfil"),
-        new("Historial de servicios", "/mis-servicios"),
-        new("Panel profesional", "/panel-profesional"),
-        new("Panel administrador", "/panel-administrador"),
-        new("Iniciar sesión", "/login"),
-        new("Registrarse", "/register")
-    };
-
-    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = new List<NavLinkModel>
-    {
-        new("Inicio", "/#inicio"),
-        new("Servicios", "/#services"),
-        new("Profesionales", "/profesionales"),
-        new("Garantías", "/#garantias"),
-        new("Contacto", "/#contacto")
-    };
+    private readonly IReadOnlyList<MenuActionModel> AccountActions = MenuConstants.AccountActions;
+    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = MenuConstants.PrimaryNavLinks;
 
     private readonly IReadOnlyList<string> FooterContact = new List<string>
     {
@@ -231,9 +207,9 @@
     {
         new("Explorá más", new []
         {
-            new FooterLinkModel("Servicios", "/#services"),
-            new FooterLinkModel("Profesionales", "/profesionales"),
-            new FooterLinkModel("Garantías", "/#garantias")
+            new FooterLinkModel("Servicios", RouteConstants.HashServices),
+            new FooterLinkModel("Profesionales", RouteConstants.Professionals),
+            new FooterLinkModel("Garantías", RouteConstants.HashGarantias)
         })
     };
 
@@ -244,7 +220,7 @@
         ServicesCatalog.TryGetValue(Slug, out Service);
     }
 
-    private void BackToSearch() => Navigation.NavigateTo("/search");
+    private void BackToSearch() => Navigation.NavigateTo(RouteConstants.Search);
 
     private bool showBookingModal = false;
     private bool showSuccessMessage = false;

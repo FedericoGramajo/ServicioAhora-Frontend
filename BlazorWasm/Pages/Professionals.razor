@@ -1,16 +1,13 @@
-@page "/profesionales"
+@attribute [Route(RouteConstants.Professionals)]
 @using System.Linq
+@using ClientLibrary.Helper
+@using ClientLibrary.Models.Landing
 @inject NavigationManager Navigation
 
 <PageTitle>Profesionales | ServicioAhora!</PageTitle>
 
 <div class="landing-page">
-    <LandingHeader HeaderId="profesionales"
-                   Brand="ServicioAhora!"
-                   BrandHref="/"
-                   Search="@SearchBar"
-                   AccountLinks="@AccountActions"
-                   NavLinks="@PrimaryNavLinks" />
+
 
     <main class="search-page container py-5 professional-search">
         <div class="d-flex flex-column gap-4">
@@ -159,35 +156,14 @@
         </div>
     </div>
 
-    <LandingFooter FooterId="contacto-profesionales"
-                   Brand="ServicioAhora!"
-                   Description="Coordinamos servicios hogareños confiables con soporte humano y seguimiento en tiempo real."
-                   ContactLines="@FooterContact"
-                   LinkGroups="@FooterGroups"
-                   CurrentYear="@CurrentYear" />
+
 </div>
 
 @code {
     private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
 
-    private readonly IReadOnlyList<MenuActionModel> AccountActions = new List<MenuActionModel>
-    {
-        new("Mi perfil", "/perfil"),
-        new("Historial de servicios", "/mis-servicios"),
-        new("Panel profesional", "/panel-profesional"),
-        new("Panel administrador", "/panel-administrador"),
-        new("Iniciar sesión", "/login"),
-        new("Registrarse", "/register")
-    };
-
-    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = new List<NavLinkModel>
-    {
-        new("Inicio", "/#inicio"),
-        new("Servicios", "/#services"),
-        new("Profesionales", "/profesionales"),
-        new("Garantías", "/#garantias"),
-        new("Contacto", "/#contacto")
-    };
+    private readonly IReadOnlyList<MenuActionModel> AccountActions = MenuConstants.AccountActions;
+    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = MenuConstants.PrimaryNavLinks;
 
     private readonly IReadOnlyList<string> FooterContact = new List<string>
     {
@@ -200,9 +176,9 @@
     {
         new("Explorá más", new []
         {
-            new FooterLinkModel("Servicios", "/#services"),
-            new FooterLinkModel("Profesionales", "/profesionales"),
-            new FooterLinkModel("Garantías", "/#garantias")
+            new FooterLinkModel("Servicios", RouteConstants.HashServices),
+            new FooterLinkModel("Profesionales", RouteConstants.Professionals),
+            new FooterLinkModel("Garantías", RouteConstants.HashGarantias)
         })
     };
 
@@ -316,7 +292,7 @@
     {
         var term = searchTerm?.Trim();
         var queryString = string.IsNullOrWhiteSpace(term) ? string.Empty : $"?query={Uri.EscapeDataString(term)}";
-        Navigation.NavigateTo($"/profesionales{queryString}");
+        Navigation.NavigateTo($"{RouteConstants.Professionals}{queryString}");
     }
 
     private void ApplyFilters() => StateHasChanged();
@@ -331,7 +307,7 @@
         _ => "Cualquiera"
     };
 
-    private void GoToProfessional(string slug) => Navigation.NavigateTo($"/profesional/{slug}");
+    private void GoToProfessional(string slug) => Navigation.NavigateTo(RouteConstants.Create(RouteConstants.ProfessionalDetail, slug));
 
     private bool MatchesRating(ProfessionalResult result)
     {

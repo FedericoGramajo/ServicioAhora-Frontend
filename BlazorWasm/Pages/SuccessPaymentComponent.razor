@@ -1,4 +1,6 @@
-﻿@page "/payment-success"
+﻿@attribute [Route(RouteConstants.PaymentSuccess)]
+@using ClientLibrary.Helper
+@inject ICookieStorageService cookieStorageService
 
 <div class="container">
     <div class="row">
@@ -18,7 +20,7 @@
             var user = (await UserAuthentState!).User;
             if (user.Identity!.IsAuthenticated)
             {
-                string cartString = await browserCookieStorageService.GetAsync(Constant.Cart.Name);
+                string? cartString = await cookieStorageService.GetCookieAsync(Constant.Cart.Name);
                 if (!string.IsNullOrEmpty(cartString))
                 {
                     var list = JsonSerializer.Deserialize<IEnumerable<ProcessCart>>(cartString);
@@ -29,7 +31,7 @@
                             UserId = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value
                         });
                     await cartService.SaveCheckoutHistory(arc);
-                    await browserCookieStorageService.RemoveAsync(Constant.Cart.Name);
+                    await cookieStorageService.RemoveCookieAsync(Constant.Cart.Name);
                 }
             }
         }

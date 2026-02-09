@@ -1,8 +1,8 @@
-﻿using NetcodeHub.Packages.WebAssembly.Storage.Cookie;
+﻿using System.Threading.Tasks;
 
 namespace ClientLibrary.Helper
 {
-    public class TokenService(IBrowserCookieStorageService cookieService) : ITokenService
+    public class TokenService(ICookieStorageService cookieService) : ITokenService
     {
         public string FormToken(string jwt, string refresh)
         {
@@ -17,7 +17,7 @@ namespace ClientLibrary.Helper
         {
             try
             {
-                string token = await cookieService.GetAsync(key);
+                string? token = await cookieService.GetCookieAsync(key);
                 return token != null ? token.Split("--")[position] : null!;
             }
             catch
@@ -32,12 +32,12 @@ namespace ClientLibrary.Helper
 
         public async Task RemoveCookie(string key)
         {
-            await cookieService.RemoveAsync(key);
+            await cookieService.RemoveCookieAsync(key);
         }
 
-        public async Task SetCookie(string key, string value, int seconds, string path)
+        public async Task SetCookie(string key, string value, int days, string path)
         {
-            await cookieService.SetAsync(key, value, seconds, path); 
+            await cookieService.SetCookieAsync(key, value, days, path); 
         }
     }
 }

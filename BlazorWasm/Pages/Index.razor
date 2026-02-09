@@ -1,15 +1,11 @@
-@page "/"
+@attribute [Route(RouteConstants.Home)]
 <PageTitle>Inicio - ServicioAhora!</PageTitle>
 @using System.Collections.Generic
 @using System.Globalization
+@using ClientLibrary.Helper
+@using ClientLibrary.Models.Landing
 
 <div class="landing-page">
-    <LandingHeader HeaderId="inicio"
-                   Brand="ServicioAhora!"
-                   BrandHref="#inicio"
-                   Search="@SearchBar"
-                   AccountLinks="@AccountActions"
-                   NavLinks="@PrimaryNavLinks" />
 
     <HeroSection BadgeText="Bienvenido a ServicioAhora!"
                  Title="Soluciones hogareñas a medida para tu día a día"
@@ -38,7 +34,7 @@
                 @foreach (var rubro in FeaturedCategories)
                 {
                     <div class="col-6 col-md-4 col-lg-2">
-                        <a href="search?categoryId=@rubro.Id" class="text-decoration-none">
+                        <a href="@RouteConstants.Search?categoryId=@rubro.Id" class="text-decoration-none">
                             <div class="card h-100 border-0 shadow-sm hover-elevate text-center py-4">
                                 <div class="card-body">
                                     <div class="mb-3">
@@ -69,16 +65,11 @@
                           Subtitle="Profesionales verificados"
                           Title="Conocé a quienes cuidan tu hogar"
                           CtaText="Sumate como profesional"
-                          ProfessionalsRoot="/profesionales"
+                          ProfessionalsRoot="@RouteConstants.Professionals"
                           Professionals="@Professionals"
                           TrustStats="@TrustStats" />
 
-    <LandingFooter FooterId="contacto"
-                   Brand="ServicioAhora!"
-                   Description="Coordinamos servicios hogareños confiables con soporte humano y seguimiento en tiempo real."
-                   ContactLines="@FooterContact"
-                   LinkGroups="@FooterGroups"
-                   CurrentYear="@CurrentYear" />
+
 </div>
 
 @code {
@@ -91,24 +82,8 @@
 
     private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
 
-    private readonly IReadOnlyList<MenuActionModel> AccountActions = new List<MenuActionModel>
-    {
-        new("Mi perfil", "/perfil"),
-        new("Historial de servicios", "/mis-servicios"),
-        new("Panel profesional", "/panel-profesional"),
-        new("Panel administrador", "/panel-administrador"),
-        new("Iniciar sesión", "/login"),
-        new("Registrarse", "/register")
-    };
-
-    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = new List<NavLinkModel>
-    {
-        new("Inicio", "#inicio"),
-        new("Servicios", "#services"),
-        new("Profesionales", "/profesionales"),
-        new("Garantías", "#garantias"),
-        new("Contacto", "#contacto")
-    };
+    private readonly IReadOnlyList<MenuActionModel> AccountActions = MenuConstants.AccountActions;
+    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = MenuConstants.PrimaryNavLinks;
 
     private readonly IReadOnlyList<HeroCtaModel> HeroCtas = new List<HeroCtaModel>
     {
@@ -177,9 +152,9 @@
     {
         new("Explorá más", new []
         {
-            new FooterLinkModel("Servicios", "#services"),
-            new FooterLinkModel("Profesionales", "/profesionales"),
-            new FooterLinkModel("Garantías", "#garantias")
+            new FooterLinkModel("Servicios", RouteConstants.HashServices),
+            new FooterLinkModel("Profesionales", RouteConstants.Professionals),
+            new FooterLinkModel("Garantías", RouteConstants.HashGarantias)
         })
     };
 

@@ -1,6 +1,8 @@
 @using System
 @using System.Linq
 @using BlazorWasm.Shared.Landing
+@using ClientLibrary.Helper
+@using ClientLibrary.Models.Landing
 
 <section class="content-section pt-0" id="@SectionId">
     <div class="container">
@@ -97,9 +99,9 @@
     public IReadOnlyList<TrustStatModel> TrustStats { get; set; } = Array.Empty<TrustStatModel>();
 
     [Parameter]
-    public string ProfessionalsRoot { get; set; } = "/profesionales";
+    public string ProfessionalsRoot { get; set; } = RouteConstants.Professionals;
 
     private IEnumerable<ProfessionalModel[]> Slides => Professionals.Chunk(3);
 
-    private void NavigateToProfessional(string slug) => Navigation.NavigateTo($"/profesional/{slug}");
+    private void NavigateToProfessional(string slug) => Navigation.NavigateTo(RouteConstants.Create(RouteConstants.ProfessionalDetail, slug));
 }

@@ -1,18 +1,16 @@
-@page "/panel-administrador"
+@attribute [Route(RouteConstants.AdminDashboard)]
 @using System.Globalization
 @using ClientLibrary.Models.Authentication.Rol.Professional
 @using ClientLibrary.Models.ServicioAhora.ServOffering
 @using BlazorWasm.Pages.AdminDashboard
+@using ClientLibrary.Models.Landing
+@using ClientLibrary.Helper
+@inject IJSRuntime js
 
 <PageTitle>Panel administrador - ServicioAhora!</PageTitle>
 
 <div class="landing-page">
-    <LandingHeader HeaderId="panel-admin"
-                   Brand="ServicioAhora!"
-                   BrandHref="/"
-                   Search="@SearchBar"
-                   AccountLinks="@AccountActions"
-                   NavLinks="@PrimaryNavLinks" />
+
 
     <main class="container py-5 account-layout">
         <div class="section-heading flex-column flex-lg-row">
@@ -58,12 +56,7 @@
                     OnSaveNew="SaveNewCategory"
                     OnSaveEdit="SaveEditedCategory" />
 
-    <LandingFooter FooterId="contacto-panel-administrador"
-                   Brand="ServicioAhora!"
-                   Description="Coordinamos servicios hogareños confiables con soporte humano y seguimiento en tiempo real."
-                   ContactLines="@FooterContact"
-                   LinkGroups="@FooterGroups"
-                   CurrentYear="@CurrentYear" />
+
 </div>
 
 @code {
@@ -71,24 +64,8 @@
 
     private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
 
-    private readonly IReadOnlyList<MenuActionModel> AccountActions = new List<MenuActionModel>
-    {
-        new("Mi perfil", "/perfil"),
-        new("Historial de servicios", "/mis-servicios"),
-        new("Panel profesional", "/panel-profesional"),
-        new("Panel administrador", "/panel-administrador"),
-        new("Iniciar sesión", "/login"),
-        new("Registrarse", "/register")
-    };
-
-    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = new List<NavLinkModel>
-    {
-        new("Inicio", "/#inicio"),
-        new("Servicios", "/#services"),
-        new("Profesionales", "/profesionales"),
-        new("Garantías", "/#garantias"),
-        new("Contacto", "/#contacto")
-    };
+    private readonly IReadOnlyList<MenuActionModel> AccountActions = MenuConstants.AccountActions;
+    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = MenuConstants.PrimaryNavLinks;
 
     private readonly IReadOnlyList<string> FooterContact = new List<string>
     {
@@ -101,9 +78,9 @@
     {
         new("Explorá más", new []
         {
-            new FooterLinkModel("Servicios", "/#services"),
-            new FooterLinkModel("Profesionales", "/profesionales"),
-            new FooterLinkModel("Garantías", "/#garantias")
+            new FooterLinkModel("Servicios", RouteConstants.HashServices),
+            new FooterLinkModel("Profesionales", RouteConstants.Professionals),
+            new FooterLinkModel("Garantías", RouteConstants.HashGarantias)
         })
     };
 
@@ -197,6 +174,8 @@
         CategoryToEdit = null;
     }
 
+
+
     private async Task SaveNewCategory()
     {
         if (string.IsNullOrWhiteSpace(NewCategoryName)) return;
@@ -210,8 +189,13 @@
 
         if (result.success)
         {
+            await js.ToastrSuccess(result.Message);
             await LoadCategories();
             CloseModals();
+        }
+        else
+        {
+            await js.ToastrError(result.Message);
         }
     }
 
@@ -231,8 +215,13 @@
 
         if (result.success)
         {
+            await js.ToastrSuccess(result.Message);
             await LoadCategories();
             CloseModals();
+        }
+        else
+        {
+            await js.ToastrError(result.Message);
         }
     }
 
@@ -241,7 +230,14 @@
         var result = await categoryService.DeleteAsync(categoryId);
 
         if (result.success)
+        {
+            await js.ToastrSuccess(result.Message);
             await LoadCategories();
+        }
+        else
+        {
+            await js.ToastrError(result.Message);
+        }
     }
 
     private void BuildSampleServices()

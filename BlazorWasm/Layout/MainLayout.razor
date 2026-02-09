@@ -1,9 +1,53 @@
 ﻿@inherits LayoutComponentBase
-<div class="banner_bg_main">
-    <!-- <NavBar />
-    <br />
-    <Header /> -->
-    @Body
+@using ClientLibrary.Helper
+@using ClientLibrary.Models.Landing
+@using BlazorWasm.Shared.Landing
+@using System.Globalization
+
+<div class="landing-page">
+    <LandingHeader HeaderId="main-layout"
+                   Brand="ServicioAhora!"
+                   BrandHref="@RouteConstants.Home"
+                   Search="@SearchBar"
+                   AccountLinks="@AccountActions"
+                   NavLinks="@PrimaryNavLinks" />
+
+    <main>
+        <CustomErrorBoundary>
+            @Body
+        </CustomErrorBoundary>
+    </main>
+
+    <LandingFooter FooterId="main-footer"
+                   Brand="ServicioAhora!"
+                   Description="Coordinamos servicios hogareños confiables con soporte humano y seguimiento en tiempo real."
+                   ContactLines="@FooterContact"
+                   LinkGroups="@FooterGroups"
+                   CurrentYear="@CurrentYear" />
 </div>
-<!-- <FooterComponent /> -->
- 
+
+@code {
+    private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
+
+    private readonly IReadOnlyList<MenuActionModel> AccountActions = MenuConstants.AccountActions;
+    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = MenuConstants.PrimaryNavLinks;
+
+    private readonly IReadOnlyList<string> FooterContact = new List<string>
+    {
+        "Tel: +54 11 5555 1111",
+        "Email: hola@servicioahora.com",
+        "Horario: Lunes a domingo 8 a 22 h"
+    };
+
+    private readonly IReadOnlyList<FooterGroupModel> FooterGroups = new List<FooterGroupModel>
+    {
+        new("Explorá más", new []
+        {
+            new FooterLinkModel("Servicios", RouteConstants.HashServices),
+            new FooterLinkModel("Profesionales", RouteConstants.Professionals),
+            new FooterLinkModel("Garantías", RouteConstants.HashGarantias)
+        })
+    };
+
+    private int CurrentYear => DateTime.Now.Year;
+}

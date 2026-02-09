@@ -1,0 +1,25 @@
+@attribute [Route("/error-test")]
+@using ClientLibrary.Helper
+
+<PageTitle>Test de Error - ServicioAhora!</PageTitle>
+
+<div class="container py-5">
+    <h2>Prueba de Boundary de Error</h2>
+    <p>Esta página está diseñada para lanzar una excepción y probar el manejo global de errores.</p>
+
+    <div class="alert alert-warning">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i>
+        Al hacer clic en el botón, se lanzará una excepción no controlada. Esto debería activar el CustomErrorBoundary.
+    </div>
+
+    <button class="btn btn-danger" @onclick="ThrowError">
+        <i class="fa-solid fa-bomb me-2"></i> Lanzar Excepción
+    </button>
+</div>
+
+@code {
+    private void ThrowError()
+    {
+        throw new InvalidOperationException("¡Esta es una excepción de prueba lanzada manualmente!");
+    }
+}

@@ -59,7 +59,10 @@ namespace ClientLibrary.Services
 
         public async Task<IEnumerable<GetCategory>> GetAllAsync()
         {
-            var client =  httpClient.GetPublicClient();
+            var client = httpClient.GetPublicClient();
+            if (client == null)
+                return [];
+                
             var apiCall = new ApiCall
             {
                 Route = Constant.Category.GetAll,
