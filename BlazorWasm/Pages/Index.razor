@@ -4,6 +4,8 @@
 @using System.Globalization
 @using ClientLibrary.Helper
 @using ClientLibrary.Models.Landing
+@using ClientLibrary.State
+@implements IDisposable
 
 <div class="landing-page">
 
@@ -73,7 +75,7 @@
 </div>
 
 @code {
-    [Inject] private ICategoryService CategoryService { get; set; } = default!;
+    [Inject] private CategoryStore CategoryStore { get; set; } = default!;
 
     private static readonly CultureInfo LocalCulture = new("es-AR");
 
@@ -98,8 +100,6 @@
         new("36 hs", "Tiempo de respuesta"),
         new("24/7", "Soporte al cliente")
     };
-
-    // Removed hardcoded Rubros
 
     private readonly IReadOnlyList<ServiceModel> Services = new List<ServiceModel>
     {
@@ -162,11 +162,13 @@
 
     protected override async Task OnInitializedAsync()
     {
+        CategoryStore.OnChange += StateHasChanged;
+        
         try
         {
             CategoriesLoading = true;
-            var categories = await CategoryService.GetAllAsync();
-            FeaturedCategories = categories?.Where(c => c.IsFeatured).Take(6).ToList() ?? new List<GetCategory>();
+            await CategoryStore.LoadCategoriesAsync();
+            FeaturedCategories = CategoryStore.Categories?.Where(c => c.IsFeatured).Take(6).ToList() ?? new List<GetCategory>();
         }
         catch (Exception ex)
         {
@@ -177,5 +179,10 @@
         {
             CategoriesLoading = false;
         }
+    }
+
+    public void Dispose()
+    {
+        CategoryStore.OnChange -= StateHasChanged;
     }
 }

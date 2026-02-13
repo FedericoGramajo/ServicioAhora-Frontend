@@ -13,6 +13,48 @@
                     <button class="btn btn-primary" type="submit">@Search.ButtonText</button>
                 </div>
             </form>
+            @* <DarkModeToggle /> *@
+            <div class="dropdown me-2">
+                <button class="btn btn-link position-relative text-dark text-decoration-none dropdown-toggle-no-caret" type="button" id="notifMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-regular fa-bell fa-lg"></i>
+                    @if (NotificationState.UnreadCount > 0)
+                    {
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light">
+                            @NotificationState.UnreadCount
+                            <span class="visually-hidden">notificaciones</span>
+                        </span>
+                    }
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="notifMenu" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                    <li class="dropdown-header d-flex justify-content-between align-items-center">
+                        <span>Notificaciones</span>
+                        @if (NotificationState.UnreadCount > 0)
+                        {
+                            <button class="btn btn-link btn-sm text-decoration-none" @onclick="MarkAllRead">Marcar leídas</button>
+                        }
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    @if (NotificationState.Notifications.Any())
+                    {
+                        @foreach (var notif in NotificationState.Notifications)
+                        {
+                             <li>
+                                <a class="dropdown-item text-wrap @(notif.IsRead ? "text-muted" : "fw-bold")" href="#" @onclick="() => ReadNotification(notif.Id)">
+                                    <small class="d-block text-primary mb-1">@notif.Title</small>
+                                    <span>@notif.Message</span>
+                                    <div class="text-end mt-1"><small class="opacity-50" style="font-size: 0.7rem;">@notif.CreatedAt.ToString("g")</small></div>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                        }
+                    }
+                    else
+                    {
+                        <li class="dropdown-item text-center text-muted small py-3">No tenés notificaciones</li>
+                    }
+                </ul>
+            </div>
+
             <div class="dropdown">
                 <button class="btn btn-outline-primary dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
                     Mi cuenta
@@ -24,6 +66,19 @@
                     }
                 </ul>
             </div>
+            
+            @* Optional: Keep Cart if needed, or hide if strictly single-booking *@
+            
+            <a href="/cart" class="btn btn-primary position-relative ms-2">
+                <i class="fa-solid fa-cart-shopping"></i>
+                @if (CartState.Count > 0)
+                {
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        @CartState.Count
+                        <span class="visually-hidden">items en carrito</span>
+                    </span>
+                }
+            </a>
         </div>
         <nav class="nav-menu mt-3">
             <div class="nav nav-pills justify-content-center justify-content-lg-between flex-wrap gap-2">
@@ -39,6 +94,12 @@
 @code {
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
+
+    [Inject]
+    private CartStore CartState { get; set; } = default!;
+
+    [Inject]
+    private NotificationService NotificationState { get; set; } = default!;
 
     [Parameter]
     public string HeaderId { get; set; } = string.Empty;
@@ -59,6 +120,28 @@
     public IReadOnlyList<NavLinkModel> NavLinks { get; set; } = Array.Empty<NavLinkModel>();
 
     private string searchTerm = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        CartState.OnChange += StateHasChanged;
+        NotificationState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        CartState.OnChange -= StateHasChanged;
+        NotificationState.OnChange -= StateHasChanged;
+    }
+
+    private void ReadNotification(Guid id)
+    {
+        NotificationState.MarkAsRead(id);
+    }
+    
+    private void MarkAllRead()
+    {
+        NotificationState.MarkAllAsRead();
+    }
 
     private void OnSearch()
     {

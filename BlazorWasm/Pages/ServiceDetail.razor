@@ -118,7 +118,9 @@
                         <p class="text-muted mb-1">Precio estimado</p>
                         <h3 class="mb-3">@Service.Price.ToString("C0", LocalCulture)</h3>
                         <div class="d-grid gap-2">
-                            <button class="btn btn-primary btn-lg" type="button" @onclick="ShowBookingModal">Solicitar turno</button>
+                            <button class="btn btn-primary btn-lg" type="button" @onclick="ShowBookingModal">
+                                <i class="fa-regular fa-calendar-check me-2"></i>Reservar turno
+                            </button>
                             <button class="btn btn-outline-primary" type="button" @onclick="BackToSearch">Seguir explorando</button>
                         </div>
                         <hr class="my-4" />
@@ -140,28 +142,33 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Confirmar solicitud</h5>
+                        <h5 class="modal-title">Reservar Turno</h5>
                         <button type="button" class="btn-close" @onclick="CloseBookingModal"></button>
                     </div>
                     <div class="modal-body">
-                        <p>Estás solicitando: <strong>@Service?.Name</strong></p>
-                        <p class="mb-3">Un profesional se pondrá en contacto con vos para coordinar la visita.</p>
+                        <p class="mb-1">Servicio: <strong>@Service?.Name</strong></p>
+                        <p class="text-muted small mb-3">Duración estimada: @Service?.Duration</p>
                         
-                        <div class="mb-3">
-                            <label class="form-label">Fecha preferida</label>
-                            <input type="date" class="form-control" />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Dirección</label>
-                            <select class="form-select">
-                                <option>Av. Siempre Viva 742 (Principal)</option>
-                                <option>Calle Falsa 123</option>
-                            </select>
-                        </div>
+                        <!-- Calendar Component -->
+                        <TimeSlotPicker ProfessionalId="mock-prof-1" 
+                                       DurationMinutes="120" 
+                                       OnSlotSelected="OnTimeSlotSelected" />
+                        
+                        @if (SelectedAppointmentTime.HasValue)
+                        {
+                            <div class="alert alert-success mt-3 mb-0">
+                                <i class="fa-regular fa-calendar-check me-2"></i>
+                                Turno seleccionado: <strong>@SelectedAppointmentTime.Value.ToString("dddd d 'de' MMMM, HH:mm", LocalCulture)</strong>
+                            </div>
+                        }
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @onclick="CloseBookingModal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" @onclick="ConfirmBooking">Confirmar solicitud</button>
+                        <button type="button" class="btn btn-primary" 
+                                disabled="@(!SelectedAppointmentTime.HasValue)"
+                                @onclick="ConfirmBooking">
+                            Confirmar Reserva
+                        </button>
                     </div>
                 </div>
             </div>
@@ -174,7 +181,7 @@
             <div class="toast show align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="d-flex">
                     <div class="toast-body">
-                        <i class="fa-solid fa-check-circle me-2"></i> Solicitud enviada con éxito.
+                        <i class="fa-solid fa-check-circle me-2"></i> @successMessageText
                     </div>
                     <button type="button" class="btn-close btn-close-white me-2 m-auto" @onclick="CloseSuccessMessage" aria-label="Close"></button>
                 </div>
@@ -188,6 +195,11 @@
 @code {
     [Parameter]
     public string Slug { get; set; } = string.Empty;
+
+    // Remove CartStore if not used for this specific single-booking flow anymore, 
+    // or keep it if "booking" means adding a "Booked Item" to cart. 
+    // For single flow we might just process it directly.
+    [Inject] private CartStore CartState { get; set; } = default!; 
 
     private static readonly CultureInfo LocalCulture = new("es-AR");
 
@@ -224,22 +236,43 @@
 
     private bool showBookingModal = false;
     private bool showSuccessMessage = false;
+    private string successMessageText = "Solicitud enviada con éxito.";
+    
+    private DateTime? SelectedAppointmentTime { get; set; }
 
     private void ShowBookingModal()
     {
         showBookingModal = true;
+        SelectedAppointmentTime = null;
     }
 
     private void CloseBookingModal()
     {
         showBookingModal = false;
     }
+    
+    private void OnTimeSlotSelected(DateTime slot)
+    {
+        SelectedAppointmentTime = slot;
+    }
 
     private void ConfirmBooking()
     {
-        showBookingModal = false;
-        showSuccessMessage = true;
-        // In a real app we would send the request to the backend here
+        if (SelectedAppointmentTime.HasValue)
+        {
+            showBookingModal = false;
+            successMessageText = $"Turno reservado para el {SelectedAppointmentTime.Value.ToString("d/M HH:mm")}. ¡Te esperamos!";
+            showSuccessMessage = true;
+            
+            // Here you would redirect to checkout or save appointment
+            // Navigation.NavigateTo("/checkout?appointmentId=...");
+            
+            Task.Delay(5000).ContinueWith(_ => 
+            {
+                 showSuccessMessage = false;
+                 InvokeAsync(StateHasChanged);
+            });
+        }
     }
 
     private void CloseSuccessMessage()

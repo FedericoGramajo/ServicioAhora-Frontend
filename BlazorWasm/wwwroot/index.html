@@ -21,6 +21,29 @@
     <script src="_content/NetcodeHub.Packages.Components.DataGrid/event.js"></script>
     <script src="_content/NetcodeHub.Packages.Components.Modal/modal.js"></script>
 
+    <script>
+        (function () {
+            window.themeManager = {
+                setTheme: function (isDark) {
+                    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                },
+                isDarkMode: function () {
+                    return document.documentElement.getAttribute('data-theme') === 'dark';
+                }
+            };
+
+            // Immediate execution to prevent FOUC
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
 </head>
 
 <body>

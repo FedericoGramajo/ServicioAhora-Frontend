@@ -1,0 +1,120 @@
+@page "/cart"
+@using System.Globalization
+@using ClientLibrary.State
+@using ClientLibrary.Models.Cart
+@implements IDisposable
+
+<PageTitle>Carrito - ServicioAhora!</PageTitle>
+
+<div class="landing-page">
+    <div class="container py-5">
+        <h1 class="mb-4">Mi Carrito</h1>
+
+        @if (CartState.Items.Any())
+        {
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="surface-card">
+                        @foreach (var item in CartState.Items)
+                        {
+                            <div class="d-flex gap-3 mb-4 position-relative">
+                                <div class="rounded overflow-hidden flex-shrink-0" style="width: 100px; height: 100px;">
+                                    <img src="@item.ImageUrl" alt="@item.Name" class="w-100 h-100 object-fit-cover" />
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h5 class="mb-1">@item.Name</h5>
+                                            <p class="text-muted small mb-2">@item.Category</p>
+                                        </div>
+                                        <button class="btn btn-link text-danger p-0" @onclick="() => RemoveItem(item.ServiceId)" title="Eliminar">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-end mt-2">
+                                        <div class="input-group input-group-sm" style="width: 120px;">
+                                            <button class="btn btn-outline-secondary" type="button" @onclick="() => UpdateQuantity(item, -1)">-</button>
+                                            <span class="input-group-text bg-white">@item.Quantity</span>
+                                            <button class="btn btn-outline-secondary" type="button" @onclick="() => UpdateQuantity(item, 1)">+</button>
+                                        </div>
+                                        <p class="fw-bold mb-0">@item.TotalPrice.ToString("C0", LocalCulture)</p>
+                                    </div>
+                                </div>
+                            </div>
+                            @if (item != CartState.Items.Last())
+                            {
+                                <hr class="my-4 opacity-10" />
+                            }
+                        }
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="surface-card sticky-top" style="top: 20px;">
+                        <h4 class="mb-3">Resumen</h4>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal</span>
+                            <span>@CartState.Total.ToString("C0", LocalCulture)</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Impuestos (estimado)</span>
+                            <span>$0</span>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="fw-bold fs-5">Total</span>
+                            <span class="fw-bold fs-5 text-primary">@CartState.Total.ToString("C0", LocalCulture)</span>
+                        </div>
+                        <button class="btn btn-primary w-100 py-3 rounded-pill shadow-sm" @onclick="Checkout">
+                            Iniciar Compra
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <div class="mb-4">
+                     <i class="fa-solid fa-cart-shopping fa-4x text-muted opacity-25"></i>
+                </div>
+                <h3>Tu carrito está vacío</h3>
+                <p class="text-muted mb-4">¡Explorá nuestros servicios y encontrá lo que necesitás!</p>
+                <a href="/search" class="btn btn-primary rounded-pill px-5">Explorar Servicios</a>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Inject] private CartStore CartState { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    private static readonly CultureInfo LocalCulture = new("es-AR");
+
+    protected override void OnInitialized()
+    {
+        CartState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        CartState.OnChange -= StateHasChanged;
+    }
+
+    private void RemoveItem(string id)
+    {
+        CartState.RemoveFromCart(id);
+    }
+
+    private void UpdateQuantity(CartItem item, int change)
+    {
+        CartState.UpdateQuantity(item.ServiceId, item.Quantity + change);
+    }
+
+    private void Checkout()
+    {
+        // Here we would navigate to checkout or show a modal
+        // For now just console log
+        Console.WriteLine("Initiating checkout...");
+    }
+}

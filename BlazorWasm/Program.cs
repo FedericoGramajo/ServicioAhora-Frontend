@@ -2,6 +2,7 @@ using BlazorWasm;
 using BlazorWasm.Authentication;
 using ClientLibrary.Helper;
 using ClientLibrary.Services;
+using ClientLibrary.State;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -35,5 +36,10 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IPaymentMethodService, PaymentMethodService>();
 builder.Services.AddScoped<IServOfferingService, ServOfferingService>();
 builder.Services.AddVirtualizationService();
+
+builder.Services.AddScoped<CategoryStore>();
+builder.Services.AddScoped<CartStore>();
+builder.Services.AddScoped<AvailabilityMockService>();
+builder.Services.AddScoped<NotificationService>();
 
 await builder.Build().RunAsync();
