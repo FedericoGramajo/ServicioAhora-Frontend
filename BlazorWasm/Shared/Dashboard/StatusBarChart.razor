@@ -1,0 +1,43 @@
+@using System.Globalization
+
+<div class="bar-chart compact">
+    @foreach (var bar in Bars)
+    {
+        <div class="bar-row">
+            <div class="bar-label">@bar.Label</div>
+            <div class="bar-track" aria-hidden="true">
+                <div class="bar-fill" style="width: @bar.Percentage%; background-color: @GetColor(bar.Label)"></div>
+            </div>
+            <div class="bar-value">@bar.Count</div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public IEnumerable<(string Status, int Count)> Data { get; set; } = Enumerable.Empty<(string, int)>();
+
+    private List<(string Label, int Count, double Percentage)> Bars
+    {
+        get
+        {
+            if (!Data.Any()) return new();
+            var max = Data.Max(x => x.Count);
+            if (max == 0) max = 1;
+
+            return Data.Select(x => (
+                x.Status,
+                x.Count,
+                Math.Round((double)x.Count / max * 100, 1)
+            )).ToList();
+        }
+    }
+
+    private string GetColor(string status) => status switch
+    {
+        "Completado" => "#198754", // Success
+        "En curso" => "#0d6efd",   // Primary
+        "Confirmado" => "#ffc107", // Warning
+        "Cancelado" => "#dc3545",  // Danger
+        _ => "#adb5bd"             // Gray
+    };
+}

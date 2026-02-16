@@ -1,0 +1,144 @@
+@inject IProfessionalDashboardService DashboardService
+@inject IJSRuntime JS
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="p-3 border rounded bg-light">
+            <h6 class="mb-3">Configurar horarios</h6>
+            <div class="mb-3">
+                <label class="form-label small">Días de atención</label>
+                
+                <CalendarSelector @bind-SelectedDates="SelectedDates" />
+                
+                <small class="text-muted">Seleccioná días individuales o mantené Shift presionado para seleccionar un rango.</small>
+            </div>
+            <div class="mb-3">
+                    <label class="form-label small">Horario</label>
+                    <div class="d-flex gap-2 align-items-center">
+                        <input type="time" class="form-control" @bind="NewStartTime" />
+                        <span>a</span>
+                        <input type="time" class="form-control" @bind="NewEndTime" />
+                    </div>
+            </div>
+            <button class="btn btn-primary w-100" @onclick="AddAvailability">
+                <i class="fa-solid fa-plus me-2"></i> Agregar horario
+            </button>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        @if (Availabilities == null || !Availabilities.Any())
+        {
+            <div class="alert alert-light border border-dashed text-center py-4">
+                <i class="fa-regular fa-clock fa-2x text-muted mb-2"></i>
+                <p class="text-muted mb-0">No has configurado tu disponibilidad.</p>
+            </div>
+        }
+        else
+        {
+                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                <table class="table table-hover align-middle">
+                    <thead style="position: sticky; top: 0; background-color: white; z-index: 1;">
+                        <tr>
+                            <th>Día</th>
+                            <th>Horario</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Availabilities)
+                        {
+                            <tr>
+                                <td>
+                                    @if (item.SpecificDate.HasValue)
+                                    {
+                                            <span class="fw-semibold">@item.SpecificDate.Value.ToString("dd MMM yyyy", LocalCulture)</span>
+                                            <small class="text-muted d-block">@LocalCulture.DateTimeFormat.GetDayName(item.DayOfWeek)</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="fw-semibold">@(DayNames.ContainsKey((int)item.DayOfWeek) ? DayNames[(int)item.DayOfWeek] : "Desconocido")</span>
+                                        <small class="text-muted d-block">Recurrente</small>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fa-regular fa-clock text-muted"></i>
+                                        <span>@item.StartTime.ToString(@"hh\:mm") - @item.EndTime.ToString(@"hh\:mm")</span>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-outline-danger btn-sm" @onclick="() => RemoveAvailability(item.Id)">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<ProfessionalAvailability> Availabilities { get; set; } = new();
+    [Parameter] public EventCallback OnAvailabilityChanged { get; set; }
+
+    private List<DateTime> SelectedDates { get; set; } = new();
+    private DateTime NewStartTime { get; set; } = DateTime.Today.AddHours(9); 
+    private DateTime NewEndTime { get; set; } = DateTime.Today.AddHours(17); 
+
+    private readonly CultureInfo LocalCulture = new("es-AR");
+
+    // Helper for display
+    private Dictionary<int, string> DayNames = new() 
+    {
+        {1, "Lunes"}, {2, "Martes"}, {3, "Miércoles"}, {4, "Jueves"}, {5, "Viernes"}, {6, "Sábado"}, {0, "Domingo"}
+    };
+
+    private async Task AddAvailability()
+    {
+        if (!SelectedDates.Any())
+        {
+                await JS.ToastrWarning("Seleccioná al menos una fecha.");
+                return;
+        }
+
+        if (NewEndTime <= NewStartTime)
+        {
+            await JS.ToastrWarning("La hora de fin debe ser mayor a la de inicio.");
+            return;
+        }
+
+        foreach (var date in SelectedDates)
+        {
+            var model = new ProfessionalAvailability 
+            { 
+                DayOfWeek = date.DayOfWeek, 
+                SpecificDate = date,
+                StartTime = NewStartTime.TimeOfDay, 
+                EndTime = NewEndTime.TimeOfDay 
+            };
+            
+            await DashboardService.AddAvailabilityAsync(model);
+        }
+
+        await OnAvailabilityChanged.InvokeAsync(); 
+        await JS.ToastrSuccess("Disponibilidad actualizada.");
+        SelectedDates.Clear();
+    }
+
+    private async Task RemoveAvailability(Guid id)
+    {
+        var response = await DashboardService.RemoveAvailabilityAsync(id);
+        if (response.success)
+        {
+            await OnAvailabilityChanged.InvokeAsync();
+            await JS.ToastrSuccess(response.Message);
+        }
+        else
+        {
+                await JS.ToastrError(response.Message);
+        }
+    }
+}

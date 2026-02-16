@@ -1,0 +1,172 @@
+@using System.Globalization
+@using System.Linq
+
+@using Microsoft.AspNetCore.Components.Web
+<div class="calendar-selector user-select-none">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-outline-secondary btn-sm" @onclick="PrevMonth">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <span class="fw-bold text-capitalize">@CurrentMonth.ToString("MMMM yyyy", LocalCulture)</span>
+        <button class="btn btn-outline-secondary btn-sm" @onclick="NextMonth">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+    </div>
+
+    <div class="calendar-grid">
+        @foreach (var dayName in DayNames)
+        {
+            <div class="calendar-header-cell text-muted small text-center py-1">@dayName</div>
+        }
+
+        @for (int i = 0; i < OffsetDays; i++)
+        {
+            <div class="calendar-cell empty"></div>
+        }
+
+        @for (int day = 1; day <= DaysInMonth; day++)
+        {
+            var date = new DateTime(CurrentMonth.Year, CurrentMonth.Month, day);
+            var isSelected = IsSelected(date);
+            var isInRange = IsInRange(date);
+            var isRangeStart = IsRangeStart(date);
+            var isRangeEnd = IsRangeEnd(date);
+
+            <div class="calendar-cell @GetCellClass(date, isSelected, isInRange, isRangeStart, isRangeEnd)" 
+                 @onclick="(args) => OnDateClick(date, args)">
+                @day
+            </div>
+        }
+    </div>
+    
+    <div class="d-flex justify-content-end mt-2">
+        <button class="btn btn-outline-secondary btn-sm" @onclick="ClearSelection" disabled="@(!SelectedDates.Any())">
+            <i class="fa-solid fa-eraser me-1"></i> Limpiar selección
+        </button>
+    </div>
+</div>
+
+<style>
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+    }
+    .calendar-header-cell {
+        font-weight: 600;
+    }
+    .calendar-cell {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+    .calendar-cell:hover:not(.empty) {
+        background-color: #f0f0f0;
+    }
+    .calendar-cell.selected {
+        background-color: #0d6efd;
+        color: white;
+        font-weight: bold;
+    }
+    .calendar-cell.range-start {
+        background-color: #0d6efd;
+        color: white;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    .calendar-cell.range-end {
+        background-color: #0d6efd;
+        color: white;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+    .calendar-cell.in-range {
+        background-color: #e9ecef; /* Light gray/blue */
+        color: black;
+        border-radius: 0;
+    }
+    .calendar-cell.range-included {
+         background-color: #e9f2ff; /* Lighter blue */
+    }
+</style>
+
+@code {
+    [Parameter] public List<DateTime> SelectedDates { get; set; } = new();
+    [Parameter] public EventCallback<List<DateTime>> SelectedDatesChanged { get; set; }
+    
+    private DateTime CurrentMonth { get; set; } = DateTime.Today;
+    private CultureInfo LocalCulture = new("es-AR");
+    
+    // Internal state for logic, allowing HashSet for performance if needed, 
+    // but here we sync with Parameter
+    
+    // Range Selection State
+    private DateTime? RangeStart { get; set; }
+    private DateTime? LastClickedDate { get; set; }
+
+    private string[] DayNames => LocalCulture.DateTimeFormat.AbbreviatedDayNames;
+    private int DaysInMonth => DateTime.DaysInMonth(CurrentMonth.Year, CurrentMonth.Month);
+    private int OffsetDays => ((int)new DateTime(CurrentMonth.Year, CurrentMonth.Month, 1).DayOfWeek); 
+
+    private void PrevMonth() => CurrentMonth = CurrentMonth.AddMonths(-1);
+    private void NextMonth() => CurrentMonth = CurrentMonth.AddMonths(1);
+
+    private bool IsSelected(DateTime date) => SelectedDates.Contains(date);
+    
+    private bool IsRangeStart(DateTime date) => false; // Simplified for now
+    private bool IsRangeEnd(DateTime date) => false;
+    private bool IsInRange(DateTime date) => false;
+
+    private bool RangeMode { get; set; } = false;
+
+    private async Task OnDateClick(DateTime date, MouseEventArgs args)
+    {
+        if (args.ShiftKey && LastClickedDate.HasValue)
+        {
+            // Range Selection
+            var start = LastClickedDate.Value < date ? LastClickedDate.Value : date;
+            var end = LastClickedDate.Value < date ? date : LastClickedDate.Value;
+
+            for (var dt = start; dt <= end; dt = dt.AddDays(1))
+            {
+                if (!SelectedDates.Contains(dt))
+                {
+                    SelectedDates.Add(dt);
+                }
+            }
+        }
+        else
+        {
+            // Normal Toggle
+            if (SelectedDates.Contains(date))
+            {
+                SelectedDates.Remove(date);
+            }
+            else
+            {
+                SelectedDates.Add(date);
+            }
+        }
+        
+        LastClickedDate = date;
+        await SelectedDatesChanged.InvokeAsync(SelectedDates);
+    }
+    
+    private async Task ClearSelection()
+    {
+        SelectedDates.Clear();
+        await SelectedDatesChanged.InvokeAsync(SelectedDates);
+    }
+
+    private string GetCellClass(DateTime date, bool isSelected, bool isInRange, bool isStart, bool isEnd)
+    {
+        if (isSelected) return "selected";
+        return "";
+    }
+
+}

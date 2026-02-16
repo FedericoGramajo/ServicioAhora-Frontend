@@ -2,6 +2,8 @@ using BlazorWasm;
 using BlazorWasm.Authentication;
 using ClientLibrary.Helper;
 using ClientLibrary.Services;
+using ClientLibrary.Services.Contracts;
+using ClientLibrary.Services.Implementations;
 using ClientLibrary.State;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -41,5 +43,6 @@ builder.Services.AddScoped<CategoryStore>();
 builder.Services.AddScoped<CartStore>();
 builder.Services.AddScoped<AvailabilityMockService>();
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<IProfessionalDashboardService, ProfessionalDashboardService>();
 
 await builder.Build().RunAsync();

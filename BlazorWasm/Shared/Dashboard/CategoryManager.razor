@@ -1,0 +1,126 @@
+@using ClientLibrary.Services.Contracts
+@using Microsoft.JSInterop
+@using ClientLibrary.Helper
+@inject IProfessionalDashboardService DashboardService
+@inject IJSRuntime JS
+
+<div class="surface-card mb-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
+        <div>
+            <h4 class="mb-1">Mis Rubros</h4>
+            <p class="text-muted mb-0">Gestioná las categorías en las que ofrecés servicios (Máximo 2)</p>
+        </div>
+        <button class="btn btn-outline-primary btn-sm" @onclick="OpenAddCategoryModal" disabled="@(MyCategories.Count >= 2)">
+            <i class="fa-solid fa-plus me-1"></i> Agregar rubro
+        </button>
+    </div>
+    
+    @if (MyCategories.Count == 0)
+    {
+        <div class="alert alert-info">
+            <i class="fa-solid fa-info-circle me-2"></i> Aún no has seleccionado ningún rubro. Agregá uno para comenzar a publicar servicios.
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var category in MyCategories)
+            {
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-between align-items-center p-3 border rounded bg-light">
+                        <span class="fw-semibold">@category</span>
+                        <button class="btn btn-outline-danger btn-sm" @onclick="() => RemoveCategory(category)">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@if (showAddCategoryModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Agregar Rubro</h5>
+                    <button type="button" class="btn-close" @onclick="CloseAddCategoryModal"></button>
+                </div>
+                <div class="modal-body">
+                        <div class="mb-3">
+                        <label class="form-label">Seleccioná un rubro</label>
+                        <select class="form-select" @bind="selectedCategoryToAdd">
+                            @foreach (var category in AvailableCategories)
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </select>
+                        <div class="form-text">Podés seleccionar hasta 2 rubros en total.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseAddCategoryModal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" @onclick="AddCategory">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public List<string> MyCategories { get; set; } = new();
+    [Parameter] public List<string> AvailableCategories { get; set; } = new();
+    [Parameter] public EventCallback OnCategoryChanged { get; set; }
+
+    private bool showAddCategoryModal = false;
+    private string? selectedCategoryToAdd;
+
+    private void OpenAddCategoryModal()
+    {
+        if (MyCategories.Count >= 2)
+        {
+            JS.ToastrWarning("Solo puedes seleccionar hasta 2 rubros.");
+            return;
+        }
+        selectedCategoryToAdd = AvailableCategories.FirstOrDefault();
+        showAddCategoryModal = true;
+    }
+
+    private void CloseAddCategoryModal()
+    {
+        showAddCategoryModal = false;
+    }
+
+    private async Task AddCategory()
+    {
+        if (string.IsNullOrEmpty(selectedCategoryToAdd)) return;
+
+        var response = await DashboardService.AddMyCategoryAsync(selectedCategoryToAdd);
+        if (response.success) 
+        {
+            await OnCategoryChanged.InvokeAsync();
+            showAddCategoryModal = false;
+            await JS.ToastrSuccess(response.Message);
+        }
+        else
+        {
+            await JS.ToastrError(response.Message);
+        }
+    }
+
+    private async Task RemoveCategory(string category)
+    {
+        var response = await DashboardService.RemoveMyCategoryAsync(category);
+            if (response.success)
+        {
+            await OnCategoryChanged.InvokeAsync();
+            await JS.ToastrSuccess(response.Message);
+        }
+        else
+        {
+            await JS.ToastrError(response.Message);
+        }
+    }
+}

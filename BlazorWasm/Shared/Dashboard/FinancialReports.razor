@@ -1,0 +1,147 @@
+@using ClientLibrary.Models.Booking
+@using ClientLibrary.Services.Contracts
+@using BlazorWasm.Shared.Dashboard
+@using System.Globalization
+@inject IProfessionalDashboardService DashboardService
+
+<div class="surface-card mt-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+        <div>
+            <h4 class="mb-1">Reportes de servicios</h4>
+            <p class="text-muted mb-0">Filtrá por fechas, ciudad y estado</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <input type="date" class="form-control" @bind="StartDate" />
+            <input type="date" class="form-control" @bind="EndDate" />
+            <select class="form-select" @bind="SelectedStatus">
+                <option value="">Todos los estados</option>
+                <option value="Confirmado">Confirmados</option>
+                <option value="En curso">En curso</option>
+                <option value="Completado">Completados</option>
+                <option value="Cancelado">Cancelados</option>
+            </select>
+            <select class="form-select" @bind="SelectedCity">
+                <option value="">Todas las ciudades</option>
+                <option value="Buenos Aires">Buenos Aires</option>
+                <option value="Córdoba">Córdoba</option>
+                <option value="Rosario">Rosario</option>
+            </select>
+            <button class="btn btn-primary" @onclick="LoadChartsAsync">Aplicar</button>
+        </div>
+    </div>
+    
+    <div class="row g-3 mt-3">
+        <div class="col-md-4">
+            <div class="chart-card">
+                <div class="chart-value">@Transactions.Count(t => t.Status == "Completado")</div>
+                <p class="mb-0">Órdenes completadas</p>
+                <small class="text-secondary">En el periodo seleccionado</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="chart-card">
+                <div class="chart-value">@Transactions.Count(t => t.Status == "En curso")</div>
+                <p class="mb-0">Servicios en curso</p>
+                <small class="text-secondary">Con seguimiento activo</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="chart-card">
+                <div class="chart-value">4.9</div>
+                <p class="mb-0">Satisfacción promedio</p>
+                <small class="text-secondary">Basado en @Transactions.Count() reseña(s)</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-3 align-items-start">
+        <div class="col-lg-7">
+            <div class="bar-chart-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <h6 class="mb-0">Evolución de ingresos</h6>
+                        <small class="text-muted">Últimos 6 meses</small>
+                    </div>
+                    <span class="text-muted small">Total: @Transactions.Sum(t => t.Amount).ToString("C0", LocalCulture)</span>
+                </div>
+                
+                <RevenueTrendChart Data="@RevenueData" />
+
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="bar-chart-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h6 class="mb-0">Servicios por categoría</h6>
+                        <small class="text-muted">Distribución porcentual</small>
+                    </div>
+                </div>
+
+                <ServiceDistributionChart Data="@CategoryDistribution" />
+
+            </div>
+        </div>
+    </div>
+    
+        <div class="row g-3 mt-3">
+            <div class="col-12">
+                <div class="bar-chart-card">
+                    <h6 class="mb-3">Estado de servicios</h6>
+                    
+                    <StatusBarChart Data="@StatusDistribution" />
+
+                </div>
+            </div>
+        </div>
+</div>
+
+@code {
+    private DateTime StartDate { get; set; } = DateTime.Today.AddMonths(-6);
+    private DateTime EndDate { get; set; } = DateTime.Today;
+    private string SelectedStatus { get; set; } = "";
+    private string SelectedCity { get; set; } = "";
+    
+    private List<ServiceTransaction> Transactions { get; set; } = new();
+    private IEnumerable<(string Month, decimal Amount)> RevenueData { get; set; } = Enumerable.Empty<(string, decimal)>();
+    private IEnumerable<(string Category, int Count)> CategoryDistribution { get; set; } = Enumerable.Empty<(string, int)>();
+    private IEnumerable<(string Status, int Count)> StatusDistribution { get; set; } = Enumerable.Empty<(string, int)>();
+
+    private readonly CultureInfo LocalCulture = new("es-AR");
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadChartsAsync();
+    }
+
+    private async Task LoadChartsAsync()
+    {
+        Transactions = await DashboardService.GetTransactionsAsync(StartDate, EndDate, SelectedStatus, SelectedCity);
+        CalculateChartData();
+    }
+
+    private void CalculateChartData()
+    {
+        // Revenue Trend
+        RevenueData = Transactions
+            .GroupBy(t => new { t.Date.Year, t.Date.Month })
+            .Select(g => new { Date = new DateTime(g.Key.Year, g.Key.Month, 1), Total = g.Sum(t => t.Amount) })
+            .OrderBy(x => x.Date)
+            .Select(x => (x.Date.ToString("MMM", LocalCulture), x.Total))
+            .ToList();
+
+        // Category Distribution
+        CategoryDistribution = Transactions
+            .GroupBy(t => t.Category)
+            .Select(g => (g.Key, g.Count()))
+            .OrderByDescending(x => x.Item2)
+            .ToList();
+
+        // Status Distribution
+        StatusDistribution = Transactions
+                .GroupBy(t => t.Status)
+                .Select(g => (g.Key, g.Count()))
+                .OrderByDescending(x => x.Item2)
+                .ToList();
+    }
+}

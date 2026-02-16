@@ -1,0 +1,161 @@
+@inject IProfessionalDashboardService DashboardService
+@inject IJSRuntime JS
+
+<div class="surface-card">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
+        <div>
+            <h4 class="mb-1">Servicios por rubro</h4>
+            <p class="text-muted mb-0">Mostrando tus publicaciones por categoría</p>
+        </div>
+    </div>
+    @if (ServiceGroups == null)
+    {
+        <p>Cargando servicios...</p>
+    }
+    else
+    {
+        @foreach (var group in ServiceGroups)
+        {
+            <div class="service-group mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <div>
+                        <h5 class="mb-0">@group.Category</h5>
+                        <small class="text-secondary">@group.Services.Count servicio(s)</small>
+                    </div>
+                    <button class="btn btn-primary btn-sm" @onclick="() => OpenAddServiceModal(group.Category)">
+                        <i class="fa-solid fa-plus me-1"></i> Agregar servicio
+                    </button>
+                </div>
+                <div class="row g-3">
+                    @foreach (var service in group.Services)
+                    {
+                        <div class="col-md-4">
+                            <ProfessionalServiceCard 
+                                Service="@service" 
+                                Category="@group.Category"
+                                OnEdit="@((s) => EditService(s, group.Category))"
+                                OnDelete="DeleteService" />
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@if (showAddServiceModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Publicar nuevo servicio</h5>
+                    <button type="button" class="btn-close" @onclick="CloseAddServiceModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre del servicio</label>
+                        <input type="text" class="form-control" @bind="newService.Name" placeholder="Ej. Limpieza de tapizados" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Rubro</label>
+                        <select class="form-select" @bind="newService.Category">
+                            @if (ServiceGroups != null)
+                            {
+                                foreach (var group in ServiceGroups)
+                                {
+                                    <option value="@group.Category">@group.Category</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Precio estimado</label>
+                        <input type="number" class="form-control" @bind="newService.Price" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" rows="3" @bind="newService.Description"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseAddServiceModal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveService">Publicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public List<ServiceGroup> ServiceGroups { get; set; } = new();
+    [Parameter] public EventCallback OnServiceChanged { get; set; }
+
+    private bool showAddServiceModal = false;
+    private ServiceFormModel newService = new();
+    private bool isEditingService = false;
+
+    public void OpenAddServiceModal(string? category = null, ServiceSummary? serviceToEdit = null)
+    {
+        if (serviceToEdit != null)
+        {
+            isEditingService = true;
+            newService = new ServiceFormModel
+            {
+                Slug = serviceToEdit.Slug,
+                Name = serviceToEdit.Name,
+                Category = category ?? "",
+                Price = serviceToEdit.Price,
+                Description = serviceToEdit.Description
+            };
+        }
+        else
+        {
+            isEditingService = false;
+            newService = new(); 
+            if (!string.IsNullOrEmpty(category))
+            {
+                newService.Category = category;
+            }
+            else if (ServiceGroups.Any())
+            {
+                 newService.Category = ServiceGroups.First().Category;
+            }
+        }
+        showAddServiceModal = true;
+    }
+
+    private void CloseAddServiceModal()
+    {
+        showAddServiceModal = false;
+    }
+
+    private async Task SaveService()
+    {
+        if (isEditingService)
+        {
+             await DashboardService.UpdateServiceAsync(newService);
+             await JS.ToastrSuccess("Servicio actualizado correctamente.");
+        }
+        else
+        {
+            await DashboardService.AddServiceAsync(newService);
+            await JS.ToastrSuccess("Servicio publicado correctamente.");
+        }
+        
+        showAddServiceModal = false;
+        await OnServiceChanged.InvokeAsync();
+    }
+
+    private void EditService(ServiceSummary service, string category)
+    {
+        OpenAddServiceModal(category, service);
+    }
+
+    private async Task DeleteService(ServiceSummary service)
+    {
+         await DashboardService.DeleteServiceAsync(service.Slug);
+         await JS.ToastrSuccess("Servicio eliminado.");
+         await OnServiceChanged.InvokeAsync();
+    }
+}

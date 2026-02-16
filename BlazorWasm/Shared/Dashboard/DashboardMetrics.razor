@@ -1,0 +1,36 @@
+@using ClientLibrary.Models.Landing
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="dashboard-card">
+            <p class="text-muted mb-1">Servicios activos</p>
+            <h4 class="mb-0">@Metrics.ActiveServices</h4>
+            <small class="text-secondary">Publicados por categoría</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-card">
+            <p class="text-muted mb-1">Solicitudes</p>
+            <h4 class="mb-0">@Metrics.NewRequests</h4>
+            <small class="text-secondary">Nuevas esta semana</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-card">
+            <p class="text-muted mb-1">En curso</p>
+            <h4 class="mb-0">@Metrics.InProgress</h4>
+            <small class="text-secondary">Intervenciones abiertas</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-card">
+            <p class="text-muted mb-1">Satisfacción</p>
+            <h4 class="mb-0">@Metrics.Rating.ToString("0.0") ★</h4>
+            <small class="text-secondary">Promedio de clientes</small>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public ClientLibrary.Models.Landing.DashboardMetrics Metrics { get; set; } = new(0, 0, 0, 0);
+}

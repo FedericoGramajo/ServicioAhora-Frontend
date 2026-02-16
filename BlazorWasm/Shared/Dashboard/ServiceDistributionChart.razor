@@ -1,0 +1,66 @@
+@using System.Globalization
+
+<div class="d-flex align-items-center gap-4">
+    <!-- Doughnut Chart SVG -->
+        <div style="width: 120px; height: 120px;">
+        <svg viewBox="0 0 36 36" class="circular-chart">
+            @foreach (var segment in Segments) {
+                <path class="circle"
+                        stroke-dasharray="@segment.DashArray"
+                        stroke="@segment.Color"
+                        d="M18 2.0845
+                            a 15.9155 15.9155 0 0 1 0 31.831
+                            a 15.9155 15.9155 0 0 1 0 -31.831"
+                        style="stroke-dashoffset: @segment.Offset;" />
+            }
+        </svg>
+    </div>
+
+    <!-- Legend -->
+    <div class="flex-grow-1">
+        @foreach (var segment in Segments)
+        {
+            <div class="d-flex align-items-center justify-content-between mb-2 small">
+                <div class="d-flex align-items-center">
+                    <span class="d-inline-block rounded-circle me-2" style="width: 10px; height: 10px; background-color: @segment.Color;"></span>
+                    <span>@segment.Label</span>
+                </div>
+                <span class="fw-bold">@segment.Percentage.ToString("0.0")%</span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public IEnumerable<(string Category, int Count)> Data { get; set; } = Enumerable.Empty<(string, int)>();
+
+    private List<DoughnutSegment> Segments
+    {
+        get
+        {
+            var list = Data.ToList();
+            var total = list.Sum(x => x.Count);
+            if (total == 0) return new List<DoughnutSegment>();
+
+            var segments = new List<DoughnutSegment>();
+            double currentOffset = 25; // Start at top
+            var colors = new[] { "#0d6efd", "#198754", "#ffc107", "#dc3545", "#6c757d", "#6610f2", "#fd7e14" };
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                var percentage = (double)list[i].Count / total * 100;
+                segments.Add(new DoughnutSegment(
+                    list[i].Category,
+                    percentage,
+                    $"{percentage.ToString("0.0", CultureInfo.InvariantCulture)} 100",
+                    (-currentOffset).ToString(CultureInfo.InvariantCulture),
+                    colors[i % colors.Length]
+                ));
+                currentOffset -= percentage;
+            }
+            return segments;
+        }
+    }
+
+    private record DoughnutSegment(string Label, double Percentage, string DashArray, string Offset, string Color);
+}
