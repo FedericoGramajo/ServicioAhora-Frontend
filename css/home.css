@@ -589,12 +589,13 @@ body {
 
 /* Auth pages */
 .auth-page {
-    min-height: 100vh;
+    min-height: calc(100vh - 120px);
     background: radial-gradient(circle at 20% 20%, rgba(22, 163, 74, 0.12), transparent 45%),
         radial-gradient(circle at 80% 0%, rgba(15, 118, 110, 0.14), transparent 40%),
         linear-gradient(135deg, #f3f7f4, #e8f3ed 45%, #d9f1e4 75%);
     display: flex;
     align-items: center;
+    justify-content: center;
 }
 
 .auth-card {

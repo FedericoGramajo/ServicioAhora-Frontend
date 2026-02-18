@@ -46,3 +46,11 @@ window.showSwal = function (type, message) {
         });
     }
 }
+
+window.ShowConfirmationModal = function () {
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('bsConfirmationModal')).show();
+}
+
+window.HideConfirmationModal = function () {
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('bsConfirmationModal')).hide();
+}
