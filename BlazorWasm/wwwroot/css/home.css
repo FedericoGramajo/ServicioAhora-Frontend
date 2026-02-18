@@ -9,14 +9,15 @@
     color-scheme: light only;
 }
 
---landing-primary: #4ade80;
---landing-secondary: #2dd4bf;
---landing-dark: #f1f5f9;
---landing-muted: #94a3b8;
---landing-surface: #0f172a;
---landing-accent: #86efac;
---landing-footer: #020617;
-color-scheme: dark;
+[data-theme="dark"] {
+    --landing-primary: #4ade80;
+    --landing-secondary: #2dd4bf;
+    --landing-dark: #f1f5f9;
+    --landing-muted: #94a3b8;
+    --landing-surface: #0f172a;
+    --landing-accent: #86efac;
+    --landing-footer: #020617;
+    color-scheme: dark;
 }
 
 /* Specific Dark Mode Adjustments */
