@@ -126,6 +126,8 @@ color-scheme: dark;
 [data-theme="dark"] .professional-result,
 [data-theme="dark"] .bar-chart-card {
     background-color: #1e293b;
+    background-image: none;
+    /* Kill light mode gradients */
     border-color: rgba(255, 255, 255, 0.05);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     color: #e2e8f0;
