@@ -87,5 +87,19 @@ namespace ClientLibrary.Services
             else
                 return null!;
         }
+
+        public async Task<IEnumerable<GetServiceOffering>> SearchAsync(string query)
+        {
+            var allServices = await GetAllAsync();
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return allServices;
+            }
+
+            return allServices.Where(s => 
+                s.Name.Contains(query, StringComparison.OrdinalIgnoreCase) || 
+                (s.Description != null && s.Description.Contains(query, StringComparison.OrdinalIgnoreCase))
+            );
+        }
     }
 }

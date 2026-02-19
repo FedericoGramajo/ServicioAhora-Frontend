@@ -47,5 +47,6 @@ builder.Services.AddScoped<IProfessionalDashboardService, ProfessionalDashboardS
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<IServiceHistoryService, ServiceHistoryService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 await builder.Build().RunAsync();

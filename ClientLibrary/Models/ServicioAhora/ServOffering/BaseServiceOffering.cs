@@ -24,6 +24,8 @@ namespace ClientLibrary.Models.ServicioAhora.ServOffering
             public bool Status { get; set; } = true;
             [Required]
             public Guid CategoryId { get; set; }
+
+            public string? Image { get; set; }
     }
     
 }

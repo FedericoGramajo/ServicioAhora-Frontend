@@ -1,5 +1,7 @@
 @using ClientLibrary.Services.Contracts
 @using ClientLibrary.Models.Category
+@using ClientLibrary.Models.ProfessionalCat
+@using ClientLibrary.Services
 @using Microsoft.JSInterop
 @using ClientLibrary.Helper
 @inject IProfessionalDashboardService DashboardService
@@ -12,15 +14,15 @@
             <h4 class="mb-1">Mis Rubros</h4>
             <p class="text-muted mb-0">Gestioná las categorías en las que ofrecés servicios (Máximo 2)</p>
         </div>
-        <button class="btn btn-outline-primary btn-sm" @onclick="OpenAddCategoryModal" disabled="@(MyCategories.Count >= 2)">
-            <i class="fa-solid fa-plus me-1"></i> Agregar rubro
+        <button class="btn btn-primary btn-sm" @onclick="OpenAddCategoryModal">
+            <i class="fa-solid fa-plus me-1"></i> Agregar Rubro
         </button>
     </div>
     
     @if (MyCategories.Count == 0)
     {
         <div class="alert alert-info">
-            <i class="fa-solid fa-info-circle me-2"></i> Aún no has seleccionado ningún rubro. Agregá uno para comenzar a publicar servicios.
+            <i class="fa-solid fa-info-circle me-2"></i> Aún no has seleccionado ningún rubro.
         </div>
     }
     else
@@ -30,8 +32,8 @@
             {
                 <div class="col-md-6">
                     <div class="d-flex justify-content-between align-items-center p-3 border rounded bg-light">
-                        <span class="fw-semibold">@category</span>
-                        <button class="btn btn-outline-danger btn-sm" @onclick="() => RemoveCategory(category)">
+                        <span class="fw-semibold">@category.CategoryName</span>
+                        <button class="btn btn-outline-danger btn-sm" @onclick="() => RemoveCategory(category.ProfessionalId, category.CategoryId)">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -51,35 +53,29 @@
                     <button type="button" class="btn-close" @onclick="CloseAddCategoryModal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Seleccioná un rubro</label>
-                        @if (IsLoadingCategories)
-                        {
-                            <div class="text-center py-3">
-                                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                                Cargando rubros...
-                            </div>
-                        }
-                        else if (!AllCategories.Any())
-                        {
-                            <div class="alert alert-warning mb-0">No se encontraron rubros disponibles.</div>
-                        }
-                        else
-                        {
+                     @if (availableCategories == null)
+                    {
+                        <p>Cargando categorías...</p>
+                    }
+                    else
+                    {
+                        <div class="mb-3">
+                            <label class="form-label">Seleccione un rubro</label>
                             <select class="form-select" @bind="selectedCategoryId">
-                                <option value="">-- Seleccioná un rubro --</option>
-                                @foreach (var cat in FilteredCategories)
+                                <option value="@Guid.Empty">-- Seleccionar --</option>
+                                @foreach (var cat in availableCategories)
                                 {
                                     <option value="@cat.Id">@cat.Name</option>
                                 }
                             </select>
-                        }
-                        <div class="form-text">Podés seleccionar hasta 2 rubros en total.</div>
-                    </div>
+                        </div>
+                    }
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="CloseAddCategoryModal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" @onclick="AddCategory" disabled="@(selectedCategoryId == Guid.Empty)">Guardar</button>
+                    <button type="button" class="btn btn-primary" @onclick="AddCategory" disabled="@(selectedCategoryId == Guid.Empty)">
+                        Agregar
+                    </button>
                 </div>
             </div>
         </div>
@@ -87,45 +83,21 @@
 }
 
 @code {
-    [Parameter] public List<string> MyCategories { get; set; } = new();
+    [Parameter] public List<GetProfessionalCategory> MyCategories { get; set; } = new();
     [Parameter] public EventCallback OnCategoryChanged { get; set; }
 
     private bool showAddCategoryModal = false;
-    private bool IsLoadingCategories = false;
+    private IEnumerable<GetCategory> availableCategories;
     private Guid selectedCategoryId;
-    private List<GetCategory> AllCategories { get; set; } = new();
-
-    // Filter out categories the professional already has
-    private IEnumerable<GetCategory> FilteredCategories =>
-        AllCategories.Where(c => !MyCategories.Contains(c.Name ?? ""));
 
     private async Task OpenAddCategoryModal()
     {
-        if (MyCategories.Count >= 2)
+        if (availableCategories == null)
         {
-            await JS.ToastrWarning("Solo podés seleccionar hasta 2 rubros.");
-            return;
+            availableCategories = await CategoryService.GetAllAsync();
         }
-
-        showAddCategoryModal = true;
         selectedCategoryId = Guid.Empty;
-
-        // Load categories from the API
-        IsLoadingCategories = true;
-        try
-        {
-            var categories = await CategoryService.GetAllAsync();
-            AllCategories = categories?.ToList() ?? new();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading categories: {ex.Message}");
-            await JS.ToastrError("Error al cargar los rubros.");
-        }
-        finally
-        {
-            IsLoadingCategories = false;
-        }
+        showAddCategoryModal = true;
     }
 
     private void CloseAddCategoryModal()
@@ -137,15 +109,12 @@
     {
         if (selectedCategoryId == Guid.Empty) return;
 
-        var selected = AllCategories.FirstOrDefault(c => c.Id == selectedCategoryId);
-        if (selected == null) return;
-
-        var response = await DashboardService.AddMyCategoryAsync(selected.Name!);
+        var response = await DashboardService.AddMyCategoryAsync(selectedCategoryId);
         if (response.success)
         {
             await OnCategoryChanged.InvokeAsync();
-            showAddCategoryModal = false;
-            await JS.ToastrSuccess(response.Message);
+            await JS.ToastrSuccess("Rubro agregado correctamente.");
+            CloseAddCategoryModal();
         }
         else
         {
@@ -153,13 +122,13 @@
         }
     }
 
-    private async Task RemoveCategory(string category)
+    private async Task RemoveCategory(string professionalId, Guid categoryId)
     {
-        var response = await DashboardService.RemoveMyCategoryAsync(category);
+        var response = await DashboardService.RemoveMyCategoryAsync(professionalId, categoryId);
         if (response.success)
         {
             await OnCategoryChanged.InvokeAsync();
-            await JS.ToastrSuccess(response.Message);
+            await JS.ToastrSuccess("Rubro eliminado correctamente.");
         }
         else
         {

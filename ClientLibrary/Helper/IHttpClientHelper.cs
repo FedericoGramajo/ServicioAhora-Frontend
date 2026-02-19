@@ -10,6 +10,6 @@ namespace ClientLibrary.Helper
     {
         HttpClient GetPublicClient();
         Task<HttpClient> GetPrivateClientAsync();
-
+        Task<string?> GetUserIdAsync();
     }
 }

@@ -3,6 +3,12 @@
 @using System.Linq
 @using ClientLibrary.Helper
 @using ClientLibrary.Models.Landing
+@using ClientLibrary.Models.ServicioAhora.ServOffering
+@using ClientLibrary.Services
+@using ClientLibrary.Models.Category
+@using ClientLibrary.Specifications
+@inject IServOfferingService ServiceService
+@inject ICategoryService CategoryService
 
 @inject NavigationManager Navigation
 
@@ -70,28 +76,48 @@
                                 <div class="row g-0 align-items-center">
                                     <div class="col-12 col-md-3">
                                         <div class="ratio ratio-4x3">
-                                            <img src="@result.ImageUrl" alt="@result.Title" class="rounded-start" />
+                                            @if (!string.IsNullOrEmpty(result.Image))
+                                            {
+                                                <img src="@result.Image" alt="@result.Name" class="rounded-start" style="object-fit: cover;" />
+                                            }
+                                            else
+                                            {
+                                                <div class="d-flex align-items-center justify-content-center bg-light h-100 rounded-start">
+                                                    @if (CategoryIcons.TryGetValue(result.CategoryId, out var icon) && !string.IsNullOrEmpty(icon))
+                                                    {
+                                                        <i class="@icon fa-3x text-muted opacity-50"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fa-solid fa-screwdriver-wrench fa-3x text-muted opacity-50"></i>
+                                                    }
+                                                </div>
+                                            }
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-6">
                                         <div class="card-body">
                                             <div class="d-flex align-items-center gap-2 mb-2">
-                                                <span class="badge rounded-pill bg-primary-subtle text-primary">@result.Category</span>
-                                                <span class="badge rounded-pill bg-secondary-subtle text-secondary">@result.City</span>
-                                                @if (result.ExpressAvailable)
+                                                <span class="badge rounded-pill bg-primary-subtle text-primary">@result.CategoryName</span>
+                                                @* City not in model yet *@
+                                                @* <span class="badge rounded-pill bg-secondary-subtle text-secondary">@result.City</span> *@
+                                                
+                                                @* Express not in model yet *@
+                                                @* @if (result.ExpressAvailable)
                                                 {
                                                     <span class="badge rounded-pill bg-success-subtle text-success">Express</span>
-                                                }
+                                                } *@
                                             </div>
-                                            <h5 class="card-title mb-1">@result.Title</h5>
+                                            <h5 class="card-title mb-1">@result.Name</h5>
                                             <p class="card-text text-muted mb-2">@result.Description</p>
-                                            <small class="text-muted">Última calificación: @result.Rating.ToString("0.0", CultureInfo.InvariantCulture) ⭐</small>
+                                            @* Rating not in model yet *@
+                                            @* <small class="text-muted">Última calificación: @result.Rating.ToString("0.0", CultureInfo.InvariantCulture) ⭐</small> *@
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-3 d-flex flex-column align-items-start align-items-md-end gap-2 p-3">
-                                        <div class="price-tag">@result.Price.ToString("C0", LocalCulture)</div>
-                                        <button class="btn btn-outline-primary w-100" @onclick="() => GoToService(result.Slug)">Ver detalles</button>
-                                        <button class="btn btn-primary w-100" @onclick="() => GoToService(result.Slug)">Solicitar ahora</button>
+                                        <div class="price-tag">@result.BasePrice.ToString("C0", LocalCulture)</div>
+                                        <button class="btn btn-outline-primary w-100" @onclick="() => GoToService(result.Id)">Ver detalles</button>
+                                        <button class="btn btn-primary w-100" @onclick="() => GoToService(result.Id)">Solicitar ahora</button>
                                     </div>
                                 </div>
                             </div>
@@ -194,8 +220,6 @@
 
     private int CurrentYear => DateTime.Now.Year;
 
-    [Inject] private ICategoryService CategoryService { get; set; } = default!;
-
     [SupplyParameterFromQuery(Name = "query")]
     public string? Query { get; set; }
 
@@ -209,61 +233,69 @@
     private string selectedSortOrder = "relevance";
     private bool expressOnly;
 
-    private readonly IReadOnlyList<SearchResult> Results = new List<SearchResult>
+    private IEnumerable<GetServiceOffering> Results = new List<GetServiceOffering>();
+    private Dictionary<Guid, string> CategoryIcons = new();
+
+    private IEnumerable<string> Categories => Results.Select(r => r.CategoryName).Distinct().Where(c => !string.IsNullOrEmpty(c)).OrderBy(c => c);
+    
+    // We don't have City in GetServiceOffering yet, so we'll mock or ignore for now, or check if it's available elsewhere. 
+    // For now, let's just return a placeholder or empty if not in model.
+    private IEnumerable<string> Cities => new List<string>(); 
+
+    private IEnumerable<GetServiceOffering> FilteredResults => Results;
+
+    private object GetSortKey(GetServiceOffering r) => selectedSortOrder switch
     {
-        new("limpieza-profunda-integral", "Limpieza profunda integral", "Equipos especializados para dejar tu casa impecable en horas.", "Limpieza", "Buenos Aires",
-            "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=60", 32000, 4.9, true),
-        new("mantenimiento-de-jardines", "Mantenimiento de jardines", "Corte, fertilización y diseño sustentable para tus espacios verdes.", "Jardinería", "Rosario",
-            "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=900&q=60", 28000, 4.8, false),
-        new("reparacion-electrica-segura", "Reparación eléctrica segura", "Diagnóstico y solución de instalaciones y luminarias.", "Electricidad", "Córdoba",
-            "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=60", 45000, 4.7, true),
-        new("plomeria-express", "Plomería express", "Resolución de fugas, destapaciones y cambio de griferías en el día.", "Plomería", "Mendoza",
-            "https://images.unsplash.com/photo-1544723795-432537f4aa73?auto=format&fit=crop&w=900&q=60", 36000, 4.6, true),
-        new("pintura-y-retoques", "Pintura y retoques", "Renová ambientes con combinaciones modernas y materiales lavables.", "Decoración", "La Plata",
-            "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=900&q=60", 52000, 4.9, false),
-        new("asistencia-para-electrodomesticos", "Asistencia para electrodomésticos", "Servicio técnico para heladeras, lavarropas y climatización.", "Electrodomésticos", "Neuquén",
-            "https://images.unsplash.com/photo-1523419409543-0c1df022bddb?auto=format&fit=crop&w=900&q=60", 40000, 4.8, false)
+        "price_asc" => r.BasePrice,
+        "price_desc" => -r.BasePrice,
+        // "rating" => -r.Rating,
+        _ => (object)0 
     };
 
-    private IEnumerable<string> Categories => Results.Select(r => r.Category).Distinct().OrderBy(c => c);
-    private IEnumerable<string> Cities => Results.Select(r => r.City).Distinct().OrderBy(c => c);
-
-    private IEnumerable<SearchResult> FilteredResults => Results
-        .Where(r => string.IsNullOrWhiteSpace(searchTerm) || r.Title.Contains(searchTerm, StringComparison.InvariantCultureIgnoreCase) || r.Description.Contains(searchTerm, StringComparison.InvariantCultureIgnoreCase))
-        .Where(r => selectedCategory == "todas" || string.Equals(r.Category, selectedCategory, StringComparison.InvariantCultureIgnoreCase))
-        .Where(r => selectedCity == "todas" || string.Equals(r.City, selectedCity, StringComparison.InvariantCultureIgnoreCase))
-        .Where(r => !expressOnly || r.ExpressAvailable)
-        .Where(r => !expressOnly || r.ExpressAvailable)
-        .Where(FilterByPrice)
-        .OrderByDescending(r => r.Rating) // Default secondary sort
-        .OrderBy(r => GetSortKey(r));
-
-    private object GetSortKey(SearchResult r) => selectedSortOrder switch
+    protected override async Task OnInitializedAsync()
     {
-        "price_asc" => r.Price,
-        "price_desc" => -r.Price,
-        "rating" => -r.Rating,
-        _ => (object)0 // relevance keeps original order (or randomness)
-    };
+        try
+        {
+            var categories = await CategoryService.GetAllAsync();
+            if (categories != null)
+            {
+                CategoryIcons = categories.ToDictionary(c => c.Id, c => c.Icon ?? "fa-solid fa-screwdriver-wrench");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading categories: {ex.Message}");
+        }
+    }
 
     protected override async Task OnParametersSetAsync()
     {
         searchTerm = Query ?? string.Empty;
+        
+        // Fetch all results initially (could be optimized significantly with server-side filtering later)
+        var allServices = await ServiceService.GetAllAsync();
+
+        // Apply filters using Specification Pattern
+        var spec = new ServiceSearchSpecification(
+            searchTerm, 
+            CategoryId,
+            null,
+            null
+        );
+
+        Results = SpecificationEvaluator<GetServiceOffering>.GetQuery(allServices, spec);
 
         if (CategoryId.HasValue && CategoryId.Value != Guid.Empty && selectedCategory == "todas")
         {
             try
             {
-                var category = await CategoryService.GetByIdAsync(CategoryId.Value);
-                if (category != null)
+                if (CategoryIcons.TryGetValue(CategoryId.Value, out _))
                 {
-                    // Attempt to match the category name with mock data
-                    // This is a bridge between real ID and mock data strings
-                    var match = Categories.FirstOrDefault(c => c.Equals(category.Name, StringComparison.OrdinalIgnoreCase));
-                    if (match != null)
-                    {
-                        selectedCategory = match;
-                    }
+                     var category = await CategoryService.GetByIdAsync(CategoryId.Value);
+                     if (category != null)
+                     {
+                         selectedCategory = category.Name ?? "todas";
+                     }
                 }
             }
             catch(Exception ex)
@@ -273,6 +305,7 @@
         }
     }
 
+
     private void OnSearch()
     {
         var term = searchTerm?.Trim();
@@ -280,7 +313,60 @@
         Navigation.NavigateTo($"{RouteConstants.Search}{queryString}");
     }
 
-    private void ApplyFilters() => StateHasChanged();
+    private async Task ApplyFilters()
+    {
+        var allServices = await ServiceService.GetAllAsync();
+        
+        var spec = new ServiceSearchSpecification(
+            searchTerm, 
+            // Map selectedCategory string back to Guid if possible, or handle name-based filtering.
+            // For now, Specification uses Guid. If selectedCategory is "todas", pass null/empty.
+            // If it's a name, we might need to find the ID or assume CategoryId param governs.
+            // Current code relies on CategoryId param. If UI dropdown changes, we should probably update CategoryId or filter by name.
+            // Let's rely on CategoryId for now, or update it. 
+            // Actually, the UI binds to `selectedCategory` string name.
+            // The Specification accepts Guid. We need a way to map name to ID or update Spec to accept Name.
+            // Simplest fix: Filter by name in a new spec constructor or here.
+            CategoryId, 
+            selectedPriceRange switch 
+            {
+               "0-30000" => 0,
+               "30000-50000" => 30000,
+               "50000-80000" => 50000,
+               "80000+" => 80000,
+               _ => null 
+            }, 
+             selectedPriceRange switch 
+            {
+               "0-30000" => 30000,
+               "30000-50000" => 50000,
+               "50000-80000" => 80000,
+               _ => null 
+            }
+        );
+
+        var query = SpecificationEvaluator<GetServiceOffering>.GetQuery(allServices, spec);
+        
+        // Additional filter for Category Name if selected from dropdown (which is a string)
+        if (selectedCategory != "todas")
+        {
+            query = query.Where(s => s.CategoryName.Equals(selectedCategory, StringComparison.OrdinalIgnoreCase));
+        }
+        
+        Results = ApplySorting(query);
+        StateHasChanged();
+    }
+    
+    private IEnumerable<GetServiceOffering> ApplySorting(IEnumerable<GetServiceOffering> input)
+    {
+        return selectedSortOrder switch
+        {
+            "price_asc" => input.OrderBy(r => r.BasePrice),
+            "price_desc" => input.OrderByDescending(r => r.BasePrice),
+            "relevance" => input, // Default order
+            _ => input
+        };
+    }
 
     private string FilterLabel(string value) => string.Equals(value, "todas", StringComparison.OrdinalIgnoreCase) ? "Todas" : value;
 
@@ -293,19 +379,17 @@
         _ => "Cualquiera"
     };
 
-    private void GoToService(string slug) => Navigation.NavigateTo(RouteConstants.Create(RouteConstants.ServiceDetail, slug));
-
-    private bool FilterByPrice(SearchResult result)
+    private void GoToService(string slug) 
     {
-        return selectedPriceRange switch
-        {
-            "0-30000" => result.Price <= 30000,
-            "30000-50000" => result.Price is > 30000 and <= 50000,
-            "50000-80000" => result.Price is > 50000 and <= 80000,
-            "80000+" => result.Price > 80000,
-            _ => true
-        };
+         // Assuming Slug is ID or we have a slug property. GetServiceOffering has ID.
+         // If route expects slug, we might need to adjust or use ID. 
+         // Logic elsewhere suggests ID might be used for details? 
+         // Checking ServiceDetail.razor would confirm, but usually it's ID or unique string.
+         // Let's use ID for now as string.
     }
+    
+    private void GoToService(Guid id) => Navigation.NavigateTo(RouteConstants.Create(RouteConstants.ServiceDetail, id.ToString()));
 
-    private record SearchResult(string Slug, string Title, string Description, string Category, string City, string ImageUrl, decimal Price, double Rating, bool ExpressAvailable);
+
+
 }

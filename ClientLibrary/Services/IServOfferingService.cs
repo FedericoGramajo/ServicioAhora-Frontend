@@ -10,5 +10,6 @@ namespace ClientLibrary.Services
         Task<ServiceResponse> AddAsync(CreateServiceOffering serviceOffering);
         Task<ServiceResponse> UpdateAsync(UpdateServiceOffering serviceOffering);
         Task<ServiceResponse> DeleteAsync(Guid id);
+        Task<IEnumerable<GetServiceOffering>> SearchAsync(string query);
     }
 }

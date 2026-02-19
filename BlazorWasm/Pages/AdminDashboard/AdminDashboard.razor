@@ -46,6 +46,11 @@
                     <i class="fa-solid fa-user-tie me-2"></i>Profesionales
                 </button>
             </li>
+            <li class="nav-item">
+                <button class="nav-link @(ActiveTab == "audit" ? "active fw-bold" : "")" @onclick='() => ActiveTab = "audit"'>
+                    <i class="fa-solid fa-shield-halved me-2"></i>Auditoría
+                </button>
+            </li>
         </ul>
 
         <!-- Content -->
@@ -72,6 +77,10 @@
         else if (ActiveTab == "professionals")
         {
             <ProfessionalTableSection Professionals="Professionals" />
+        }
+        else if (ActiveTab == "audit")
+        {
+            <AuditLogSection />
         }
 
     </main>

@@ -1,5 +1,7 @@
 @attribute [Route(RouteConstants.ProfessionalDashboard)]
 @attribute [Authorize(Roles = "Professional,Admin")]
+@using ClientLibrary.Models.ProfessionalCat
+@using ClientLibrary.Models.ServicioAhora.ServOffering
 @inject IProfessionalDashboardService DashboardService
 
 <PageTitle>Panel profesional - ServicioAhora!</PageTitle>
@@ -53,7 +55,7 @@
         else if (ActiveTab == "services")
         {
             <CategoryManager MyCategories="@MyCategories" OnCategoryChanged="@RefreshCategories" />
-            <ServiceManager @ref="ServiceManagerComponent" ServiceGroups="@ServiceGroups" OnServiceChanged="@RefreshServices" />
+            <ServiceManager @ref="ServiceManagerComponent" MyServices="@MyServices" OnServiceChanged="@RefreshServices" />
         }
         else if (ActiveTab == "availability")
         {
@@ -98,8 +100,8 @@
     // Data
     private ServiceManager ServiceManagerComponent;
     private ClientLibrary.Models.Landing.DashboardMetrics Metrics { get; set; } = new(0, 0, 0, 0);
-    private List<ServiceGroup> ServiceGroups { get; set; } = new();
-    private List<string> MyCategories { get; set; } = new();
+    private List<GetServiceOffering> MyServices { get; set; } = new();
+    private List<GetProfessionalCategory> MyCategories { get; set; } = new();
 
     private List<ProfessionalAvailability> Availabilities { get; set; } = new();
     private string ProfessionalId { get; set; } = string.Empty;
@@ -143,12 +145,12 @@
 
     private async Task LoadServicesAsync()
     {
-        ServiceGroups = await DashboardService.GetServiceGroupsAsync();
+        MyServices = await DashboardService.GetServiceOfferingsByProfessionalAsync(ProfessionalId);
     }
 
     private async Task LoadCategoriesAsync()
     {
-        MyCategories = await DashboardService.GetMyCategoriesAsync();
+        MyCategories = await DashboardService.GetMyCategoriesAsync(ProfessionalId);
     }
 
     private async Task LoadAvailabilityAsync()

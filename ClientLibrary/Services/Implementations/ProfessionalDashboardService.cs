@@ -5,7 +5,10 @@ using System.Threading.Tasks;
 using ClientLibrary.Helper;
 using ClientLibrary.Models;
 using ClientLibrary.Models.Booking;
+using ClientLibrary.Models.Category;
 using ClientLibrary.Models.Landing;
+using ClientLibrary.Models.ProfessionalCat;
+using ClientLibrary.Models.ServicioAhora.ServOffering;
 using ClientLibrary.Services.Contracts;
 
 namespace ClientLibrary.Services.Implementations;
@@ -57,7 +60,7 @@ public class ProfessionalDashboardService(IHttpClientHelper httpClient, IApiCall
         return await apiHelper.GetServiceResponse<List<ServiceTransaction>>(result) ?? new List<ServiceTransaction>();
     }
 
-    public async Task AddServiceAsync(ServiceFormModel service)
+    public async Task AddServiceAsync(CreateServiceOffering service)
     {
         var client = await httpClient.GetPrivateClientAsync();
         var apiCall = new ApiCall
@@ -67,7 +70,7 @@ public class ProfessionalDashboardService(IHttpClientHelper httpClient, IApiCall
             Client = client,
             Model = service
         };
-        await apiHelper.ApiCallTypeCall<ServiceFormModel>(apiCall);
+        await apiHelper.ApiCallTypeCall<CreateServiceOffering>(apiCall);
     }
 
     public async Task UpdateServiceAsync(ServiceFormModel service)
@@ -95,6 +98,19 @@ public class ProfessionalDashboardService(IHttpClientHelper httpClient, IApiCall
         await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
     }
 
+    public async Task<List<GetServiceOffering>> GetServiceOfferingsByProfessionalAsync(string professionalId)
+    {
+        var client = await httpClient.GetPrivateClientAsync();
+        var apiCall = new ApiCall
+        {
+            Route = $"{Constant.ServiceOffering.GetByProfessional}/{professionalId}",
+            Type = Constant.ApiCallType.Get,
+            Client = client
+        };
+        var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
+        return await apiHelper.GetServiceResponse<List<GetServiceOffering>>(result) ?? new List<GetServiceOffering>();
+    }
+
     // Category Management
     public async Task<List<string>> GetAvailableCategoriesAsync()
     {
@@ -109,50 +125,49 @@ public class ProfessionalDashboardService(IHttpClientHelper httpClient, IApiCall
         return await apiHelper.GetServiceResponse<List<string>>(result) ?? new List<string>();
     }
 
-    public async Task<List<string>> GetMyCategoriesAsync()
+    public async Task<List<GetProfessionalCategory>> GetMyCategoriesAsync(string professionalId)
     {
         var client = await httpClient.GetPrivateClientAsync();
         var apiCall = new ApiCall
         {
-            Route = Constant.Professional.GetMyCategories,
+            Route = $"{Constant.Professional.GetMyCategories}/{professionalId}",
             Type = Constant.ApiCallType.Get,
             Client = client
         };
         var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
-        return await apiHelper.GetServiceResponse<List<string>>(result) ?? new List<string>();
+        return await apiHelper.GetServiceResponse<List<GetProfessionalCategory>>(result) ?? new List<GetProfessionalCategory>();
     }
 
-    public async Task<ServiceResponse> AddMyCategoryAsync(string category)
+    public async Task<ServiceResponse> AddMyCategoryAsync(Guid categoryId)
     {
         var client = await httpClient.GetPrivateClientAsync();
-        // Assuming category is sent as a string in body or query? 
-        // ApiCall expects an object Model. Let's wrap it or send as is if supported.
-        // Usually safer to wrap in a simple object or send as query param if simple string.
-        // Let's assume we send it as a dedicated wrapper or just query for simplicity if API supports it.
-        // But to be proper, let's assume body with "Category" property or similar. 
-        // For now, let's send it as a stringModel to body.
+        var professionalId = await httpClient.GetUserIdAsync();
         var apiCall = new ApiCall
         {
             Route = Constant.Professional.AddMyCategory,
             Type = Constant.ApiCallType.Post,
             Client = client,
-            Model = new { Category = category }
+            Model = new CreateProfessionalCategory
+            {
+                CategoryId = categoryId,
+                ProfessionalId = professionalId ?? string.Empty
+            }
         };
         var result = await apiHelper.ApiCallTypeCall<object>(apiCall);
-        return await apiHelper.GetServiceResponse<ServiceResponse>(result);
+        return await apiHelper.GetServiceResponse<ServiceResponse>(result) ?? new ServiceResponse(false, "Error al agregar el rubro");
     }
 
-    public async Task<ServiceResponse> RemoveMyCategoryAsync(string category)
+    public async Task<ServiceResponse> RemoveMyCategoryAsync(string professionalId, Guid categoryId)
     {
         var client = await httpClient.GetPrivateClientAsync();
         var apiCall = new ApiCall
         {
-            Route = $"{Constant.Professional.RemoveMyCategory}/{category}", // or query
+            Route = $"{Constant.Professional.RemoveMyCategory}/{professionalId}/{categoryId}",
             Type = Constant.ApiCallType.Delete,
             Client = client
         };
         var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
-        return await apiHelper.GetServiceResponse<ServiceResponse>(result);
+        return await apiHelper.GetServiceResponse<ServiceResponse>(result) ?? new ServiceResponse(false, "Error al eliminar el rubro");
     }
 
     // Availability Management

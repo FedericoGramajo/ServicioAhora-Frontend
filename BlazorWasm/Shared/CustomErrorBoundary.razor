@@ -8,41 +8,340 @@
 }
 else
 {
-    <div class="container py-5 text-center">
-        <div class="card shadow-sm border-danger mx-auto" style="max-width: 500px;">
-            <div class="card-header bg-danger text-white">
-                <i class="fa-solid fa-triangle-exclamation me-2"></i> Algo salió mal
+    <div class="error-boundary-wrapper">
+        <div class="error-boundary-bg"></div>
+        <div class="error-boundary-content">
+
+            <!-- Animated SVG Illustration -->
+            <div class="error-illustration">
+                <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg" class="error-svg">
+                    <!-- Glow circle -->
+                    <circle cx="100" cy="90" r="75" fill="none" stroke="rgba(239,68,68,0.15)" stroke-width="30" class="pulse-circle" />
+                    <circle cx="100" cy="90" r="55" fill="rgba(239,68,68,0.08)" />
+                    <!-- Triangle warning -->
+                    <polygon points="100,40 145,125 55,125" fill="none" stroke="#ef4444" stroke-width="3.5" stroke-linejoin="round" class="wobble" />
+                    <!-- Exclamation -->
+                    <line x1="100" y1="65" x2="100" y2="100" stroke="#ef4444" stroke-width="5" stroke-linecap="round" />
+                    <circle cx="100" cy="112" r="3.5" fill="#ef4444" />
+                    <!-- Floating dots -->
+                    <circle cx="30" cy="30" r="3" fill="rgba(239,68,68,0.4)" class="float-dot-1" />
+                    <circle cx="170" cy="50" r="5" fill="rgba(239,68,68,0.25)" class="float-dot-2" />
+                    <circle cx="160" cy="150" r="4" fill="rgba(239,68,68,0.3)" class="float-dot-3" />
+                    <circle cx="20" cy="140" r="6" fill="rgba(239,68,68,0.2)" class="float-dot-1" />
+                </svg>
             </div>
-            <div class="card-body">
-                <h5 class="card-title text-danger">Ocurrió un error inesperado</h5>
-                <p class="card-text text-muted">
-                    Lo sentimos, la aplicación ha encontrado un problema y no puede continuar con esta acción.
+
+            <!-- Main Card -->
+            <div class="error-card">
+                <div class="error-card-badge">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i> Error inesperado
+                </div>
+
+                <h1 class="error-title">¡Ups! Algo salió mal</h1>
+                <p class="error-subtitle">
+                    La aplicación encontró un problema que no pudo resolver.<br />
+                    Podés intentar recargar la página o volver al inicio.
                 </p>
-                <div class="d-grid gap-2">
-                    <button class="btn btn-outline-danger" @onclick="Recover">
-                        <i class="fa-solid fa-rotate-right me-2"></i> Intentar de nuevo
+
+                <div class="error-actions">
+                    <button class="error-btn-primary" @onclick="Recover">
+                        <i class="fa-solid fa-rotate-right me-2"></i>
+                        Intentar de nuevo
                     </button>
-                    <a href="/" class="btn btn-secondary">
-                        <i class="fa-solid fa-house me-2"></i> Volver al inicio
+                    <a href="/" class="error-btn-secondary">
+                        <i class="fa-solid fa-house me-2"></i>
+                        Volver al inicio
                     </a>
                 </div>
+
+                <p class="error-help-text">
+                    Si el problema persiste,&nbsp;
+                    <a href="mailto:hola@servicioahora.com">contactanos</a>.
+                </p>
             </div>
-            <div class="card-footer text-muted small">
-                Si el problema persiste, por favor contactanos.
-            </div>
+
+            <!-- Dev Details -->
+            @if (IsDevelopment)
+            {
+                <div class="error-dev-panel">
+                    <div class="error-dev-header">
+                        <i class="fa-solid fa-code me-2"></i>
+                        Detalles del error
+                        <span class="error-dev-badge">DESARROLLO</span>
+                    </div>
+                    <div class="error-dev-body">
+                        <div class="error-dev-type">@CurrentException?.GetType().FullName</div>
+                        <div class="error-dev-message">@CurrentException?.Message</div>
+                        <details>
+                            <summary class="error-dev-summary">Ver stack trace completo</summary>
+                            <pre class="error-dev-trace">@CurrentException?.StackTrace</pre>
+                        </details>
+                    </div>
+                </div>
+            }
         </div>
-        
-        @if (IsDevelopment)
-        {
-            <div class="mt-4 text-start">
-                <details class="alert alert-warning">
-                    <summary>Detalles del error (Solo desarrollo)</summary>
-                    <pre class="mt-2 small">@CurrentException?.ToString()</pre>
-                </details>
-            </div>
-        }
     </div>
 }
+
+<style>
+    .error-boundary-wrapper {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        overflow-y: auto;
+        padding: 2rem 1rem;
+    }
+
+    .error-boundary-bg {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(ellipse at 20% 30%, rgba(239, 68, 68, 0.12) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 70%, rgba(239, 68, 68, 0.08) 0%, transparent 60%),
+                    linear-gradient(135deg, #0f0f1a 0%, #1a0a0a 50%, #0a0f1a 100%);
+        z-index: 0;
+    }
+
+    .error-boundary-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+        width: 100%;
+        max-width: 600px;
+        animation: errorFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    /* SVG Illustration */
+    .error-illustration {
+        width: 180px;
+        height: 160px;
+    }
+
+    .error-svg {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+    }
+
+    .pulse-circle {
+        animation: pulsing 2.5s ease-in-out infinite;
+    }
+
+    .wobble {
+        animation: wobble 3s ease-in-out infinite;
+        transform-origin: 100px 90px;
+    }
+
+    .float-dot-1 { animation: floatY 3.1s ease-in-out infinite; }
+    .float-dot-2 { animation: floatY 4.2s ease-in-out infinite 0.8s; }
+    .float-dot-3 { animation: floatY 2.8s ease-in-out infinite 0.4s; }
+
+    /* Main Card */
+    .error-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        border-radius: 1.5rem;
+        padding: 2.5rem 2rem;
+        text-align: center;
+        width: 100%;
+        box-shadow: 0 0 60px rgba(239, 68, 68, 0.08), 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .error-card-badge {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 2rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        padding: 0.35rem 1rem;
+        text-transform: uppercase;
+        margin-bottom: 1.25rem;
+    }
+
+    .error-title {
+        font-size: clamp(1.6rem, 5vw, 2.2rem);
+        font-weight: 800;
+        color: #fff;
+        margin: 0 0 0.75rem;
+        line-height: 1.2;
+    }
+
+    .error-subtitle {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.95rem;
+        line-height: 1.7;
+        margin-bottom: 2rem;
+    }
+
+    .error-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+
+    .error-btn-primary {
+        display: inline-flex;
+        align-items: center;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: #fff;
+        border: none;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
+    }
+
+    .error-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5);
+    }
+
+    .error-btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 0.75rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .error-btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    .error-help-text {
+        color: rgba(255, 255, 255, 0.35);
+        font-size: 0.82rem;
+        margin: 0;
+    }
+
+    .error-help-text a {
+        color: rgba(248, 113, 113, 0.8);
+        text-decoration: none;
+    }
+
+    .error-help-text a:hover {
+        color: #f87171;
+        text-decoration: underline;
+    }
+
+    /* Dev Panel */
+    .error-dev-panel {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(234, 179, 8, 0.25);
+        border-radius: 1rem;
+        width: 100%;
+        overflow: hidden;
+        font-family: 'Courier New', Courier, monospace;
+    }
+
+    .error-dev-header {
+        display: flex;
+        align-items: center;
+        background: rgba(234, 179, 8, 0.1);
+        color: #fbbf24;
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 0.65rem 1rem;
+        border-bottom: 1px solid rgba(234, 179, 8, 0.2);
+        gap: 0.4rem;
+        font-family: sans-serif;
+    }
+
+    .error-dev-badge {
+        margin-left: auto;
+        background: rgba(234, 179, 8, 0.2);
+        border: 1px solid rgba(234, 179, 8, 0.35);
+        border-radius: 0.25rem;
+        padding: 0.1rem 0.4rem;
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+    }
+
+    .error-dev-body {
+        padding: 1rem 1.25rem;
+    }
+
+    .error-dev-type {
+        color: #a78bfa;
+        font-size: 0.8rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .error-dev-message {
+        color: #f87171;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        line-height: 1.5;
+    }
+
+    .error-dev-summary {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.78rem;
+        cursor: pointer;
+        font-family: sans-serif;
+        padding: 0.25rem 0;
+    }
+
+    .error-dev-trace {
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 0.72rem;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+        margin-top: 0.75rem;
+        line-height: 1.6;
+        padding: 0.5rem;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 0.5rem;
+    }
+
+    /* Animations */
+    @@keyframes errorFadeIn {
+        from { opacity: 0; transform: translateY(30px) scale(0.97); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @@keyframes pulsing {
+        0%, 100% { opacity: 0.4; transform: scale(1); }
+        50%       { opacity: 0.9; transform: scale(1.04); }
+    }
+
+    @@keyframes wobble {
+        0%, 100% { transform: rotate(0deg) scale(1); }
+        25%       { transform: rotate(-2deg) scale(1.02); }
+        75%       { transform: rotate(2deg) scale(0.98); }
+    }
+
+    @@keyframes floatY {
+        0%, 100% { transform: translateY(0); }
+        50%       { transform: translateY(-8px); }
+    }
+</style>
 
 @code {
     private Exception? CurrentException;
@@ -63,7 +362,6 @@ else
     protected override Task OnErrorAsync(Exception exception)
     {
         CurrentException = exception;
-        // Here you would log to your telemetry service (AppInsights, Sentry, etc.)
         Console.WriteLine($"Error capturado globalmente: {exception.Message}");
         return Task.CompletedTask;
     }

@@ -1,5 +1,10 @@
+@using ClientLibrary.Models.ServicioAhora.ServOffering
+@using ClientLibrary.Models.Landing
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 @inject IProfessionalDashboardService DashboardService
 @inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthStateProvider
 
 <div class="surface-card">
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
@@ -8,37 +13,49 @@
             <p class="text-muted mb-0">Mostrando tus publicaciones por categoría</p>
         </div>
     </div>
-    @if (ServiceGroups == null)
+    @if (MyServices == null)
     {
         <p>Cargando servicios...</p>
     }
     else
     {
-        @foreach (var group in ServiceGroups)
+        var groupedServices = MyServices.GroupBy(s => s.CategoryName).ToList();
+        
+        @foreach (var group in groupedServices)
         {
+            var firstService = group.FirstOrDefault();
+            var categoryId = firstService?.CategoryId ?? Guid.Empty;
+
             <div class="service-group mb-4">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                     <div>
-                        <h5 class="mb-0">@group.Category</h5>
-                        <small class="text-secondary">@group.Services.Count servicio(s)</small>
+                        <h5 class="mb-0">@group.Key</h5>
+                        <small class="text-secondary">@group.Count() servicio(s)</small>
                     </div>
-                    <button class="btn btn-primary btn-sm" @onclick="() => OpenAddServiceModal(group.Category)">
+                    <button class="btn btn-primary btn-sm" @onclick="() => OpenAddServiceModal(group.Key, categoryId)">
                         <i class="fa-solid fa-plus me-1"></i> Agregar servicio
                     </button>
                 </div>
                 <div class="row g-3">
-                    @foreach (var service in group.Services)
+                    @foreach (var service in group)
                     {
                         <div class="col-md-4">
                             <ProfessionalServiceCard 
                                 Service="@service" 
-                                Category="@group.Category"
-                                OnEdit="@((s) => EditService(s, group.Category))"
+                                Category="@group.Key"
+                                OnEdit="@((s) => EditService(s, group.Key))"
                                 OnDelete="DeleteService" />
                         </div>
                     }
                 </div>
             </div>
+        }
+        
+        @if (!groupedServices.Any())
+        {
+             <div class="alert alert-info">
+                No tienes servicios creados.
+             </div>
         }
     }
 </div>
@@ -49,7 +66,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Publicar nuevo servicio</h5>
+                    <h5 class="modal-title">@(isEditingService ? "Editar servicio" : "Publicar nuevo servicio")</h5>
                     <button type="button" class="btn-close" @onclick="CloseAddServiceModal"></button>
                 </div>
                 <div class="modal-body">
@@ -59,19 +76,21 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Rubro</label>
-                        <select class="form-select" @bind="newService.Category">
-                            @if (ServiceGroups != null)
-                            {
-                                foreach (var group in ServiceGroups)
-                                {
-                                    <option value="@group.Category">@group.Category</option>
-                                }
-                            }
-                        </select>
+                        <input type="text" class="form-control" value="@newService.Category" disabled readonly />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Precio estimado</label>
                         <input type="number" class="form-control" @bind="newService.Price" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Imagen del servicio</label>
+                        <InputFile OnChange="HandleImageUpload" class="form-control" accept="image/*" />
+                        @if (!string.IsNullOrEmpty(newService.Image))
+                        {
+                            <div class="mt-2 text-center">
+                                <img src="@newService.Image" alt="Vista previa" class="img-thumbnail" style="max-height: 200px;" />
+                            </div>
+                        }
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Descripción</label>
@@ -81,7 +100,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="CloseAddServiceModal" disabled="@IsLoading">Cancelar</button>
                     <button type="button" class="btn btn-primary" @onclick="SaveService" disabled="@IsLoading">
-                        @(IsLoading ? "Procesando..." : "Publicar")
+                        @(IsLoading ? "Procesando..." : (isEditingService ? "Guardar Cambios" : "Publicar"))
                     </button>
                 </div>
             </div>
@@ -90,40 +109,61 @@
 }
 
 @code {
-    [Parameter] public List<ServiceGroup> ServiceGroups { get; set; } = new();
+    [Parameter] public List<GetServiceOffering> MyServices { get; set; } = new();
     [Parameter] public EventCallback OnServiceChanged { get; set; }
 
     private bool showAddServiceModal = false;
     private ServiceFormModel newService = new();
     private bool isEditingService = false;
     private bool IsLoading = false;
+    private Guid selectedCategoryId;
 
-    public void OpenAddServiceModal(string? category = null, ServiceSummary? serviceToEdit = null)
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            try
+            {
+                var resizedFile = await file.RequestImageFileAsync(file.ContentType, 600, 400);
+                var buffer = new byte[resizedFile.Size];
+                await resizedFile.OpenReadStream().ReadAsync(buffer);
+                var base64 = Convert.ToBase64String(buffer);
+                newService.Image = $"data:{file.ContentType};base64,{base64}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error uploading image: {ex.Message}");
+                await JS.ToastrError("Error al procesar la imagen.");
+            }
+        }
+    }
+
+    public void OpenAddServiceModal(string? categoryName = null, Guid? categoryId = null, GetServiceOffering? serviceToEdit = null)
     {
         if (serviceToEdit != null)
         {
             isEditingService = true;
             newService = new ServiceFormModel
             {
-                Slug = serviceToEdit.Slug,
+                Slug = serviceToEdit.Id.ToString(), 
                 Name = serviceToEdit.Name,
-                Category = category ?? "",
-                Price = serviceToEdit.Price,
-                Description = serviceToEdit.Description
+                Category = categoryName ?? serviceToEdit.CategoryName,
+                Price = serviceToEdit.BasePrice,
+                Description = serviceToEdit.Description ?? "",
+                Image = serviceToEdit.Image
             };
+            selectedCategoryId = serviceToEdit.CategoryId;
         }
         else
         {
             isEditingService = false;
             newService = new(); 
-            if (!string.IsNullOrEmpty(category))
+            if (!string.IsNullOrEmpty(categoryName))
             {
-                newService.Category = category;
+                newService.Category = categoryName;
             }
-            else if (ServiceGroups.Any())
-            {
-                 newService.Category = ServiceGroups.First().Category;
-            }
+            selectedCategoryId = categoryId ?? Guid.Empty;
         }
         showAddServiceModal = true;
     }
@@ -145,7 +185,31 @@
             }
             else
             {
-                await DashboardService.AddServiceAsync(newService);
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                var user = authState.User;
+                // Try to find sub claim or nameidentifier
+                var professionalId = user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value 
+                                     ?? user.FindFirst("sub")?.Value;
+
+                if (string.IsNullOrEmpty(professionalId))
+                {
+                     await JS.ToastrError("No se pudo identificar al profesional.");
+                     return;
+                }
+
+                var createModel = new CreateServiceOffering
+                {
+                    Name = newService.Name,
+                    Description = newService.Description,
+                    BasePrice = newService.Price,
+                    Image = newService.Image,
+                    CategoryId = selectedCategoryId,
+                    ProfessionalId = professionalId,
+                    Status = true,
+                    EstimatedDuration = 1 // Default duration or add field
+                };
+
+                await DashboardService.AddServiceAsync(createModel);
                 await JS.ToastrSuccess("Servicio publicado correctamente.");
             }
             
@@ -163,14 +227,14 @@
         }
     }
 
-    private void EditService(ServiceSummary service, string category)
+    private void EditService(GetServiceOffering service, string categoryName)
     {
-        OpenAddServiceModal(category, service);
+        OpenAddServiceModal(categoryName, service.CategoryId, service);
     }
 
-    private async Task DeleteService(ServiceSummary service)
+    private async Task DeleteService(GetServiceOffering service)
     {
-         await DashboardService.DeleteServiceAsync(service.Slug);
+         await DashboardService.DeleteServiceAsync(service.Id.ToString());
          await JS.ToastrSuccess("Servicio eliminado.");
          await OnServiceChanged.InvokeAsync();
     }

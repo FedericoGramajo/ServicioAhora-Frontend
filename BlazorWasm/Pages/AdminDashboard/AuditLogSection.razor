@@ -1,0 +1,318 @@
+@using ClientLibrary.Models.Audit
+@using ClientLibrary.Services.Contracts
+@using ClientLibrary.Helper
+@using Microsoft.JSInterop
+@inject IAuditLogService AuditLogService
+@inject IJSRuntime js
+
+<section class="surface-card mb-4">
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center mb-3">
+        <div>
+            <h4 class="mb-1">
+                <i class="fa-solid fa-shield-halved me-2 text-primary"></i>
+                Auditoría del Sistema
+            </h4>
+            <p class="text-muted mb-0">Registro de acciones realizadas en la plataforma</p>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm" @onclick="LoadAsync" disabled="@IsLoading">
+            <i class="fa-solid fa-rotate-right @(IsLoading ? "fa-spin" : "") me-1"></i> Actualizar
+        </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="border rounded p-3 mb-3 bg-light">
+        <div class="row g-2 mb-2">
+            <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+                <label class="form-label small fw-semibold mb-1">Acción</label>
+                <input class="form-control form-control-sm" placeholder="Login, Update..." @bind="Filter.Action" @bind:event="oninput" @onkeydown="OnEnterKey" />
+            </div>
+            <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+                <label class="form-label small fw-semibold mb-1">Entidad</label>
+                <input class="form-control form-control-sm" placeholder="User, ServiceOffering..." @bind="Filter.EntityName" @bind:event="oninput" @onkeydown="OnEnterKey" />
+            </div>
+            <div class="col-12 col-sm-6 col-md-3 col-lg-3">
+                <label class="form-label small fw-semibold mb-1">Usuario (ID)</label>
+                <input class="form-control form-control-sm" placeholder="ID del usuario..." @bind="Filter.UserId" @bind:event="oninput" @onkeydown="OnEnterKey" />
+            </div>
+            <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+                <label class="form-label small fw-semibold mb-1">Estado</label>
+                <select class="form-select form-select-sm" @bind="SuccessFilter">
+                    <option value="">Todos</option>
+                    <option value="true">Exitosos</option>
+                    <option value="false">Fallidos</option>
+                </select>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+                <label class="form-label small fw-semibold mb-1">Desde</label>
+                <input type="date" class="form-control form-control-sm" @bind="Filter.FromDate" />
+            </div>
+            <div class="col-12 col-sm-6 col-md-3 col-lg-1">
+                <label class="form-label small fw-semibold mb-1">Hasta</label>
+                <input type="date" class="form-control form-control-sm" @bind="Filter.ToDate" />
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button class="btn btn-primary btn-sm" @onclick="ApplyFilters">
+                <i class="fa-solid fa-magnifying-glass me-1"></i> Buscar
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" @onclick="ClearFilters">
+                <i class="fa-solid fa-xmark me-1"></i> Limpiar
+            </button>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <span class="small text-muted">Mostrar</span>
+                <select class="form-select form-select-sm" style="width: auto;" @bind="Filter.PageSize" @bind:after="ApplyFilters">
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                </select>
+                <span class="small text-muted">por página</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Badges -->
+    @if (Result != null && !IsLoading)
+    {
+        <div class="d-flex gap-2 mb-3 flex-wrap">
+            <span class="badge rounded-pill bg-secondary">@Result.TotalCount registros</span>
+            <span class="badge rounded-pill bg-success">
+                <i class="fa-solid fa-check me-1"></i> @Result.Items.Count(x => x.IsSuccess) exitosos
+            </span>
+            <span class="badge rounded-pill bg-danger">
+                <i class="fa-solid fa-xmark me-1"></i> @Result.Items.Count(x => !x.IsSuccess) fallidos
+            </span>
+        </div>
+    }
+
+    <!-- Table -->
+    <div class="table-responsive">
+        @if (IsLoading)
+        {
+            <div class="text-center py-5 text-muted">
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                Cargando registros de auditoría...
+            </div>
+        }
+        else if (Result == null || !Result.Items.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fa-solid fa-database fa-2x mb-3 d-block"></i>
+                No se encontraron registros con los filtros seleccionados.
+            </div>
+        }
+        else
+        {
+            <table class="table align-middle table-borderless table-hover mb-0">
+                <thead class="text-muted small">
+                    <tr>
+                        <th>Fecha / Hora</th>
+                        <th>Acción</th>
+                        <th>Entidad</th>
+                        <th>Usuario</th>
+                        <th>Rol</th>
+                        <th>IP</th>
+                        <th class="text-center">Estado</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Result.Items)
+                    {
+                        <tr class="@(!log.IsSuccess ? "table-danger" : "")">
+                            <td class="text-nowrap">
+                                <div class="fw-medium">@log.Timestamp.ToString("dd/MM/yyyy")</div>
+                                <div class="small text-muted">@log.Timestamp.ToString("HH:mm:ss")</div>
+                            </td>
+                            <td>
+                                <span class="badge @GetActionBadgeClass(log.Action)">
+                                    <i class="fa-solid @GetActionIcon(log.Action) me-1"></i>
+                                    @log.Action
+                                </span>
+                                @if (!string.IsNullOrWhiteSpace(log.Title))
+                                {
+                                    <div class="small text-muted mt-1">@log.Title</div>
+                                }
+                            </td>
+                            <td>
+                                <div class="fw-medium">@log.EntityName</div>
+                                @if (!string.IsNullOrEmpty(log.EntityId))
+                                {
+                                    <div class="small text-muted font-monospace">@TruncateId(log.EntityId)</div>
+                                }
+                            </td>
+                            <td>
+                                <div class="small">@(log.UserName ?? "—")</div>
+                                @if (!string.IsNullOrEmpty(log.UserId))
+                                {
+                                    <div class="small text-muted font-monospace">@TruncateId(log.UserId)</div>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(log.UserRole))
+                                {
+                                    <span class="badge @GetRoleBadgeClass(log.UserRole)">@log.UserRole</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td class="small text-muted font-monospace text-nowrap">@(log.IpAddress ?? "—")</td>
+                            <td class="text-center">
+                                @if (log.IsSuccess)
+                                {
+                                    <span class="badge rounded-pill bg-success">OK</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill bg-danger">Error</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(log.OldValues) || !string.IsNullOrEmpty(log.NewValues) || !string.IsNullOrEmpty(log.FailureReason))
+                                {
+                                    <button class="btn btn-outline-secondary btn-sm py-0"
+                                            @onclick="() => ToggleDetail(log.Id)"
+                                            title="Ver detalle">
+                                        <i class="fa-solid fa-chevron-@(ExpandedId == log.Id ? "up" : "down") small"></i>
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                        @if (ExpandedId == log.Id)
+                        {
+                            <tr class="table-light">
+                                <td colspan="8" class="px-4 py-3">
+                                    @if (!string.IsNullOrEmpty(log.OldValues))
+                                    {
+                                        <div class="mb-2">
+                                            <span class="small text-muted fw-semibold text-uppercase">Valores anteriores</span>
+                                            <pre class="mb-0 mt-1 p-2 rounded bg-white border small" style="white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;">@log.OldValues</pre>
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(log.NewValues))
+                                    {
+                                        <div class="mb-2">
+                                            <span class="small text-muted fw-semibold text-uppercase">Valores nuevos</span>
+                                            <pre class="mb-0 mt-1 p-2 rounded bg-white border small" style="white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;">@log.NewValues</pre>
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(log.FailureReason))
+                                    {
+                                        <div>
+                                            <span class="small text-danger fw-semibold text-uppercase">Motivo del error</span>
+                                            <pre class="mb-0 mt-1 p-2 rounded border border-danger small text-danger bg-white" style="white-space:pre-wrap;word-break:break-all;">@log.FailureReason</pre>
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <!-- Pagination -->
+    @if (Result != null && Result.TotalPages > 1)
+    {
+        <div class="d-flex align-items-center gap-2 mt-3 flex-wrap">
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(Filter.Page <= 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="PrevPage">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                    </li>
+                    @for (int p = Math.Max(1, Filter.Page - 2); p <= Math.Min(Result.TotalPages, Filter.Page + 2); p++)
+                    {
+                        var pageNum = p;
+                        <li class="page-item @(pageNum == Filter.Page ? "active" : "")">
+                            <button class="page-link" @onclick="() => GoToPage(pageNum)">@pageNum</button>
+                        </li>
+                    }
+                    <li class="page-item @(Filter.Page >= Result.TotalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="NextPage">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+            <span class="small text-muted ms-2">
+                Página @Filter.Page de @Result.TotalPages · @Result.TotalCount registros totales
+            </span>
+        </div>
+    }
+
+</section>
+
+@code {
+    private AuditLogFilter Filter = new();
+    private AuditLogResult? Result;
+    private bool IsLoading;
+    private Guid? ExpandedId;
+
+    private string SuccessFilter
+    {
+        get => Filter.IsSuccess.HasValue ? Filter.IsSuccess.Value.ToString().ToLower() : "";
+        set => Filter.IsSuccess = string.IsNullOrEmpty(value) ? null : bool.Parse(value);
+    }
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        try { Result = await AuditLogService.GetAllAsync(Filter); }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AuditLog] {ex.Message}");
+            await js.ToastrError("Error al cargar los registros de auditoría.");
+        }
+        finally { IsLoading = false; }
+    }
+
+    private async Task ApplyFilters() { Filter.Page = 1; await LoadAsync(); }
+    private async Task ClearFilters() { Filter = new AuditLogFilter(); await LoadAsync(); }
+    private async Task GoToPage(int page) { Filter.Page = page; await LoadAsync(); }
+    private async Task PrevPage() { if (Filter.Page > 1) { Filter.Page--; await LoadAsync(); } }
+    private async Task NextPage() { if (Result != null && Filter.Page < Result.TotalPages) { Filter.Page++; await LoadAsync(); } }
+    private void ToggleDetail(Guid id) => ExpandedId = ExpandedId == id ? null : id;
+    private async Task OnEnterKey(KeyboardEventArgs e) { if (e.Key == "Enter") await ApplyFilters(); }
+
+    private static string TruncateId(string? id) =>
+        string.IsNullOrEmpty(id) ? "—" : (id.Length > 14 ? id[..14] + "…" : id);
+
+    private static string GetActionBadgeClass(string? action) => action?.ToLower() switch
+    {
+        "login" or "logout"  => "bg-primary",
+        "add" or "create"    => "bg-success",
+        "update"             => "bg-warning text-dark",
+        "delete" or "remove" => "bg-danger",
+        "view" or "get"      => "bg-info text-dark",
+        _                    => "bg-secondary"
+    };
+
+    private static string GetActionIcon(string? action) => action?.ToLower() switch
+    {
+        "login"              => "fa-right-to-bracket",
+        "logout"             => "fa-right-from-bracket",
+        "add" or "create"    => "fa-plus",
+        "update"             => "fa-pen",
+        "delete" or "remove" => "fa-trash",
+        "view" or "get"      => "fa-eye",
+        _                    => "fa-bolt"
+    };
+
+    private static string GetRoleBadgeClass(string? role) => role?.ToLower() switch
+    {
+        "admin"        => "bg-danger",
+        "professional" => "bg-primary",
+        "user"         => "bg-secondary",
+        _              => "bg-light text-dark"
+    };
+}

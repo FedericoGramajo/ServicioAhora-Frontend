@@ -8,7 +8,15 @@
 
 
     <main class="container py-5">
-        @if (Service is null)
+        @if (isLoading)
+        {
+             <div class="d-flex justify-content-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+        }
+        else if (Service is null)
         {
             <div class="alert alert-warning mt-4">No encontramos el servicio solicitado. <a href="@RouteConstants.Search">Volver a buscar</a>.</div>
         }
@@ -18,92 +26,37 @@
                 <div class="col-lg-7">
                     <div class="surface-card h-100">
                         <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
-                            <span class="badge bg-primary-subtle text-primary">@Service.Category</span>
-                            <span class="badge bg-secondary-subtle text-secondary">@Service.City</span>
-                            <span class="badge bg-success-subtle text-success">Garantía @Service.Guarantee</span>
+                            <span class="badge bg-primary-subtle text-primary">@Service.CategoryName</span>
                         </div>
                         <h1 class="mb-2">@Service.Name</h1>
                         <p class="text-muted mb-3">@Service.Description</p>
                         <div class="d-flex flex-wrap gap-3 mb-4">
-                            <div class="pill">@Service.Duration</div>
-                            <div class="pill">Cobertura: @Service.Availability</div>
+                            @if (Service.EstimatedDuration.HasValue)
+                            {
+                                <div class="pill">@Service.EstimatedDuration horas aprox.</div>
+                            }
                         </div>
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <!-- Features -->
+                             <div class="col-md-6">
                                 <div class="feature-tile">
                                     <i class="fa-solid fa-shield-heart text-primary"></i>
                                     <div>
                                         <p class="fw-semibold mb-0">Garantía clara</p>
-                                        <small class="text-muted">Revisión y ajuste sin costo dentro de @Service.Guarantee.</small>
+                                        <small class="text-muted">Revisión y ajuste sin costo.</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="feature-tile">
-                                    <i class="fa-solid fa-user-gear text-secondary"></i>
-                                    <div>
-                                        <p class="fw-semibold mb-0">Profesionales asignados</p>
-                                        <small class="text-muted">Seleccionamos técnicos verificados para tu barrio.</small>
-                                    </div>
-                                </div>
-                            </div>
-                            @foreach (var highlight in Service.Highlights)
-                            {
-                                <div class="col-md-6">
-                                    <div class="feature-tile">
-                                        <i class="fa-regular fa-circle-check text-success"></i>
-                                        <div>
-                                            <p class="fw-semibold mb-0">@highlight.Title</p>
-                                            <small class="text-muted">@highlight.Description</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
+                            <!-- More features... -->
                         </div>
                     </div>
 
-                    
                      <div class="surface-card mt-4">
                         <h3 class="mb-4">Opiniones de clientes</h3>
                         <div class="row g-4">
-                            @if (Service.Reviews.Any())
-                            {
-                                @foreach (var review in Service.Reviews)
-                                {
-                                    <div class="col-12">
-                                        <div class="d-flex gap-3">
-                                            <div class="avatar-placeholder rounded-circle bg-light d-flex align-items-center justify-content-center text-muted fw-bold" style="width: 48px; height: 48px;">
-                                                @review.UserName.Substring(0, 1)
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-1">@review.UserName</h6>
-                                                <div class="mb-2 text-warning small">
-                                                    @for (int i = 0; i < 5; i++)
-                                                    {
-                                                        if (i < review.Rating)
-                                                        {
-                                                            <i class="fa-solid fa-star"></i>
-                                                        }
-                                                        else
-                                                        {
-                                                            <i class="fa-regular fa-star"></i>
-                                                        }
-                                                    }
-                                                    <span class="text-muted ms-2">@review.Date.ToString("d 'de' MMMM, yyyy", LocalCulture)</span>
-                                                </div>
-                                                <p class="mb-0 text-muted">@review.Comment</p>
-                                            </div>
-                                        </div>
-                                        <hr class="my-3 opacity-25" />
-                                    </div>
-                                }
-                            }
-                            else
-                            {
                                 <div class="col-12 text-center py-4">
                                     <p class="text-muted">Aún no hay opiniones para este servicio.</p>
                                 </div>
-                            }
                         </div>
                     </div>
 
@@ -111,10 +64,26 @@
                 <div class="col-lg-5">
                     <div class="surface-card service-summary sticky-top">
                         <div class="ratio ratio-4x3 rounded overflow-hidden mb-3">
-                            <img src="@Service.ImageUrl" alt="@Service.Name" />
+                             @if (!string.IsNullOrEmpty(Service.Image))
+                            {
+                                <img src="@Service.Image" alt="@Service.Name" style="object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <div class="d-flex align-items-center justify-content-center bg-light h-100">
+                                    @if (!string.IsNullOrEmpty(CategoryIcon))
+                                    {
+                                        <i class="@CategoryIcon fa-4x text-muted opacity-25"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa-solid fa-screwdriver-wrench fa-4x text-muted opacity-25"></i>
+                                    }
+                                </div>
+                            }
                         </div>
                         <p class="text-muted mb-1">Precio estimado</p>
-                        <h3 class="mb-3">@Service.Price.ToString("C0", LocalCulture)</h3>
+                        <h3 class="mb-3">@Service.BasePrice.ToString("C0", LocalCulture)</h3>
                         <div class="d-grid gap-2">
                             <button class="btn btn-primary btn-lg" type="button" @onclick="ShowBookingModal">
                                 <i class="fa-regular fa-calendar-check me-2"></i>Reservar turno
@@ -132,7 +101,6 @@
                 </div>
             </div>
         }
-    </main>
 
     @if (showBookingModal)
     {
@@ -145,7 +113,7 @@
                     </div>
                     <div class="modal-body">
                         <p class="mb-1">Servicio: <strong>@Service?.Name</strong></p>
-                        <p class="text-muted small mb-3">Duración estimada: @Service?.Duration</p>
+                        <p class="text-muted small mb-3">Duración estimada: @(Service?.EstimatedDuration) horas</p>
                         
                         <!-- Calendar Component -->
                         <TimeSlotPicker ProfessionalId="mock-prof-1" 
@@ -172,6 +140,9 @@
             </div>
         </div>
     }
+    </main>
+
+
 
     @if (showSuccessMessage)
     {
@@ -194,40 +165,39 @@
     [Parameter]
     public string Slug { get; set; } = string.Empty;
 
-    // Remove CartStore if not used for this specific single-booking flow anymore, 
-    // or keep it if "booking" means adding a "Booked Item" to cart. 
-    // For single flow we might just process it directly.
+    // Use ID since our routes use ID currently, but parameter is named Slug. 
+    // We'll try to parse it as Guid.
+    private Guid ServiceId => Guid.TryParse(Slug, out var id) ? id : Guid.Empty;
+
+    [Inject] private IServOfferingService ServiceService { get; set; } = default!;
+    [Inject] private ICategoryService CategoryService { get; set; } = default!;
     [Inject] private CartStore CartState { get; set; } = default!; 
 
     private static readonly CultureInfo LocalCulture = new("es-AR");
 
-    private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
+    private GetServiceOffering? Service;
+    private string? CategoryIcon;
+    private bool isLoading = true;
 
-    private readonly IReadOnlyList<MenuActionModel> AccountActions = MenuConstants.AccountActions;
-    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = MenuConstants.PrimaryNavLinks;
-
-    private readonly IReadOnlyList<string> FooterContact = new List<string>
+    protected override async Task OnInitializedAsync()
     {
-        "Tel: +54 11 5555 1111",
-        "Email: hola@servicioahora.com",
-        "Horario: Lunes a domingo 8 a 22 h"
-    };
-
-    private readonly IReadOnlyList<FooterGroupModel> FooterGroups = new List<FooterGroupModel>
-    {
-        new("Explorá más", new []
+        if (ServiceId != Guid.Empty)
         {
-            new FooterLinkModel("Servicios", RouteConstants.HashServices),
-            new FooterLinkModel("Profesionales", RouteConstants.Professionals),
-            new FooterLinkModel("Garantías", RouteConstants.HashGarantias)
-        })
-    };
-
-    private ServiceDetailModel? Service;
-
-    protected override void OnParametersSet()
-    {
-        ServicesCatalog.TryGetValue(Slug, out Service);
+            try 
+            {
+                Service = await ServiceService.GetByIdAsync(ServiceId);
+                if (Service != null)
+                {
+                    var category = await CategoryService.GetByIdAsync(Service.CategoryId);
+                    CategoryIcon = category?.Icon;
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"Error loading service: {ex.Message}");
+            }
+        }
+        isLoading = false;
     }
 
     private void BackToSearch() => Navigation.NavigateTo(RouteConstants.Search);
@@ -262,9 +232,6 @@
             successMessageText = $"Turno reservado para el {SelectedAppointmentTime.Value.ToString("d/M HH:mm")}. ¡Te esperamos!";
             showSuccessMessage = true;
             
-            // Here you would redirect to checkout or save appointment
-            // Navigation.NavigateTo("/checkout?appointmentId=...");
-            
             Task.Delay(5000).ContinueWith(_ => 
             {
                  showSuccessMessage = false;
@@ -277,156 +244,4 @@
     {
         showSuccessMessage = false;
     }
-
-    private static readonly IReadOnlyDictionary<string, ServiceDetailModel> ServicesCatalog = new Dictionary<string, ServiceDetailModel>
-    {
-        ["limpieza-profunda-integral"] = new(
-            "limpieza-profunda-integral",
-            "Limpieza profunda integral",
-            "Equipos especializados para dejar tu casa impecable en horas con insumos hipoalergénicos y protocolos de cuidado familiar.",
-            "Limpieza",
-            "Buenos Aires",
-            "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=60",
-            32000,
-            "4 horas promedio",
-            "72h",
-            "Zonas norte, oeste y sur",
-            new []
-            {
-                new Highlight("Desinfección profunda", "Incluye vapor y sanitización de superficies de alto contacto."),
-                new Highlight("Organización básica", "Ordenamos y dejamos cada ambiente listo para el uso diario."),
-                new Highlight("Equipo doble", "Dos especialistas coordinados para reducir tiempos.")
-            },
-            new List<ReviewModel>
-            {
-                new("Camila Torres", 5, "Excelente servicio, dejaron todo impecable y fueron muy puntuales.", DateTime.Now.AddDays(-5)),
-                new("Roberto Gómez", 4, "Muy buen trabajo, aunque tardaron un poco más de lo estimado.", DateTime.Now.AddDays(-12))
-            }
-        ),
-        ["mantenimiento-de-jardines"] = new(
-            "mantenimiento-de-jardines",
-            "Mantenimiento de jardines",
-            "Corte, fertilización y diseño sustentable para tus espacios verdes sin residuos sobrantes.",
-            "Jardinería",
-            "Rosario",
-            "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=900&q=60",
-            28000,
-            "Visita de 2 a 3 horas",
-            "5 días",
-            "Radio de 30 km",
-            new []
-            {
-                new Highlight("Asesoría botánica", "Revisión de riego, tierra y especies que mejor se adaptan."),
-                new Highlight("Herramientas incluidas", "Llegamos con equipamiento profesional y bolsas reutilizables."),
-                new Highlight("Mantenimiento mensual", "Podés reservar agenda recurrente con el mismo especialista.")
-            },
-             new List<ReviewModel>
-            {
-                new("Laura Mendez", 5, "Me encantó cómo dejaron mi jardín. Súper recomendables.", DateTime.Now.AddDays(-2))
-            }
-        ),
-        ["reparacion-electrica-segura"] = new(
-            "reparacion-electrica-segura",
-            "Reparación eléctrica segura",
-            "Diagnóstico y solución de instalaciones, tableros y luminarias con materiales certificados.",
-            "Electricidad",
-            "Córdoba",
-            "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=60",
-            45000,
-            "3 horas aprox.",
-            "90 días",
-            "Capital y alrededores",
-            new []
-            {
-                new Highlight("Chequeo de tablero", "Verificamos térmicas y disyuntor para prevenir cortes."),
-                new Highlight("Seguridad primero", "Trabajamos con elementos de protección y normas IRAM."),
-                new Highlight("Pruebas finales", "Incluye medición de tensión y correcto funcionamiento.")
-            },
-             new List<ReviewModel>()
-        ),
-        ["plomeria-express"] = new(
-            "plomeria-express",
-            "Plomería express",
-            "Resolución de fugas, destapaciones y cambio de griferías con diagnóstico en el acto.",
-            "Plomería",
-            "Mendoza",
-            "https://images.unsplash.com/photo-1544723795-432537f4aa73?auto=format&fit=crop&w=900&q=60",
-            36000,
-            "Visita 2 horas",
-            "72h",
-            "Gran Mendoza",
-            new []
-            {
-                new Highlight("Detección sin rotura", "Usamos herramientas para localizar filtraciones rápidamente."),
-                new Highlight("Reposición opcional", "Podemos llevar repuestos sugeridos según tu grifería."),
-                new Highlight("Limpieza posterior", "Dejamos la zona seca y ordenada al finalizar.")
-            },
-             new List<ReviewModel>
-            {
-                new("Esteban Quito", 5, "Rápido y efectivo. Me salvó el domingo.", DateTime.Now.AddDays(-1))
-            }
-        ),
-        ["pintura-y-retoques"] = new(
-            "pintura-y-retoques",
-            "Pintura y retoques",
-            "Renová ambientes con combinaciones modernas, protección antihongos y terminaciones prolijas.",
-            "Decoración",
-            "La Plata",
-            "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=900&q=60",
-            52000,
-            "1 a 2 días según m²",
-            "10 días",
-            "La Plata y alrededores",
-            new []
-            {
-                new Highlight("Asesoría de color", "Te ayudamos a elegir paletas cálidas que combinen con tu hogar."),
-                new Highlight("Protección de muebles", "Cubrimos superficies y retiramos residuos al terminar."),
-                new Highlight("Materiales premium", "Trabajamos con pinturas lavables y selladores incluidos.")
-            },
-             new List<ReviewModel>
-            {
-                new("Ana García", 4, "Muy prolijos. Recomendable.", DateTime.Now.AddDays(-20)),
-                new("Carlos Ruiz", 5, "Transformaron mi living por completo.", DateTime.Now.AddDays(-15))
-            }
-        ),
-        ["asistencia-para-electrodomesticos"] = new(
-            "asistencia-para-electrodomesticos",
-            "Asistencia para electrodomésticos",
-            "Servicio técnico para heladeras, lavarropas y climatización con diagnóstico previo.",
-            "Electrodomésticos",
-            "Neuquén",
-            "https://images.unsplash.com/photo-1523419409543-0c1df022bddb?auto=format&fit=crop&w=900&q=60",
-            40000,
-            "Entre 1 y 2 horas",
-            "60 días",
-            "Zona centro y oeste",
-            new []
-            {
-                new Highlight("Chequeo completo", "Revisión eléctrica y mecánica antes de reemplazar piezas."),
-                new Highlight("Repuestos originales", "Trabajamos con insumos garantizados y factura."),
-                new Highlight("Consejos de uso", "Te dejamos recomendaciones para alargar la vida útil.")
-            },
-            new List<ReviewModel>()
-        )
-    };
-
-    private int CurrentYear => DateTime.Now.Year;
-
-    private record ServiceDetailModel(
-        string Slug,
-        string Name,
-        string Description,
-        string Category,
-        string City,
-        string ImageUrl,
-        decimal Price,
-        string Duration,
-        string Guarantee,
-        string Availability,
-        IReadOnlyList<Highlight> Highlights,
-        IReadOnlyList<ReviewModel> Reviews);
-
-    private record Highlight(string Title, string Description);
-    
-    private record ReviewModel(string UserName, int Rating, string Comment, DateTime Date);
 }

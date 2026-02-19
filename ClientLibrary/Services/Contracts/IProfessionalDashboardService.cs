@@ -5,6 +5,9 @@ using ClientLibrary.Models.Landing;
 using ClientLibrary.Models;
 using ClientLibrary.Services.Contracts;
 using ClientLibrary.Models.Booking;
+using ClientLibrary.Models.Category;
+using ClientLibrary.Models.ProfessionalCat;
+using ClientLibrary.Models.ServicioAhora.ServOffering;
 
 namespace ClientLibrary.Services.Contracts;
 
@@ -13,15 +16,16 @@ public interface IProfessionalDashboardService
     Task<DashboardMetrics> GetDashboardMetricsAsync();
     Task<List<ServiceGroup>> GetServiceGroupsAsync();
     Task<List<ServiceTransaction>> GetTransactionsAsync(DateTime start, DateTime end, string? status, string? city);
-    Task AddServiceAsync(ServiceFormModel service);
+    Task AddServiceAsync(CreateServiceOffering service);
     Task UpdateServiceAsync(ServiceFormModel service);
     Task DeleteServiceAsync(string serviceSlug);
+    Task<List<GetServiceOffering>> GetServiceOfferingsByProfessionalAsync(string professionalId);
 
     // Category Management
     Task<List<string>> GetAvailableCategoriesAsync();
-    Task<List<string>> GetMyCategoriesAsync();
-    Task<ServiceResponse> AddMyCategoryAsync(string category);
-    Task<ServiceResponse> RemoveMyCategoryAsync(string category);
+    Task<List<GetProfessionalCategory>> GetMyCategoriesAsync(string professionalId);
+    Task<ServiceResponse> AddMyCategoryAsync(Guid categoryId);
+    Task<ServiceResponse> RemoveMyCategoryAsync(string professionalId, Guid categoryId);
 
     // Availability Management
     Task<List<ProfessionalAvailability>> GetAvailabilityAsync(string professionalId);
@@ -33,4 +37,3 @@ public interface IProfessionalDashboardService
     Task<ServiceResponse> AddCertificationAsync(CertificationModel certification);
     Task<ServiceResponse> RemoveCertificationAsync(Guid id);
 }
-
