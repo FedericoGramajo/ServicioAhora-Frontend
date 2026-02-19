@@ -55,7 +55,7 @@
         else if (ActiveTab == "services")
         {
             <CategoryManager MyCategories="@MyCategories" OnCategoryChanged="@RefreshCategories" />
-            <ServiceManager @ref="ServiceManagerComponent" MyServices="@MyServices" OnServiceChanged="@RefreshServices" />
+            <ServiceManager @ref="ServiceManagerComponent" MyServices="@MyServices" MyCategories="@MyCategories" OnServiceChanged="@RefreshServices" />
         }
         else if (ActiveTab == "availability")
         {

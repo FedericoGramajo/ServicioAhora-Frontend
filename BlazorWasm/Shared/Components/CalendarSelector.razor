@@ -32,10 +32,16 @@
             var isRangeStart = IsRangeStart(date);
             var isRangeEnd = IsRangeEnd(date);
 
-            <div class="calendar-cell @GetCellClass(date, isSelected, isInRange, isRangeStart, isRangeEnd)" 
-                 @onclick="(args) => OnDateClick(date, args)">
+            var ariaLabel = date.ToString("D", LocalCulture);
+            var isClickable = true; // Could use to disable past dates if needed
+
+            <button type="button" 
+                    class="calendar-cell @GetCellClass(date, isSelected, isInRange, isRangeStart, isRangeEnd)" 
+                    @onclick="(args) => OnDateClick(date, args)"
+                    aria-label="@ariaLabel"
+                    aria-selected="@(isSelected ? "true" : "false")">
                 @day
-            </div>
+            </button>
         }
     </div>
     
@@ -64,6 +70,17 @@
         cursor: pointer;
         font-size: 0.9rem;
         transition: all 0.2s;
+        
+        /* Button reset */
+        background: none;
+        border: none;
+        padding: 0;
+        color: inherit;
+    }
+    .calendar-cell:focus-visible {
+        outline: 2px solid #0d6efd;
+        outline-offset: 2px;
+        z-index: 1;
     }
     .calendar-cell:hover:not(.empty) {
         background-color: #f0f0f0;
@@ -93,19 +110,35 @@
     .calendar-cell.range-included {
          background-color: #e9f2ff; /* Lighter blue */
     }
+    .calendar-cell.has-availability {
+        position: relative;
+        font-weight: 600;
+    }
+    .calendar-cell.has-availability::after {
+        content: '';
+        position: absolute;
+        bottom: 3px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 4px;
+        background-color: #198754; /* Green */
+        border-radius: 50%;
+    }
+    .calendar-cell.selected.has-availability::after {
+        background-color: white; /* White dot when selected */
+    }
 </style>
 
 @code {
     [Parameter] public List<DateTime> SelectedDates { get; set; } = new();
     [Parameter] public EventCallback<List<DateTime>> SelectedDatesChanged { get; set; }
+    [Parameter] public List<DateTime> AvailableDates { get; set; } = new(); // Dates that already have slots
     
     private DateTime CurrentMonth { get; set; } = DateTime.Today;
     private CultureInfo LocalCulture = new("es-AR");
     
-    // Internal state for logic, allowing HashSet for performance if needed, 
-    // but here we sync with Parameter
-    
-    // Range Selection State
+    // Internal state for logic
     private DateTime? RangeStart { get; set; }
     private DateTime? LastClickedDate { get; set; }
 
@@ -117,12 +150,12 @@
     private void NextMonth() => CurrentMonth = CurrentMonth.AddMonths(1);
 
     private bool IsSelected(DateTime date) => SelectedDates.Contains(date);
+    private bool IsAvailable(DateTime date) => AvailableDates.Any(d => d.Date == date.Date);
     
-    private bool IsRangeStart(DateTime date) => false; // Simplified for now
+    // Range logic simplified/placeholders
+    private bool IsRangeStart(DateTime date) => false; 
     private bool IsRangeEnd(DateTime date) => false;
     private bool IsInRange(DateTime date) => false;
-
-    private bool RangeMode { get; set; } = false;
 
     private async Task OnDateClick(DateTime date, MouseEventArgs args)
     {
@@ -165,8 +198,10 @@
 
     private string GetCellClass(DateTime date, bool isSelected, bool isInRange, bool isStart, bool isEnd)
     {
-        if (isSelected) return "selected";
-        return "";
+        var classes = new List<string>();
+        if (isSelected) classes.Add("selected");
+        if (IsAvailable(date)) classes.Add("has-availability");
+        return string.Join(" ", classes);
     }
 
 }

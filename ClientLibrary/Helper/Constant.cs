@@ -110,6 +110,7 @@ namespace ClientLibrary.Helper
             public const string AddAvailability         = "availability/add";          // POST /api/Availability/add
             public const string UpdateAvailability      = "availability/update";       // PUT /api/Availability/update
             public const string RemoveAvailability      = "availability/delete";       // DELETE /api/Availability/delete/{id}
+            public const string BatchAVailability       = "availability/batch";
 
             // Certifications (no están en el OpenAPI — endpoints de backend)
             public const string GetCertifications       = "professional/certifications/get";

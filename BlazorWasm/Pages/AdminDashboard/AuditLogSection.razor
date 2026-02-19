@@ -24,19 +24,18 @@
     <!-- Filters -->
     <div class="border rounded p-3 mb-3 bg-light">
         <div class="row g-2 mb-2">
-            <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="col-12 col-md-3">
                 <label class="form-label small fw-semibold mb-1">Acción</label>
-                <input class="form-control form-control-sm" placeholder="Login, Update..." @bind="Filter.Action" @bind:event="oninput" @onkeydown="OnEnterKey" />
+                <select class="form-select form-select-sm" @bind="Filter.Action">
+                    <option value="">Todas</option>
+                    <option value="Login">Login</option>
+                    <option value="Add">Add</option>
+                    <option value="Update">Update</option>
+                    <option value="BatchUpdate">BatchUpdate</option>
+                    <option value="Delete">Delete</option>
+                </select>
             </div>
-            <div class="col-12 col-sm-6 col-md-3 col-lg-2">
-                <label class="form-label small fw-semibold mb-1">Entidad</label>
-                <input class="form-control form-control-sm" placeholder="User, ServiceOffering..." @bind="Filter.EntityName" @bind:event="oninput" @onkeydown="OnEnterKey" />
-            </div>
-            <div class="col-12 col-sm-6 col-md-3 col-lg-3">
-                <label class="form-label small fw-semibold mb-1">Usuario (ID)</label>
-                <input class="form-control form-control-sm" placeholder="ID del usuario..." @bind="Filter.UserId" @bind:event="oninput" @onkeydown="OnEnterKey" />
-            </div>
-            <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="col-12 col-md-3">
                 <label class="form-label small fw-semibold mb-1">Estado</label>
                 <select class="form-select form-select-sm" @bind="SuccessFilter">
                     <option value="">Todos</option>
@@ -44,11 +43,11 @@
                     <option value="false">Fallidos</option>
                 </select>
             </div>
-            <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+            <div class="col-12 col-md-3">
                 <label class="form-label small fw-semibold mb-1">Desde</label>
                 <input type="date" class="form-control form-control-sm" @bind="Filter.FromDate" />
             </div>
-            <div class="col-12 col-sm-6 col-md-3 col-lg-1">
+            <div class="col-12 col-md-3">
                 <label class="form-label small fw-semibold mb-1">Hasta</label>
                 <input type="date" class="form-control form-control-sm" @bind="Filter.ToDate" />
             </div>
@@ -188,16 +187,20 @@
                                 <td colspan="8" class="px-4 py-3">
                                     @if (!string.IsNullOrEmpty(log.OldValues))
                                     {
-                                        <div class="mb-2">
-                                            <span class="small text-muted fw-semibold text-uppercase">Valores anteriores</span>
-                                            <pre class="mb-0 mt-1 p-2 rounded bg-white border small" style="white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;">@log.OldValues</pre>
+                                        <div class="mb-3">
+                                            <span class="small text-muted fw-bold text-uppercase d-block mb-1">Valores anteriores</span>
+                                            <div class="bg-light border rounded p-2">
+                                                @RenderProperties(log.OldValues)
+                                            </div>
                                         </div>
                                     }
                                     @if (!string.IsNullOrEmpty(log.NewValues))
                                     {
-                                        <div class="mb-2">
-                                            <span class="small text-muted fw-semibold text-uppercase">Valores nuevos</span>
-                                            <pre class="mb-0 mt-1 p-2 rounded bg-white border small" style="white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;">@log.NewValues</pre>
+                                        <div class="mb-3">
+                                            <span class="small text-success fw-bold text-uppercase d-block mb-1">Valores nuevos</span>
+                                            <div class="bg-success-subtle border border-success rounded p-2">
+                                                @RenderProperties(log.NewValues)
+                                            </div>
                                         </div>
                                     }
                                     @if (!string.IsNullOrEmpty(log.FailureReason))
@@ -314,5 +317,56 @@
         "professional" => "bg-primary",
         "user"         => "bg-secondary",
         _              => "bg-light text-dark"
+    };
+
+    private RenderFragment RenderProperties(string json) => builder =>
+    {
+        try
+        {
+            var node = System.Text.Json.Nodes.JsonNode.Parse(json);
+            if (node is System.Text.Json.Nodes.JsonObject obj)
+            {
+                 builder.OpenElement(0, "table");
+                 builder.AddAttribute(1, "class", "table table-sm table-borderless mb-0 small");
+                 builder.OpenElement(2, "tbody");
+                 
+                 foreach (var kvp in obj)
+                 {
+                     builder.OpenElement(3, "tr");
+                     
+                     // Key
+                     builder.OpenElement(4, "td");
+                     builder.AddAttribute(5, "class", "fw-semibold text-muted pe-3");
+                     builder.AddAttribute(6, "style", "width: 150px; white-space: nowrap;"); // Label column
+                     builder.AddContent(7, kvp.Key);
+                     builder.CloseElement(); // td
+
+                     // Value
+                     builder.OpenElement(8, "td");
+                     builder.AddAttribute(9, "class", "font-monospace text-break"); // Value column
+                     builder.AddContent(10, kvp.Value?.ToString() ?? "null");
+                     builder.CloseElement(); // td
+
+                     builder.CloseElement(); // tr
+                 }
+
+                 builder.CloseElement(); // tbody
+                 builder.CloseElement(); // table
+            }
+            else
+            {
+                // Not an object (array or value), fallback to simple text
+                 builder.OpenElement(0, "code");
+                 builder.AddContent(1, json);
+                 builder.CloseElement();
+            }
+        }
+        catch
+        {
+            // Fallback for invalid JSON
+             builder.OpenElement(0, "span");
+             builder.AddContent(1, json);
+             builder.CloseElement();
+        }
     };
 }

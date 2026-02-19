@@ -40,8 +40,7 @@
                     </button>
                     <div class="d-flex flex-wrap gap-2 small text-muted">
                         <span class="badge bg-primary-subtle text-primary">Categoría: @FilterLabel(selectedCategory)</span>
-                        <span class="badge bg-secondary-subtle text-secondary">Ciudad: @FilterLabel(selectedCity)</span>
-                        <span class="badge bg-info-subtle text-info">Presupuesto: @PriceLabel(selectedPriceRange)</span>
+                        <span class="badge bg-primary-subtle text-primary">Categoría: @FilterLabel(selectedCategory)</span>
                         @if (expressOnly)
                         {
                             <span class="badge bg-success-subtle text-success">Express prioritario</span>
@@ -108,6 +107,7 @@
                                                     <span class="badge rounded-pill bg-success-subtle text-success">Express</span>
                                                 } *@
                                             </div>
+                                            <p class="text-primary fw-bold mb-1 small">@result.ProfessionalFullName</p>
                                             <h5 class="card-title mb-1">@result.Name</h5>
                                             <p class="card-text text-muted mb-2">@result.Description</p>
                                             @* Rating not in model yet *@
@@ -154,26 +154,7 @@
                                 }
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Ciudad</label>
-                            <select class="form-select" @bind="selectedCity">
-                                <option value="todas">Todas</option>
-                                @foreach (var city in Cities)
-                                {
-                                    <option value="@city">@city</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Presupuesto</label>
-                            <select class="form-select" @bind="selectedPriceRange">
-                                <option value="cualquiera">Cualquiera</option>
-                                <option value="0-30000">Hasta $30.000</option>
-                                <option value="30000-50000">$30.000 - $50.000</option>
-                                <option value="50000-80000">$50.000 - $80.000</option>
-                                <option value="80000+">Más de $80.000</option>
-                            </select>
-                        </div>
+                        <!-- City and Budget filters removed -->
                         <div class="col-md-6 d-flex align-items-end">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="expressCheck" @bind="expressOnly" />
@@ -228,8 +209,8 @@
 
     private string searchTerm = string.Empty;
     private string selectedCategory = "todas";
-    private string selectedCity = "todas";
-    private string selectedPriceRange = "cualquiera";
+    // private string selectedCity = "todas"; // Removed
+    // private string selectedPriceRange = "cualquiera"; // Removed
     private string selectedSortOrder = "relevance";
     private bool expressOnly;
 
@@ -240,7 +221,7 @@
     
     // We don't have City in GetServiceOffering yet, so we'll mock or ignore for now, or check if it's available elsewhere. 
     // For now, let's just return a placeholder or empty if not in model.
-    private IEnumerable<string> Cities => new List<string>(); 
+    // Cities list removed 
 
     private IEnumerable<GetServiceOffering> FilteredResults => Results;
 
@@ -274,6 +255,8 @@
         
         // Fetch all results initially (could be optimized significantly with server-side filtering later)
         var allServices = await ServiceService.GetAllAsync();
+        // Client-side filtering for active services
+        allServices = allServices.Where(s => s.Status).ToList();
 
         // Apply filters using Specification Pattern
         var spec = new ServiceSearchSpecification(
@@ -328,21 +311,8 @@
             // The Specification accepts Guid. We need a way to map name to ID or update Spec to accept Name.
             // Simplest fix: Filter by name in a new spec constructor or here.
             CategoryId, 
-            selectedPriceRange switch 
-            {
-               "0-30000" => 0,
-               "30000-50000" => 30000,
-               "50000-80000" => 50000,
-               "80000+" => 80000,
-               _ => null 
-            }, 
-             selectedPriceRange switch 
-            {
-               "0-30000" => 30000,
-               "30000-50000" => 50000,
-               "50000-80000" => 80000,
-               _ => null 
-            }
+            null, 
+            null
         );
 
         var query = SpecificationEvaluator<GetServiceOffering>.GetQuery(allServices, spec);
@@ -370,14 +340,7 @@
 
     private string FilterLabel(string value) => string.Equals(value, "todas", StringComparison.OrdinalIgnoreCase) ? "Todas" : value;
 
-    private string PriceLabel(string value) => value switch
-    {
-        "0-30000" => "Hasta $30.000",
-        "30000-50000" => "$30.000 - $50.000",
-        "50000-80000" => "$50.000 - $80.000",
-        "80000+" => "Más de $80.000",
-        _ => "Cualquiera"
-    };
+    // PriceLabel method removed
 
     private void GoToService(string slug) 
     {

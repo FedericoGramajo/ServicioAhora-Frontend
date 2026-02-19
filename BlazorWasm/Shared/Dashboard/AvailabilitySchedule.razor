@@ -1,95 +1,178 @@
 @inject IProfessionalDashboardService DashboardService
 @inject IJSRuntime JS
 @inject AuthenticationStateProvider AuthStateProvider
+@using ClientLibrary.Models.Booking
 
-<div class="row g-4">
-    <div class="col-lg-4">
-        <div class="p-3 border rounded bg-light">
-            <h6 class="mb-3">Configurar horarios</h6>
-            <div class="mb-3">
-                <label class="form-label small">Días de atención</label>
+<div class="row g-4 h-100">
+    <!-- Columna Izquierda: Configuración -->
+    <div class="col-lg-5 d-flex flex-column gap-3">
+        <!-- 1. Calendario -->
+        <div class="p-4 border rounded bg-white shadow-sm">
+            <h6 class="mb-3 fw-bold text-success"><i class="fa-regular fa-calendar-days me-2"></i>1. Seleccioná días</h6>
+            <CalendarSelector SelectedDates="@SelectedDates" 
+                              SelectedDatesChanged="OnDatesChanged"
+                              AvailableDates="@Availabilities.Select(a => a.Date.Date).Distinct().ToList()" />
+            <small class="text-muted d-block mt-3 text-center">
+                <i class="fa-solid fa-arrow-pointer me-1"></i>
+                Hacé clic para seleccionar. <strong>Shift + Clic</strong> para rangos.
+            </small>
+        </div>
+
+        <!-- 2. Grilla de Horas (Solo visible si hay selección) -->
+        <div class="p-4 border rounded bg-white shadow-sm flex-grow-1 d-flex flex-column">
+            <h6 class="mb-3 fw-bold text-success"><i class="fa-regular fa-clock me-2"></i>2. Configurá disponibilidad</h6>
+            
+            @if (!SelectedDates.Any())
+            {
+                <div class="text-center my-auto text-muted opacity-50">
+                    <i class="fa-solid fa-hand-pointer fa-2x mb-2"></i>
+                    <p class="mb-0 small">Seleccioná un día arriba para comenzar.</p>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                     <span class="badge bg-success-subtle text-success border border-success">
+                         @if(SelectedDates.Count == 1)
+                         {
+                             @($"Día: {SelectedDates.First().ToString("dd/MM")}")
+                         }
+                         else
+                         {
+                             @($"{SelectedDates.Count} días seleccionados")
+                         }
+                     </span>
+                     <button class="btn btn-link btn-sm text-decoration-none p-0 fw-semibold text-success" @onclick="SelectAllHours">
+                         @(SelectedHours.Count >= 14 ? "Desmarcar todas" : "Marcar todas")
+                     </button>
+                </div>
+
+                <div class="hour-grid mb-4">
+                    @for (int i = 8; i <= 21; i++) // 8:00 to 21:00
+                    {
+                        var hour = i;
+                        var isSelected = SelectedHours.Contains(hour);
+                        <button class="btn btn-sm @(isSelected ? "btn-success" : "btn-outline-secondary")" 
+                                @onclick="() => ToggleHour(hour)">
+                            @($"{hour:00}:00")
+                        </button>
+                    }
+                </div>
                 
-                <CalendarSelector @bind-SelectedDates="SelectedDates" />
-                
-                <small class="text-muted">Seleccioná días individuales o mantené Shift presionado para seleccionar un rango.</small>
-            </div>
-            <div class="mb-3">
-                    <label class="form-label small">Horario</label>
-                    <div class="d-flex gap-2 align-items-center">
-                        <input type="time" class="form-control" @bind="NewStartTime" />
-                        <span>a</span>
-                        <input type="time" class="form-control" @bind="NewEndTime" />
-                    </div>
-            </div>
-            <button class="btn btn-primary w-100" @onclick="AddAvailability" disabled="@IsLoading">
-                <i class="fa-solid fa-plus me-2"></i> @(IsLoading ? "Agregando..." : "Agregar horario")
-            </button>
+                <div class="mt-auto">
+                    <button class="btn btn-success w-100 py-2 fw-semibold shadow-sm" @onclick="SaveAvailability" disabled="@IsLoading">
+                        @if (IsLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Guardando...</span>
+                        }
+                        else
+                        {
+                            <i class="fa-solid fa-check me-2"></i> 
+                            @("Guardar Disponibilidad")
+                        }
+                    </button>
+                </div>
+            }
         </div>
     </div>
-    <div class="col-lg-8">
-        @if (Availabilities == null || !Availabilities.Any())
-        {
-            <div class="alert alert-light border border-dashed text-center py-4">
-                <i class="fa-regular fa-clock fa-2x text-muted mb-2"></i>
-                <p class="text-muted mb-0">No has configurado tu disponibilidad.</p>
+
+    <!-- Columna Derecha: Resumen Permanente -->
+    <div class="col-lg-7">
+        <div class="p-4 border rounded bg-light h-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h6 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-list-check me-2"></i>Mis Horarios</h6>
+                <span class="badge bg-secondary">@Availabilities.Count slots</span>
             </div>
-        }
-        else
-        {
-                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                <table class="table table-hover align-middle">
-                    <thead style="position: sticky; top: 0; background-color: white; z-index: 1;">
-                        <tr>
-                            <th>Día</th>
-                            <th>Horario</th>
-                            <th class="text-end">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Availabilities)
-                        {
-                            <tr>
-                                <td>
-                                    <span class="fw-semibold">@item.Date.ToString("dd MMM yyyy", LocalCulture)</span>
-                                    <small class="text-muted d-block">@LocalCulture.DateTimeFormat.GetDayName(item.DayOfWeek)</small>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="fa-regular fa-clock text-muted"></i>
-                                        <span>@item.StartTime.ToString(@"hh\:mm") - @item.EndTime.ToString(@"hh\:mm")</span>
+
+            @if (Availabilities == null || !Availabilities.Any())
+            {
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <span class="fa-stack fa-2x text-muted opacity-25">
+                          <i class="fas fa-circle fa-stack-2x"></i>
+                          <i class="fas fa-calendar-xmark fa-stack-1x fa-inverse"></i>
+                        </span>
+                    </div>
+                    <h6 class="text-muted">Aún no tienes horarios configurados</h6>
+                    <p class="text-muted small mb-0">Usá el panel izquierdo para agregar disponibilidad.</p>
+                </div>
+            }
+            else
+            {
+                <div class="availability-list pe-2" style="max-height: 600px; overflow-y: auto;">
+                    @{
+                        // Group by Date for cleaner display
+                        var grouped = Availabilities
+                            .GroupBy(a => a.Date.Date)
+                            .OrderBy(g => g.Key)
+                            .ToList();
+                    }
+
+                    @foreach (var group in grouped)
+                    {
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-body py-2 px-3">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3 border-end">
+                                        <div class="text-center">
+                                            <span class="d-block fw-bold text-uppercase text-success small">@LocalCulture.DateTimeFormat.GetMonthName(group.Key.Month)</span>
+                                            <span class="display-6 fw-bold lh-1 text-dark">@group.Key.Day</span>
+                                            <span class="d-block text-muted small text-uppercase">@LocalCulture.DateTimeFormat.GetAbbreviatedDayName(group.Key.DayOfWeek)</span>
+                                        </div>
                                     </div>
-                                </td>
-                                <td class="text-end">
-                                    <button class="btn btn-outline-danger btn-sm" @onclick="() => RemoveAvailability(item.Id)" disabled="@IsLoading">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
+                                    <div class="col-md-9">
+                                        <div class="d-flex flex-wrap gap-1 py-1">
+                                            @foreach (var slot in group.OrderBy(x => x.StartTime))
+                                            {
+                                                <span class="badge bg-white text-success border border-success">
+                                                    @slot.StartTime.ToString(@"hh\:mm")
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
     </div>
 </div>
+
+<style>
+    .hour-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        gap: 8px;
+    }
+    .availability-list::-webkit-scrollbar {
+        width: 6px;
+    }
+    .availability-list::-webkit-scrollbar-track {
+        background: #f1f1f1; 
+    }
+    .availability-list::-webkit-scrollbar-thumb {
+        background: #ccc; 
+        border-radius: 3px;
+    }
+    .availability-list::-webkit-scrollbar-thumb:hover {
+        background: #bbb; 
+    }
+</style>
 
 @code {
     [Parameter] public List<ProfessionalAvailability> Availabilities { get; set; } = new();
     [Parameter] public EventCallback OnAvailabilityChanged { get; set; }
 
     private List<DateTime> SelectedDates { get; set; } = new();
-    private DateTime NewStartTime { get; set; } = DateTime.Today.AddHours(9); 
-    private DateTime NewEndTime { get; set; } = DateTime.Today.AddHours(17);
+    private HashSet<int> SelectedHours { get; set; } = new();
     
     private bool IsLoading { get; set; } = false; 
     private string? ProfessionalId { get; set; }
 
     private readonly CultureInfo LocalCulture = new("es-AR");
-
-    private Dictionary<int, string> DayNames = new() 
-    {
-        {1, "Lunes"}, {2, "Martes"}, {3, "Miércoles"}, {4, "Jueves"}, {5, "Viernes"}, {6, "Sábado"}, {0, "Domingo"}
-    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -99,99 +182,109 @@
                       ?? string.Empty;
     }
 
-    private async Task AddAvailability()
+    private void OnDatesChanged(List<DateTime> dates)
     {
-        if (!SelectedDates.Any())
-        {
-            await JS.ToastrWarning("Seleccioná al menos una fecha.");
-            return;
-        }
+        SelectedDates = dates;
+        UpdateSelectedHoursFromSelection();
+    }
 
-        if (NewEndTime <= NewStartTime)
+    private void UpdateSelectedHoursFromSelection()
+    {
+        if (SelectedDates.Count == 1)
         {
-            await JS.ToastrWarning("La hora de fin debe ser mayor a la de inicio.");
-            return;
+            // If single date selected, load its hours
+            var date = SelectedDates.First().Date;
+            var existing = Availabilities.Where(a => a.Date.Date == date).ToList();
+            
+            SelectedHours.Clear();
+            foreach (var slot in existing)
+            {
+                // Assuming slots start at exact hours for now based on the grid logic
+                SelectedHours.Add(slot.StartTime.Hours);
+            }
         }
+        else
+        {
+            // If multiple dates or none, clear selection (batch mode starts fresh)
+            SelectedHours.Clear();
+        }
+    }
+
+    private void ToggleHour(int hour)
+    {
+        if (SelectedHours.Contains(hour))
+        {
+            SelectedHours.Remove(hour);
+        }
+        else
+        {
+            SelectedHours.Add(hour);
+        }
+    }
+
+    private void SelectAllHours()
+    {
+        if (SelectedHours.Count >= 14) // Rough check if all (8 to 21 is 14 hours)
+        {
+            SelectedHours.Clear();
+        }
+        else
+        {
+            for (int i = 8; i <= 21; i++) SelectedHours.Add(i);
+        }
+    }
+
+    private async Task SaveAvailability()
+    {
+        if (!SelectedDates.Any()) return;
 
         IsLoading = true;
         int successCount = 0;
-        string? lastError = null;
         try
         {
+            var hoursList = SelectedHours.OrderBy(h => h).Select(h => $"{h:00}:00:00").ToList();
+
             foreach (var date in SelectedDates)
             {
-                var request = new AddAvailabilityRequest
+                var request = new BatchAvailabilityDto
                 { 
                     ProfessionalId = ProfessionalId ?? string.Empty,
                     Date = date, 
-                    StartTime = NewStartTime.ToString("HH:mm"), 
-                    EndTime = NewEndTime.ToString("HH:mm") 
+                    Hours = hoursList,
+                    SlotDurationMinutes = 60
                 };
 
-                Console.WriteLine($"[Availability] Sending: ProfessionalId={request.ProfessionalId}, Date={request.Date}, Start={request.StartTime}, End={request.EndTime}");
+                Console.WriteLine($"[Availability] Saving batch for {date.ToShortDateString()}: {string.Join(", ", request.Hours)}");
                 
-                try
+                var result = await DashboardService.SetDailyAvailabilityAsync(request);
+                if (result.success)
                 {
-                    var result = await DashboardService.AddAvailabilityAsync(request);
-                    if (result != null && result.success)
-                    {
-                        successCount++;
-                    }
-                    else
-                    {
-                        lastError = result?.Message ?? "Respuesta vacía del servidor";
-                        Console.WriteLine($"[Availability] Error for date {request.Date}: {lastError}");
-                    }
+                    successCount++;
                 }
-                catch (Exception innerEx)
+                else
                 {
-                    lastError = innerEx.Message;
-                    Console.WriteLine($"[Availability] Exception for date {request.Date}: {innerEx}");
+                    Console.WriteLine($"[Availability] Error for {date}: {result.Message}");
                 }
             }
 
             if (successCount > 0)
             {
                 await OnAvailabilityChanged.InvokeAsync(); 
-                await JS.ToastrSuccess($"Se agregaron {successCount} horario(s) correctamente.");
+                await JS.ToastrSuccess($"Se actualizaron {successCount} fechas correctamente.");
+                
+                // RESET SELECTION
                 SelectedDates.Clear();
+                SelectedHours.Clear();
             }
             else
             {
-                await JS.ToastrError(lastError ?? "No se pudo agregar ningún horario.");
+                await JS.ToastrError("No se pudieron guardar los cambios.");
             }
         }
         catch (Exception ex)
         {
              Console.WriteLine($"[Availability] Fatal error: {ex}");
              await JS.ToastrError($"Error al guardar: {ex.Message}");
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    private async Task RemoveAvailability(Guid id)
-    {
-        IsLoading = true;
-        try
-        {
-            var response = await DashboardService.RemoveAvailabilityAsync(id);
-            if (response.success)
-            {
-                await OnAvailabilityChanged.InvokeAsync();
-                await JS.ToastrSuccess(response.Message);
-            }
-            else
-            {
-                    await JS.ToastrError(response.Message);
-            }
-        }
-        catch (Exception ex)
-        {
-             Console.WriteLine(ex);
-             await JS.ToastrError("Error al eliminar disponibilidad.");
         }
         finally
         {

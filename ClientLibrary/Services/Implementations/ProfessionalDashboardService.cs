@@ -73,7 +73,7 @@ public class ProfessionalDashboardService(IHttpClientHelper httpClient, IApiCall
         await apiHelper.ApiCallTypeCall<CreateServiceOffering>(apiCall);
     }
 
-    public async Task UpdateServiceAsync(ServiceFormModel service)
+    public async Task<ServiceResponse> UpdateServiceAsync(UpdateServiceOffering service)
     {
         var client = await httpClient.GetPrivateClientAsync();
         var apiCall = new ApiCall
@@ -83,7 +83,8 @@ public class ProfessionalDashboardService(IHttpClientHelper httpClient, IApiCall
             Client = client,
             Model = service
         };
-        await apiHelper.ApiCallTypeCall<ServiceFormModel>(apiCall);
+        var result = await apiHelper.ApiCallTypeCall<UpdateServiceOffering>(apiCall);
+        return result == null ? apiHelper.ConnectionError() : await apiHelper.GetServiceResponse<ServiceResponse>(result);
     }
 
     public async Task DeleteServiceAsync(string serviceSlug)
@@ -167,6 +168,12 @@ public class ProfessionalDashboardService(IHttpClientHelper httpClient, IApiCall
             Client = client
         };
         var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
+
+        if (result != null && result.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            return new ServiceResponse(false, "No se puede eliminar la categoría porque tiene servicios asignados. Elimine los servicios primero.");
+        }
+
         return await apiHelper.GetServiceResponse<ServiceResponse>(result) ?? new ServiceResponse(false, "Error al eliminar el rubro");
     }
 
@@ -212,6 +219,34 @@ public class ProfessionalDashboardService(IHttpClientHelper httpClient, IApiCall
     }
 
 
+
+    public async Task<ServiceResponse> SetDailyAvailabilityAsync(BatchAvailabilityDto request)
+    {
+        var client = await httpClient.GetPrivateClientAsync();
+        var apiCall = new ApiCall
+        {
+            Route = Constant.Professional.BatchAVailability,
+            Type = Constant.ApiCallType.Post,
+            Client = client,
+            Model = request
+        };
+        var result = await apiHelper.ApiCallTypeCall<BatchAvailabilityDto>(apiCall);
+
+        if (result == null)
+            return new ServiceResponse(false, "Error de conexión con el servidor");
+
+        if (result.IsSuccessStatusCode)
+        {
+             // Try to deserialize ServiceResponse, or create one if body is empty but status is OK
+             var response = await apiHelper.GetServiceResponse<ServiceResponse>(result);
+             return response ?? new ServiceResponse(true, "Disponibilidad actualizada correctamente");
+        }
+        else
+        {
+            var response = await apiHelper.GetServiceResponse<ServiceResponse>(result);
+            return response ?? new ServiceResponse(false, $"Error del servidor: {result.StatusCode}");
+        }
+    }
 
     public async Task<ServiceResponse> RemoveAvailabilityAsync(Guid id)
     {

@@ -17,7 +17,7 @@ public interface IProfessionalDashboardService
     Task<List<ServiceGroup>> GetServiceGroupsAsync();
     Task<List<ServiceTransaction>> GetTransactionsAsync(DateTime start, DateTime end, string? status, string? city);
     Task AddServiceAsync(CreateServiceOffering service);
-    Task UpdateServiceAsync(ServiceFormModel service);
+    Task<ServiceResponse> UpdateServiceAsync(UpdateServiceOffering service);
     Task DeleteServiceAsync(string serviceSlug);
     Task<List<GetServiceOffering>> GetServiceOfferingsByProfessionalAsync(string professionalId);
 
@@ -30,6 +30,7 @@ public interface IProfessionalDashboardService
     // Availability Management
     Task<List<ProfessionalAvailability>> GetAvailabilityAsync(string professionalId);
     Task<ServiceResponse> AddAvailabilityAsync(AddAvailabilityRequest request);
+    Task<ServiceResponse> SetDailyAvailabilityAsync(BatchAvailabilityDto request);
     Task<ServiceResponse> RemoveAvailabilityAsync(Guid id);
 
     // Certification Management

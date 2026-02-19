@@ -11,18 +11,31 @@
 <div class="surface-card mb-4">
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
         <div>
-            <h4 class="mb-1">Mis Rubros</h4>
+            <h4 class="mb-1">Mis Categorías</h4>
             <p class="text-muted mb-0">Gestioná las categorías en las que ofrecés servicios (Máximo 2)</p>
         </div>
-        <button class="btn btn-primary btn-sm" @onclick="OpenAddCategoryModal">
-            <i class="fa-solid fa-plus me-1"></i> Agregar Rubro
-        </button>
+        <div>
+             @if (MyCategories.Count >= 2)
+            {
+                <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Has alcanzado el límite de categorías">
+                    <button class="btn btn-primary btn-sm" disabled>
+                        <i class="fa-solid fa-plus me-1"></i> Agregar Categoría
+                    </button>
+                </span>
+            }
+            else
+            {
+                <button class="btn btn-primary btn-sm" @onclick="OpenAddCategoryModal">
+                    <i class="fa-solid fa-plus me-1"></i> Agregar Categoría
+                </button>
+            }
+        </div>
     </div>
     
     @if (MyCategories.Count == 0)
     {
         <div class="alert alert-info">
-            <i class="fa-solid fa-info-circle me-2"></i> Aún no has seleccionado ningún rubro.
+            <i class="fa-solid fa-info-circle me-2"></i> Aún no has seleccionado ninguna categoría.
         </div>
     }
     else
@@ -49,7 +62,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Agregar Rubro</h5>
+                    <h5 class="modal-title">Agregar Categoría</h5>
                     <button type="button" class="btn-close" @onclick="CloseAddCategoryModal"></button>
                 </div>
                 <div class="modal-body">
@@ -60,7 +73,7 @@
                     else
                     {
                         <div class="mb-3">
-                            <label class="form-label">Seleccione un rubro</label>
+                            <label class="form-label">Seleccione una categoría</label>
                             <select class="form-select" @bind="selectedCategoryId">
                                 <option value="@Guid.Empty">-- Seleccionar --</option>
                                 @foreach (var cat in availableCategories)
@@ -92,10 +105,13 @@
 
     private async Task OpenAddCategoryModal()
     {
-        if (availableCategories == null)
-        {
-            availableCategories = await CategoryService.GetAllAsync();
-        }
+        if (MyCategories.Count >= 2) return;
+
+        var allCategories = await CategoryService.GetAllAsync();
+        
+        // Filter out categories that the professional already has
+        availableCategories = allCategories.Where(c => !MyCategories.Any(mc => mc.CategoryId == c.Id));
+
         selectedCategoryId = Guid.Empty;
         showAddCategoryModal = true;
     }
@@ -113,7 +129,7 @@
         if (response.success)
         {
             await OnCategoryChanged.InvokeAsync();
-            await JS.ToastrSuccess("Rubro agregado correctamente.");
+            await JS.ToastrSuccess("Categoría agregada correctamente.");
             CloseAddCategoryModal();
         }
         else
@@ -128,7 +144,7 @@
         if (response.success)
         {
             await OnCategoryChanged.InvokeAsync();
-            await JS.ToastrSuccess("Rubro eliminado correctamente.");
+            await JS.ToastrSuccess("Categoría eliminada correctamente.");
         }
         else
         {
