@@ -24,8 +24,17 @@
                             @foreach (var service in slide)
                             {
                                 <div class="col-md-4">
-                                    <div class="card service-card h-100">
-                                        <img src="@service.ImageUrl" class="card-img-top" alt="Imagen de @service.Name" loading="lazy" />
+                                    <div class="card service-card h-100 overflow-hidden">
+                                        @if (!string.IsNullOrEmpty(service.ImageUrl))
+                                        {
+                                            <img src="@service.ImageUrl" class="card-img-top" alt="Imagen de @service.Name" loading="lazy" style="height: 200px; object-fit: cover;" />
+                                        }
+                                        else
+                                        {
+                                            <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
+                                                <i class="@(string.IsNullOrEmpty(service.CategoryIcon) ? "fa-solid fa-screwdriver-wrench" : service.CategoryIcon) fa-4x text-muted opacity-50"></i>
+                                            </div>
+                                        }
                                         <div class="card-body">
                                             <span class="badge rounded-pill">@service.Category</span>
                                             <h5 class="card-title mt-3">@service.Name</h5>

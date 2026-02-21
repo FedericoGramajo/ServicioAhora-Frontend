@@ -8,7 +8,8 @@
                  Title="Soluciones hogareñas a medida para tu día a día"
                  Description="Coordinamos especialistas confiables para limpieza, reparaciones y mantenimiento con garantías claras, pagos protegidos y seguimiento en línea."
                  Ctas="@HeroCtas"
-                 Metrics="@HeroMetrics" />
+                 Metrics="@HeroMetrics"
+                 OnCtaClick="HandleCtaClick" />
 
     <section class="container py-5" id="rubros">
         <div class="text-center mb-5">
@@ -71,10 +72,15 @@
 
 @code {
     [Inject] private CategoryStore CategoryStore { get; set; } = default!;
+    [Inject] private IServOfferingService ServiceOfferingService { get; set; } = default!;
+    [Inject] private IProfessionalService ProfessionalService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
 
     private static readonly CultureInfo LocalCulture = new("es-AR");
 
     private IEnumerable<GetCategory> FeaturedCategories { get; set; } = Enumerable.Empty<GetCategory>();
+    private List<ServiceModel> Services { get; set; } = new();
+    private List<ProfessionalModel> Professionals { get; set; } = new();
     private bool CategoriesLoading { get; set; } = true;
 
     private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
@@ -88,44 +94,18 @@
         new("Convertirme en profesional", "btn btn-outline-light rounded-pill px-4 py-3")
     };
 
+    private void HandleCtaClick(string text)
+    {
+        if (text == "Explorar servicios") Navigation.NavigateTo(RouteConstants.Search);
+        else if (text == "Convertirme en profesional") Navigation.NavigateTo($"{RouteConstants.Register}?role=Professional");
+    }
+
     private readonly IReadOnlyList<HeroMetricModel> HeroMetrics = new List<HeroMetricModel>
     {
         new("+2.400", "Intervenciones hogareñas"),
         new("4.9/5", "Satisfacción promedio"),
         new("36 hs", "Tiempo de respuesta"),
         new("24/7", "Soporte al cliente")
-    };
-
-    private readonly IReadOnlyList<ServiceModel> Services = new List<ServiceModel>
-    {
-        new("limpieza-profunda-integral", "Limpieza profunda integral", "Equipos especializados para dejar tu casa impecable en horas.", "Limpieza",
-            "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=60", 32000),
-        new("mantenimiento-de-jardines", "Mantenimiento de jardines", "Corte, fertilización y diseño sustentable para tus espacios verdes.", "Jardinería",
-            "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=900&q=60", 28000),
-        new("reparacion-electrica-segura", "Reparación eléctrica segura", "Diagnóstico y solución de instalaciones, tableros y luminarias.", "Electricidad",
-            "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=60", 45000),
-        new("plomeria-express", "Plomería express", "Resolución de fugas, destapaciones y cambio de griferías en el día.", "Plomería",
-            "https://images.unsplash.com/photo-1481241999043-63e7ebd5a675?auto=format&fit=crop&w=900&q=60", 36000),
-        new("pintura-y-retoques", "Pintura y retoques", "Renová ambientes con combinaciones modernas y materiales lavables.", "Decoración",
-            "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=900&q=60", 52000),
-        new("asistencia-para-electrodomesticos", "Asistencia para electrodomésticos", "Servicio técnico para heladeras, lavarropas y climatización.", "Electrodomésticos",
-            "https://images.unsplash.com/photo-1523419409543-0c1df022bddb?auto=format&fit=crop&w=900&q=60", 40000)
-    };
-
-    private readonly IReadOnlyList<ProfessionalModel> Professionals = new List<ProfessionalModel>
-    {
-        new("laura-fernandez", "Laura Fernández", "Especialista en organización y limpieza", "Buenos Aires",
-            "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=900&q=60", 4.9, 128),
-        new("mateo-alvarez", "Mateo Álvarez", "Electricista matriculado", "Córdoba",
-            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=60", 4.8, 96),
-        new("valentina-castro", "Valentina Castro", "Paisajista y jardinera", "Rosario",
-            "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=60", 5.0, 142),
-        new("jeremias-luna", "Jeremías Luna", "Plomero certificado", "Mendoza",
-            "https://images.unsplash.com/photo-1544723795-432537f4aa73?auto=format&fit=crop&w=900&q=60", 4.7, 88),
-        new("marina-quiroga", "Marina Quiroga", "Pintora y decoradora", "La Plata",
-            "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=900&q=60", 4.9, 77),
-        new("andres-rivas", "Andrés Rivas", "Técnico de electrodomésticos", "Neuquén",
-            "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=60", 4.8, 109)
     };
 
     private readonly IReadOnlyList<TrustStatModel> TrustStats = new List<TrustStatModel>
@@ -147,9 +127,9 @@
     {
         new("Explorá más", new []
         {
-            new FooterLinkModel("Servicios", RouteConstants.HashServices),
+            new FooterLinkModel("Servicios", RouteConstants.Search),
             new FooterLinkModel("Profesionales", RouteConstants.Professionals),
-            new FooterLinkModel("Garantías", RouteConstants.HashGarantias)
+            new FooterLinkModel("Contacto", RouteConstants.Contact)
         })
     };
 
@@ -164,10 +144,42 @@
             CategoriesLoading = true;
             await CategoryStore.LoadCategoriesAsync();
             FeaturedCategories = CategoryStore.Categories?.Where(c => c.IsFeatured).Take(6).ToList() ?? new List<GetCategory>();
+
+            // Load Real Services
+            var realServices = await ServiceOfferingService.GetAllAsync();
+            if (realServices != null)
+            {
+                var catIcons = CategoryStore.Categories?.ToDictionary(c => c.Id, c => c.Icon) ?? new Dictionary<Guid, string?>();
+                
+                Services = realServices.Where(s => s.Status).Take(6).Select(s => new ServiceModel(
+                    s.Id.ToString(), 
+                    s.Name, 
+                    s.Description ?? "", 
+                    s.CategoryName, 
+                    s.Image, 
+                    s.BasePrice,
+                    catIcons.TryGetValue(s.CategoryId, out var icon) ? icon : null
+                )).ToList();
+            }
+
+            // Load Real Professionals
+            var realProfessionals = await ProfessionalService.GetActiveProfessionalsAsync();
+            if (realProfessionals != null)
+            {
+                Professionals = realProfessionals.Take(6).Select(p => new ProfessionalModel(
+                    p.AppUserId, // Used as Slug for simplicity
+                    p.FullName,
+                    p.Categories.FirstOrDefault() ?? "Especialista",
+                    "Ciudad", // Default city if not in model
+                    p.ProfileImage ?? "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=900&q=60",
+                    p.AvgRating,
+                    p.BookingsCount
+                )).ToList();
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading categories: {ex.Message}");
+            Console.WriteLine($"Error loading landing data: {ex.Message}");
             FeaturedCategories = new List<GetCategory>();
         }
         finally

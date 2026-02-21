@@ -136,5 +136,21 @@ namespace ClientLibrary.Services
             //    return new UserDto();
             //}
         }
+        
+        public async Task<ServiceResponse> LogoutAsync()
+        {
+            var client = await httpClient.GetPrivateClientAsync();
+            var apiCall = new ApiCall
+            {
+                Route = Constant.Authentication.Logout,
+                Type = Constant.ApiCallType.Post,
+                Client = client,
+                Id = null!,
+                Model = null!
+            };
+            var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
+            return result == null ? apiHelper.ConnectionError() :
+                await apiHelper.GetServiceResponse<ServiceResponse>(result);
+        }
     }
 }

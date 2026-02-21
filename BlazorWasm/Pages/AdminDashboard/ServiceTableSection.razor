@@ -35,6 +35,7 @@
                     <th>Profesional</th>
                     <th>Rubro</th>
                     <th>Precio</th>
+                    <th>Estado</th>
                     <th class="text-end">Acciones</th>
                 </tr>
             </thead>
@@ -48,10 +49,24 @@
                             <td>@service.ProfessionalFullName</td>
                             <td>@service.CategoryName</td>
                             <td>@service.BasePrice.ToString("C0", LocalCulture)</td>
+                            <td>
+                                @if (service.Status)
+                                {
+                                    <span class="badge rounded-pill bg-success-subtle text-success small">Publicado</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill bg-secondary-subtle text-secondary small">Oculto</span>
+                                }
+                            </td>
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <button class="btn btn-outline-primary btn-sm" @onclick="() => OpenEditModal(service)">Editar</button>
-                                    <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteService(service)">Eliminar</button>
+                                    <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" @onclick="() => OpenEditModal(service)">
+                                        <i class="fa-solid fa-pen small"></i> Editar
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" @onclick="() => DeleteService(service)">
+                                        <i class="fa-solid fa-trash small"></i> Eliminar
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -60,7 +75,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="4" class="text-center text-muted">No se encontraron servicios con los filtros aplicados.</td>
+                        <td colspan="6" class="text-center text-muted">No se encontraron servicios con los filtros aplicados.</td>
                     </tr>
                 }
             </tbody>

@@ -41,6 +41,7 @@ namespace ClientLibrary.Helper
             public const string VerifyToken             = "authentication/verifyToken";
             public const string ChangePassword          = "authentication/change-password";
             public const string Me                      = "authentication/me";
+            public const string Logout                  = "authentication/logout";
         }
         public static class ApiCallType
         {
@@ -117,6 +118,9 @@ namespace ClientLibrary.Helper
             public const string GetCertifications       = "professional/certifications/get";
             public const string AddCertification        = "professional/certifications/add";
             public const string RemoveCertification     = "professional/certifications/remove";
+
+            // Public listing
+            public const string GetAllPublic            = "Professional/all";
         }
         public static class Admin
         {

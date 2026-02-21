@@ -40,7 +40,6 @@
                     </button>
                     <div class="d-flex flex-wrap gap-2 small text-muted">
                         <span class="badge bg-primary-subtle text-primary">Categoría: @FilterLabel(selectedCategory)</span>
-                        <span class="badge bg-primary-subtle text-primary">Categoría: @FilterLabel(selectedCategory)</span>
                         @if (expressOnly)
                         {
                             <span class="badge bg-success-subtle text-success">Express prioritario</span>
@@ -56,81 +55,109 @@
                         <span class="text-muted">Mostrando servicios destacados para tu hogar</span>
                     </div>
                     <div class="d-flex align-items-center gap-2">
-                        <select class="form-select form-select-sm w-auto" @bind="selectedSortOrder">
+                        <select class="form-select form-select-sm w-auto" @bind="selectedSortOrder" @bind:after="ApplyFilters">
                             <option value="relevance">Relevancia</option>
                             <option value="price_asc">Precio: Menor a Mayor</option>
                             <option value="price_desc">Precio: Mayor a Menor</option>
-                            <option value="rating">Mejor calificados</option>
                         </select>
                         <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#customSearchModal">
                             <i class="fa-solid fa-sliders me-1"></i> Filtros
                         </button>
                     </div>
                 </div>
-                <div class="row g-3">
-                    @foreach (var result in FilteredResults)
-                    {
-                        <div class="col-12">
-                            <div class="card search-result">
-                                <div class="row g-0 align-items-center">
-                                    <div class="col-12 col-md-3">
-                                        <div class="ratio ratio-4x3">
-                                            @if (!string.IsNullOrEmpty(result.Image))
-                                            {
-                                                <img src="@result.Image" alt="@result.Name" class="rounded-start" style="object-fit: cover;" />
-                                            }
-                                            else
-                                            {
-                                                <div class="d-flex align-items-center justify-content-center bg-light h-100 rounded-start">
-                                                    @if (CategoryIcons.TryGetValue(result.CategoryId, out var icon) && !string.IsNullOrEmpty(icon))
-                                                    {
-                                                        <i class="@icon fa-3x text-muted opacity-50"></i>
-                                                    }
-                                                    else
-                                                    {
-                                                        <i class="fa-solid fa-screwdriver-wrench fa-3x text-muted opacity-50"></i>
-                                                    }
-                                                </div>
-                                            }
-                                        </div>
-                                    </div>
-                                    <div class="col-12 col-md-6">
-                                        <div class="card-body">
-                                            <div class="d-flex align-items-center gap-2 mb-2">
-                                                <span class="badge rounded-pill bg-primary-subtle text-primary">@result.CategoryName</span>
-                                                @* City not in model yet *@
-                                                @* <span class="badge rounded-pill bg-secondary-subtle text-secondary">@result.City</span> *@
-                                                
-                                                @* Express not in model yet *@
-                                                @* @if (result.ExpressAvailable)
+                
+                @if (IsLoading)
+                {
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-3">
+                        @foreach (var result in PaginatedResults)
+                        {
+                            <div class="col-12">
+                                <div class="card search-result">
+                                    <div class="row g-0 align-items-center">
+                                        <div class="col-12 col-md-3">
+                                            <div class="ratio ratio-4x3">
+                                                @if (!string.IsNullOrEmpty(result.Image))
                                                 {
-                                                    <span class="badge rounded-pill bg-success-subtle text-success">Express</span>
-                                                } *@
+                                                    <img src="@result.Image" alt="@result.Name" class="rounded-start" style="object-fit: cover;" />
+                                                }
+                                                else
+                                                {
+                                                    <div class="d-flex align-items-center justify-content-center bg-light h-100 rounded-start">
+                                                        @if (CategoryIcons.TryGetValue(result.CategoryId, out var icon) && !string.IsNullOrEmpty(icon))
+                                                        {
+                                                            <i class="@icon fa-3x text-muted opacity-50"></i>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="fa-solid fa-screwdriver-wrench fa-3x text-muted opacity-50"></i>
+                                                        }
+                                                    </div>
+                                                }
                                             </div>
-                                            <p class="text-primary fw-bold mb-1 small">@result.ProfessionalFullName</p>
-                                            <h5 class="card-title mb-1">@result.Name</h5>
-                                            <p class="card-text text-muted mb-2">@result.Description</p>
-                                            @* Rating not in model yet *@
-                                            @* <small class="text-muted">Última calificación: @result.Rating.ToString("0.0", CultureInfo.InvariantCulture) ⭐</small> *@
                                         </div>
-                                    </div>
-                                    <div class="col-12 col-md-3 d-flex flex-column align-items-start align-items-md-end gap-2 p-3">
-                                        <div class="price-tag">@result.BasePrice.ToString("C0", LocalCulture)</div>
-                                        <button class="btn btn-outline-primary w-100" @onclick="() => GoToService(result.Id)">Ver detalles</button>
-                                        <button class="btn btn-primary w-100" @onclick="() => GoToService(result.Id)">Solicitar ahora</button>
+                                        <div class="col-12 col-md-6">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center gap-2 mb-2">
+                                                    <span class="badge rounded-pill bg-primary-subtle text-primary">@result.CategoryName</span>
+                                                </div>
+                                                <p class="text-primary fw-bold mb-1 small">@result.ProfessionalFullName</p>
+                                                <h5 class="card-title mb-1">@result.Name</h5>
+                                                <p class="card-text text-muted mb-2">@result.Description</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-3 d-flex flex-column align-items-start align-items-md-end gap-2 p-3">
+                                            <div class="price-tag">@result.BasePrice.ToString("C0", LocalCulture)</div>
+                                            <button class="btn btn-outline-primary w-100" @onclick="() => GoToService(result.Id)">Ver detalles</button>
+                                            <button class="btn btn-primary w-100" @onclick="() => GoToService(result.Id)">Solicitar ahora</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    }
+                        }
 
-                    @if (!FilteredResults.Any())
+                        @if (!FilteredResults.Any())
+                        {
+                            <div class="col-12">
+                                <div class="alert alert-info mb-0">No encontramos resultados con esos filtros. Probá ajustar la búsqueda personalizada.</div>
+                            </div>
+                        }
+                    </div>
+
+                    @if (TotalPages > 1)
                     {
-                        <div class="col-12">
-                            <div class="alert alert-info mb-0">No encontramos resultados con esos filtros. Probá ajustar la búsqueda personalizada.</div>
+                        <div class="d-flex justify-content-center mt-5">
+                            <nav aria-label="Paginación de servicios">
+                                <ul class="pagination shadow-sm">
+                                    <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+                                        <button class="page-link" @onclick="() => ChangePage(CurrentPage - 1)">
+                                            <i class="fa-solid fa-chevron-left"></i>
+                                        </button>
+                                    </li>
+                                    @for (int i = 1; i <= TotalPages; i++)
+                                    {
+                                        var p = i;
+                                        <li class="page-item @(CurrentPage == p ? "active" : "")">
+                                            <button class="page-link" @onclick="() => ChangePage(p)">@p</button>
+                                        </li>
+                                    }
+                                    <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+                                        <button class="page-link" @onclick="() => ChangePage(CurrentPage + 1)">
+                                            <i class="fa-solid fa-chevron-right"></i>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
                         </div>
                     }
-                </div>
+                }
             </div>
         </div>
     </main>
@@ -148,13 +175,12 @@
                             <label class="form-label fw-semibold">Categoría</label>
                             <select class="form-select" @bind="selectedCategory">
                                 <option value="todas">Todas</option>
-                                @foreach (var category in Categories)
+                                @foreach (var category in CategoryNames)
                                 {
                                     <option value="@category">@category</option>
                                 }
                             </select>
                         </div>
-                        <!-- City and Budget filters removed -->
                         <div class="col-md-6 d-flex align-items-end">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="expressCheck" @bind="expressOnly" />
@@ -176,30 +202,7 @@
 
 @code {
     private static readonly CultureInfo LocalCulture = new("es-AR");
-
-    private readonly SearchConfig SearchBar = new("Buscar servicios hogareños en ServicioAhora!", "Buscar");
-
-    private readonly IReadOnlyList<MenuActionModel> AccountActions = MenuConstants.AccountActions;
-    private readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = MenuConstants.PrimaryNavLinks;
-
-    private readonly IReadOnlyList<string> FooterContact = new List<string>
-    {
-        "Tel: +54 11 5555 1111",
-        "Email: hola@servicioahora.com",
-        "Horario: Lunes a domingo 8 a 22 h"
-    };
-
-    private readonly IReadOnlyList<FooterGroupModel> FooterGroups = new List<FooterGroupModel>
-    {
-        new("Explorá más", new []
-        {
-            new FooterLinkModel("Servicios", RouteConstants.HashServices),
-            new FooterLinkModel("Profesionales", RouteConstants.Professionals),
-            new FooterLinkModel("Garantías", RouteConstants.HashGarantias)
-        })
-    };
-
-    private int CurrentYear => DateTime.Now.Year;
+    private bool IsLoading = true;
 
     [SupplyParameterFromQuery(Name = "query")]
     public string? Query { get; set; }
@@ -209,29 +212,20 @@
 
     private string searchTerm = string.Empty;
     private string selectedCategory = "todas";
-    // private string selectedCity = "todas"; // Removed
-    // private string selectedPriceRange = "cualquiera"; // Removed
     private string selectedSortOrder = "relevance";
     private bool expressOnly;
 
-    private IEnumerable<GetServiceOffering> Results = new List<GetServiceOffering>();
+    private List<GetServiceOffering> AllResults = new();
+    private IEnumerable<GetServiceOffering> FilteredResults = Enumerable.Empty<GetServiceOffering>();
     private Dictionary<Guid, string> CategoryIcons = new();
-
-    private IEnumerable<string> Categories => Results.Select(r => r.CategoryName).Distinct().Where(c => !string.IsNullOrEmpty(c)).OrderBy(c => c);
     
-    // We don't have City in GetServiceOffering yet, so we'll mock or ignore for now, or check if it's available elsewhere. 
-    // For now, let's just return a placeholder or empty if not in model.
-    // Cities list removed 
+    // Pagination
+    private int CurrentPage = 1;
+    private int PageSize = 10;
+    private int TotalPages => (int)Math.Ceiling(FilteredResults.Count() / (double)PageSize);
+    private IEnumerable<GetServiceOffering> PaginatedResults => FilteredResults.Skip((CurrentPage - 1) * PageSize).Take(PageSize);
 
-    private IEnumerable<GetServiceOffering> FilteredResults => Results;
-
-    private object GetSortKey(GetServiceOffering r) => selectedSortOrder switch
-    {
-        "price_asc" => r.BasePrice,
-        "price_desc" => -r.BasePrice,
-        // "rating" => -r.Rating,
-        _ => (object)0 
-    };
+    private IEnumerable<string> CategoryNames => AllResults.Select(r => r.CategoryName).Distinct().Where(c => !string.IsNullOrEmpty(c)).OrderBy(c => c);
 
     protected override async Task OnInitializedAsync()
     {
@@ -252,42 +246,53 @@
     protected override async Task OnParametersSetAsync()
     {
         searchTerm = Query ?? string.Empty;
-        
-        // Fetch all results initially (could be optimized significantly with server-side filtering later)
-        var allServices = await ServiceService.GetAllAsync();
-        // Client-side filtering for active services
-        allServices = allServices.Where(s => s.Status).ToList();
+        await LoadData();
+    }
 
-        // Apply filters using Specification Pattern
-        var spec = new ServiceSearchSpecification(
-            searchTerm, 
-            CategoryId,
-            null,
-            null
-        );
-
-        Results = SpecificationEvaluator<GetServiceOffering>.GetQuery(allServices, spec);
-
-        if (CategoryId.HasValue && CategoryId.Value != Guid.Empty && selectedCategory == "todas")
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        try
         {
-            try
-            {
-                if (CategoryIcons.TryGetValue(CategoryId.Value, out _))
-                {
-                     var category = await CategoryService.GetByIdAsync(CategoryId.Value);
-                     if (category != null)
-                     {
-                         selectedCategory = category.Name ?? "todas";
-                     }
-                }
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine($"Error resolving category ID: {ex.Message}");
-            }
+            var allServices = await ServiceService.GetAllAsync();
+            AllResults = allServices.Where(s => s.Status).ToList();
+            await ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading services: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 
+    private async Task ApplyFilters()
+    {
+        CurrentPage = 1;
+        
+        var spec = new ServiceSearchSpecification(searchTerm, CategoryId, null, null);
+        var query = SpecificationEvaluator<GetServiceOffering>.GetQuery(AllResults, spec);
+
+        if (selectedCategory != "todas")
+        {
+            query = query.Where(s => s.CategoryName.Equals(selectedCategory, StringComparison.OrdinalIgnoreCase));
+        }
+
+        FilteredResults = ApplySorting(query);
+        StateHasChanged();
+    }
+
+    private IEnumerable<GetServiceOffering> ApplySorting(IEnumerable<GetServiceOffering> input)
+    {
+        return selectedSortOrder switch
+        {
+            "price_asc" => input.OrderBy(r => r.BasePrice),
+            "price_desc" => input.OrderByDescending(r => r.BasePrice),
+            _ => input
+        };
+    }
 
     private void OnSearch()
     {
@@ -296,63 +301,13 @@
         Navigation.NavigateTo($"{RouteConstants.Search}{queryString}");
     }
 
-    private async Task ApplyFilters()
+    private void ChangePage(int newPage)
     {
-        var allServices = await ServiceService.GetAllAsync();
-        
-        var spec = new ServiceSearchSpecification(
-            searchTerm, 
-            // Map selectedCategory string back to Guid if possible, or handle name-based filtering.
-            // For now, Specification uses Guid. If selectedCategory is "todas", pass null/empty.
-            // If it's a name, we might need to find the ID or assume CategoryId param governs.
-            // Current code relies on CategoryId param. If UI dropdown changes, we should probably update CategoryId or filter by name.
-            // Let's rely on CategoryId for now, or update it. 
-            // Actually, the UI binds to `selectedCategory` string name.
-            // The Specification accepts Guid. We need a way to map name to ID or update Spec to accept Name.
-            // Simplest fix: Filter by name in a new spec constructor or here.
-            CategoryId, 
-            null, 
-            null
-        );
-
-        var query = SpecificationEvaluator<GetServiceOffering>.GetQuery(allServices, spec);
-        
-        // Additional filter for Category Name if selected from dropdown (which is a string)
-        if (selectedCategory != "todas")
-        {
-            query = query.Where(s => s.CategoryName.Equals(selectedCategory, StringComparison.OrdinalIgnoreCase));
-        }
-        
-        Results = ApplySorting(query);
+        CurrentPage = newPage;
         StateHasChanged();
-    }
-    
-    private IEnumerable<GetServiceOffering> ApplySorting(IEnumerable<GetServiceOffering> input)
-    {
-        return selectedSortOrder switch
-        {
-            "price_asc" => input.OrderBy(r => r.BasePrice),
-            "price_desc" => input.OrderByDescending(r => r.BasePrice),
-            "relevance" => input, // Default order
-            _ => input
-        };
     }
 
     private string FilterLabel(string value) => string.Equals(value, "todas", StringComparison.OrdinalIgnoreCase) ? "Todas" : value;
 
-    // PriceLabel method removed
-
-    private void GoToService(string slug) 
-    {
-         // Assuming Slug is ID or we have a slug property. GetServiceOffering has ID.
-         // If route expects slug, we might need to adjust or use ID. 
-         // Logic elsewhere suggests ID might be used for details? 
-         // Checking ServiceDetail.razor would confirm, but usually it's ID or unique string.
-         // Let's use ID for now as string.
-    }
-    
     private void GoToService(Guid id) => Navigation.NavigateTo(RouteConstants.Create(RouteConstants.ServiceDetail, id.ToString()));
-
-
-
 }

@@ -31,18 +31,22 @@
     <div class="container">
         <div class="topbar d-flex align-items-center gap-3">
             <a class="brand text-decoration-none flex-shrink-0" href="@BrandHref">
-                <img src="images/logoServioAhora.png" alt="@Brand" style="height: clamp(35px, 5vw, 55px); object-fit: contain;" />
+                <img src="images/logoServioAhora.png" alt="@Brand" class="d-none d-md-block" style="height: clamp(35px, 5vw, 55px); object-fit: contain;" />
+                <img src="images/logoServioAhoraChico.png" alt="@Brand" class="d-md-none" style="height: 40px; object-fit: contain;" />
             </a>
             
-            <form class="search-bar flex-grow-1 mx-lg-3" role="search" @onsubmit="OnSearch" @onsubmit:preventDefault>
-                <div class="input-group rounded-pill overflow-hidden" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);">
+            <form class="search-bar flex-grow-1 mx-1 mx-lg-3" role="search" @onsubmit="OnSearch" @onsubmit:preventDefault>
+                <div class="input-group rounded-pill overflow-hidden align-items-center" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); height: 46px;">
                     <span class="input-group-text bg-transparent border-0 ps-3" style="color: rgba(255,255,255,0.6);"><i class="fa-solid fa-magnifying-glass"></i></span>
-                    <input class="form-control border-0 bg-transparent shadow-none text-white" type="search" placeholder="@Search.Placeholder" aria-label="Buscar" @bind="searchTerm" style="color: white;" />
-                    <button class="btn px-4 rounded-pill m-1 fw-semibold" type="submit" style="background-color: white; color: #4a7c59;">@Search.ButtonText</button>
+                    <input class="form-control border-0 bg-transparent shadow-none text-white px-2" type="search" placeholder="@Search.Placeholder" aria-label="Buscar" @bind="searchTerm" style="color: white; height: 100%; outline: none;" />
+                    <button class="btn px-4 rounded-pill m-1 fw-semibold d-flex align-items-center justify-content-center" type="submit" style="background-color: white; color: #4a7c59; height: 36px; min-width: 100px;">
+                        <span class="d-none d-md-inline">@Search.ButtonText</span>
+                        <i class="fa-solid fa-magnifying-glass d-md-none"></i>
+                    </button>
                 </div>
             </form>
             
-            <div class="d-flex align-items-center gap-3 flex-shrink-0 ms-2">
+            <div class="d-flex align-items-center gap-1 gap-md-3 flex-shrink-0">
                 @* <DarkModeToggle /> *@
                 <AuthorizeView>
                     <Authorized>
@@ -136,7 +140,7 @@
             <div class="nav justify-content-center gap-4">
                 @foreach (var link in NavLinks)
                 {
-                    <a class="nav-link fw-medium px-2 py-1" href="@link.Href" style="font-size: 0.95rem; color: rgba(255,255,255,0.8);" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">@link.Text</a>
+                    <a class="nav-link fw-medium px-2 py-1" href="@link.Href" style="font-size: 0.95rem; color: white;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">@link.Text</a>
                 }
             </div>
         </nav>

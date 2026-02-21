@@ -42,8 +42,12 @@
                             </td>
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <button class="btn btn-outline-primary btn-sm" @onclick="() => OnEditCategory.InvokeAsync(category)">Editar</button>
-                                    <button class="btn btn-outline-danger btn-sm" @onclick="() => RequestDelete(category)">Eliminar</button>
+                                    <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" @onclick="() => OnEditCategory.InvokeAsync(category)">
+                                        <i class="fa-solid fa-pen small"></i> Editar
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" @onclick="() => RequestDelete(category)">
+                                        <i class="fa-solid fa-trash small"></i> Eliminar
+                                    </button>
                                 </div>
                             </td>
                         </tr>

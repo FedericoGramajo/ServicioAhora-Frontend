@@ -9,6 +9,7 @@ namespace ClientLibrary.Helper
         public const string ForgotPassword = "/forgot-password";
         public const string ResetPassword = "/reset-password";
         public const string ResetPasswordPage = "/reset-password/{token}";
+        public const string Contact = "/contacto";
         
         // Search & Discovery
         public const string Search = "/search";

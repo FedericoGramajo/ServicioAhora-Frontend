@@ -24,8 +24,17 @@
                                 @foreach (var professional in slide)
                                 {
                                     <div class="col-md-4">
-                                        <div class="card professional-card h-100">
-                                            <img src="@professional.ImageUrl" class="card-img-top" alt="Foto de @professional.Name" loading="lazy" />
+                                        <div class="card professional-card h-100 overflow-hidden">
+                                            @if (!string.IsNullOrEmpty(professional.ImageUrl))
+                                            {
+                                                <img src="@professional.ImageUrl" class="card-img-top" alt="Foto de @professional.Name" loading="lazy" style="height: 250px; object-fit: cover;" />
+                                            }
+                                            else
+                                            {
+                                                <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 250px;">
+                                                    <i class="fa-solid fa-circle-user fa-6x text-muted opacity-50"></i>
+                                                </div>
+                                            }
                                             <div class="card-body">
                                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                                     <h5 class="mb-0">@professional.Name</h5>

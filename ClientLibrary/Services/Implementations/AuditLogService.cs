@@ -70,7 +70,7 @@ public class AuditLogService(IHttpClientHelper httpClient, IApiCallHelper apiHel
         if (filter.FromDate.HasValue)
             parts.Add($"fromDate={filter.FromDate.Value:yyyy-MM-dd}");
         if (filter.ToDate.HasValue)
-            parts.Add($"toDate={filter.ToDate.Value:yyyy-MM-dd}");
+            parts.Add($"toDate={filter.ToDate.Value:yyyy-MM-dd}T23:59:59");
 
         parts.Add($"page={filter.Page}");
         parts.Add($"pageSize={filter.PageSize}");

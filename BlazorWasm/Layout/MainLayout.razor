@@ -51,9 +51,9 @@
     {
         new("Explorá más", new []
         {
-            new FooterLinkModel("Servicios", RouteConstants.HashServices),
+            new FooterLinkModel("Servicios", RouteConstants.Search),
             new FooterLinkModel("Profesionales", RouteConstants.Professionals),
-            new FooterLinkModel("Garantías", RouteConstants.HashGarantias)
+            new FooterLinkModel("Contacto", RouteConstants.Contact)
         })
     };
 
@@ -74,9 +74,6 @@
 
         if (user.Identity?.IsAuthenticated == true)
         {
-            // Set User Info
-            // Try to get name from Name claim (http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name) or fallback
-            // Note: Blazor WASM mapping depends on options.UserOptions.NameClaimType
             var fullName = user.Identity.Name;
             if (string.IsNullOrEmpty(fullName))
             {
@@ -86,8 +83,7 @@
             UserName = fullName.Split(' ')[0]; // First name
             UserInitial = !string.IsNullOrEmpty(UserName) ? UserName[0].ToString().ToUpper() : "U";
 
-            // Common for all logged in users
-            links.Add(new("Mi perfil", RouteConstants.Profile)); // Or query string logic if needed
+            links.Add(new("Mi perfil", RouteConstants.Profile));
 
             if (user.IsInRole(Constant.Administration.AdminRole))
             {
@@ -103,7 +99,6 @@
         }
         else
         {
-            // Not logged in
             UserName = string.Empty;
             UserInitial = string.Empty;
 

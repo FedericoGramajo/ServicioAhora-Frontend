@@ -17,11 +17,10 @@ namespace ClientLibrary.Helper
 
         public static readonly IReadOnlyList<NavLinkModel> PrimaryNavLinks = new List<NavLinkModel>
         {
-            new("Inicio", RouteConstants.HashInicio),
-            new("Servicios", RouteConstants.HashServices),
+            new("Inicio", RouteConstants.Home),
+            new("Servicios", RouteConstants.Search),
             new("Profesionales", RouteConstants.Professionals),
-            new("Garantías", RouteConstants.HashGarantias),
-            new("Contacto", RouteConstants.HashContacto)
+            new("Contacto", RouteConstants.Contact)
         };
     }
 }

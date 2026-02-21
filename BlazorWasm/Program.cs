@@ -37,6 +37,7 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IPaymentMethodService, PaymentMethodService>();
 builder.Services.AddScoped<IServOfferingService, ServOfferingService>();
+builder.Services.AddScoped<IProfessionalService, ProfessionalService>();
 builder.Services.AddVirtualizationService();
 
 builder.Services.AddScoped<CategoryStore>();

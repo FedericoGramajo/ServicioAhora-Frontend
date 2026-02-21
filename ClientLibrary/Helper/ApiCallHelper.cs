@@ -29,7 +29,7 @@ namespace ClientLibrary.Helper
 
         public ServiceResponse ConnectionError()
         {
-            return new ServiceResponse(Message: "Error ocurred in communicating to the server");
+            return new ServiceResponse(Message: "Ocurrió un error al comunicarse con el servidor");
         }
 
         public async Task<TResponse> GetServiceResponse<TResponse>(HttpResponseMessage message)

@@ -23,35 +23,43 @@
                         </div>
                         <EditForm Model="User" OnSubmit="HandleRegister" FormName="registerForm">
                             <DataAnnotationsValidator />
-                            <ValidationSummary class="text-danger" />
+                            
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold" for="firstName">Nombre</label>
                                     <InputText class="form-control" id="firstName" placeholder="María" @bind-Value="FirstName" />
+                                    @if (string.IsNullOrWhiteSpace(FirstName) && ShowManualErrors)
+                                    {
+                                        <div class="text-danger small mt-1">El nombre es obligatorio.</div>
+                                    }
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold" for="lastName">Apellido</label>
                                     <InputText class="form-control" id="lastName" placeholder="Pérez" @bind-Value="LastName" />
+                                    @if (string.IsNullOrWhiteSpace(LastName) && ShowManualErrors)
+                                    {
+                                        <div class="text-danger small mt-1">El apellido es obligatorio.</div>
+                                    }
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold" for="email">Correo electrónico</label>
                                     <InputText class="form-control" id="email" placeholder="tu@email.com" @bind-Value="User.Email" />
-                                    <ValidationMessage For="@(() => User.Email)" />
+                                    <ValidationMessage For="@(() => User.Email)" class="text-danger small mt-1" />
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold" for="phone">Teléfono</label>
                                     <InputText class="form-control" id="phone" placeholder="11 5555 1111" @bind-Value="User.PhoneNumber" />
-                                    <ValidationMessage For="@(() => User.PhoneNumber)" />
+                                    <ValidationMessage For="@(() => User.PhoneNumber)" class="text-danger small mt-1" />
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold" for="password">Contraseña</label>
                                     <InputText type="password" class="form-control" id="password" placeholder="Mínimo 8 caracteres" @bind-Value="User.Password" />
-                                    <ValidationMessage For="@(() => User.Password)" />
+                                    <ValidationMessage For="@(() => User.Password)" class="text-danger small mt-1" />
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold" for="confirmPassword">Confirmar contraseña</label>
                                     <InputText type="password" class="form-control" id="confirmPassword" placeholder="Repetí tu contraseña" @bind-Value="User.ConfirmPassword" />
-                                    <ValidationMessage For="@(() => User.ConfirmPassword)" />
+                                    <ValidationMessage For="@(() => User.ConfirmPassword)" class="text-danger small mt-1" />
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-semibold" for="role">¿Cómo querés usar ServicioAhora?</label>
@@ -65,6 +73,10 @@
                                     <label class="form-check-label" for="terms">
                                         Acepto los <a href="#">términos y condiciones</a> y autorizo contacto para coordinación de servicios.
                                     </label>
+                                    @if (!AcceptedTerms && ShowManualErrors)
+                                    {
+                                        <div class="text-danger small mt-1">Debés aceptar los términos.</div>
+                                    }
                                 </div>
                             </div>
                             <div class="d-grid gap-2 mt-4">
@@ -96,33 +108,43 @@
 
 @code {
     private CreateUser User { get; set; } = new() { UserType = UserType.Customer };
+    [SupplyParameterFromQuery(Name = "role")]
+    public string? PreSelectedRole { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(PreSelectedRole))
+        {
+            if (Enum.TryParse<UserType>(PreSelectedRole, true, out var role))
+            {
+                User.UserType = role;
+            }
+        }
+    }
+
     private string FirstName { get; set; } = "";
     private string LastName { get; set; } = "";
     private bool AcceptedTerms { get; set; }
     private bool IsLoading { get; set; }
     private string? ErrorMessage { get; set; }
+    private bool ShowManualErrors { get; set; }
 
     private async Task HandleRegister(EditContext editContext)
     {
         ErrorMessage = null;
+        ShowManualErrors = true;
 
         // Compose FullName BEFORE validation
         User.FullName = $"{FirstName.Trim()} {LastName.Trim()}".Trim();
 
-        if (string.IsNullOrWhiteSpace(FirstName) || string.IsNullOrWhiteSpace(LastName))
+        bool isValid = editContext.Validate();
+
+        if (string.IsNullOrWhiteSpace(FirstName) || string.IsNullOrWhiteSpace(LastName) || !AcceptedTerms)
         {
-            ErrorMessage = "Nombre y apellido son obligatorios.";
-            return;
+            isValid = false;
         }
 
-        if (!editContext.Validate())
-            return;
-
-        if (!AcceptedTerms)
-        {
-            ErrorMessage = "Debés aceptar los términos y condiciones.";
-            return;
-        }
+        if (!isValid) return;
 
         IsLoading = true;
         try

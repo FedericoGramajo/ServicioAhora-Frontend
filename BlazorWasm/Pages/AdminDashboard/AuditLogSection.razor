@@ -16,7 +16,7 @@
             </h4>
             <p class="text-muted mb-0">Registro de acciones realizadas en la plataforma</p>
         </div>
-        <button class="btn btn-outline-secondary btn-sm" @onclick="LoadAsync" disabled="@IsLoading">
+        <button class="btn btn-outline-secondary btn-sm d-none" @onclick="LoadAsync" disabled="@IsLoading">
             <i class="fa-solid fa-rotate-right @(IsLoading ? "fa-spin" : "") me-1"></i> Actualizar
         </button>
     </div>
@@ -29,6 +29,7 @@
                 <select class="form-select form-select-sm" @bind="Filter.Action">
                     <option value="">Todas</option>
                     <option value="Login">Login</option>
+                    <option value="Logout">Logout</option>
                     <option value="Add">Add</option>
                     <option value="Update">Update</option>
                     <option value="BatchUpdate">BatchUpdate</option>
@@ -95,7 +96,14 @@
                 Cargando registros de auditoría...
             </div>
         }
-        else if (Result == null || !Result.Items.Any())
+        else if (Result == null)
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fa-solid fa-magnifying-glass fa-2x mb-3 d-block"></i>
+                Presiona el botón "Buscar" para cargar los registros de auditoría.
+            </div>
+        }
+        else if (!Result.Items.Any())
         {
             <div class="text-center py-5 text-muted">
                 <i class="fa-solid fa-database fa-2x mb-3 d-block"></i>
@@ -264,7 +272,11 @@
         set => Filter.IsSuccess = string.IsNullOrEmpty(value) ? null : bool.Parse(value);
     }
 
-    protected override async Task OnInitializedAsync() => await LoadAsync();
+    protected override void OnInitialized() 
+    { 
+        Filter.FromDate = DateTime.Today;
+        Filter.ToDate = DateTime.Today;
+    }
 
     private async Task LoadAsync()
     {
@@ -280,7 +292,16 @@
     }
 
     private async Task ApplyFilters() { Filter.Page = 1; await LoadAsync(); }
-    private async Task ClearFilters() { Filter = new AuditLogFilter(); await LoadAsync(); }
+    private void ClearFilters() 
+    { 
+        Filter = new AuditLogFilter
+        {
+            FromDate = DateTime.Today,
+            ToDate = DateTime.Today
+        }; 
+        Result = null; 
+        StateHasChanged();
+    }
     private async Task GoToPage(int page) { Filter.Page = page; await LoadAsync(); }
     private async Task PrevPage() { if (Filter.Page > 1) { Filter.Page--; await LoadAsync(); } }
     private async Task NextPage() { if (Result != null && Filter.Page < Result.TotalPages) { Filter.Page++; await LoadAsync(); } }
@@ -292,7 +313,8 @@
 
     private static string GetActionBadgeClass(string? action) => action?.ToLower() switch
     {
-        "login" or "logout"  => "bg-primary",
+        "login"              => "bg-primary",
+        "logout"             => "bg-secondary",
         "add" or "create"    => "bg-success",
         "update"             => "bg-warning text-dark",
         "delete" or "remove" => "bg-danger",
