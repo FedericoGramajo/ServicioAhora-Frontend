@@ -1,8 +1,9 @@
 ﻿using ClientLibrary.Helper;
 using ClientLibrary.Models;
 using ClientLibrary.Models.Cart;
+using ClientLibrary.Services.Contracts;
 
-namespace ClientLibrary.Services
+namespace ClientLibrary.Services.Implementations
 {
     public class PaymentMethodService(IHttpClientHelper httpClient, IApiCallHelper apiHelper) : IPaymentMethodService
     {

@@ -1,6 +1,6 @@
 using ClientLibrary.Models.Booking;
 
-namespace ClientLibrary.Services;
+namespace ClientLibrary.Services.Implementations;
 
 public class AvailabilityMockService
 {

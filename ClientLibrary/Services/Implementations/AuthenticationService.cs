@@ -2,10 +2,11 @@
 using ClientLibrary.Models;
 using ClientLibrary.Models.Authentication;
 using ClientLibrary.Models.Category;
+using ClientLibrary.Services.Contracts;
 using System.Net.Http.Json;
 using System.Web;
 
-namespace ClientLibrary.Services
+namespace ClientLibrary.Services.Implementations
 {
     public class AuthenticationService(IApiCallHelper apiHelper, IHttpClientHelper httpClient) : IAuthenticationService
     {
@@ -111,7 +112,7 @@ namespace ClientLibrary.Services
             var apiCall = new ApiCall
             {
                 Route = Constant.Authentication.Update,
-                Type = Constant.ApiCallType.Post,
+                Type = Constant.ApiCallType.Update,
                 Client = client,
                 Id = null!,
                 Model = user

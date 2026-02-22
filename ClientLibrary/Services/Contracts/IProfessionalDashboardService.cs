@@ -37,4 +37,9 @@ public interface IProfessionalDashboardService
     Task<List<CertificationModel>> GetCertificationsAsync();
     Task<ServiceResponse> AddCertificationAsync(CertificationModel certification);
     Task<ServiceResponse> RemoveCertificationAsync(Guid id);
+
+    // Booking Management
+    Task<ServiceResponse<IEnumerable<BookingDto>>> GetBookingsAsync(string professionalId);
+    Task<ServiceResponse> AcceptBookingAsync(Guid bookingId);
+    Task<ServiceResponse> CancelBookingAsync(Guid bookingId);
 }

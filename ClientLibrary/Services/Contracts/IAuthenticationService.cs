@@ -1,7 +1,7 @@
 ﻿using ClientLibrary.Models;
 using ClientLibrary.Models.Authentication;
 
-namespace ClientLibrary.Services
+namespace ClientLibrary.Services.Contracts
 {
     public interface IAuthenticationService
     {

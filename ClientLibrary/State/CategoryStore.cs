@@ -1,5 +1,5 @@
 using ClientLibrary.Models.Category;
-using ClientLibrary.Services;
+using ClientLibrary.Services.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

@@ -1,14 +1,12 @@
 using BlazorWasm;
 using BlazorWasm.Authentication;
 using ClientLibrary.Helper;
-using ClientLibrary.Services;
 using ClientLibrary.Services.Contracts;
 using ClientLibrary.Services.Implementations;
 using ClientLibrary.State;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using NetcodeHub.Packages.Components.DataGrid;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -38,14 +36,12 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IPaymentMethodService, PaymentMethodService>();
 builder.Services.AddScoped<IServOfferingService, ServOfferingService>();
 builder.Services.AddScoped<IProfessionalService, ProfessionalService>();
-builder.Services.AddVirtualizationService();
-
 builder.Services.AddScoped<CategoryStore>();
 builder.Services.AddScoped<CartStore>();
 builder.Services.AddScoped<AvailabilityMockService>();
-builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IProfessionalDashboardService, ProfessionalDashboardService>();
-builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IServiceHistoryService, ServiceHistoryService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();

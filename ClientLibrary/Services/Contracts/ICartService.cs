@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ClientLibrary.Services
+namespace ClientLibrary.Services.Contracts
 {
     public interface ICartService
     {

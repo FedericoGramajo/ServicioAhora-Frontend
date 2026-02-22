@@ -79,13 +79,13 @@ namespace ClientLibrary.Helper
             public const string ProfessionalRole = "Professional";
             public const string CustomerRole = "Customer";
         }
-        public static class UserProfile
+
+        public static class Address
         {
-            public const string Get = "userprofile/get";
-            public const string Update = "userprofile/update";
-            public const string AddAddress = "userprofile/address/add";
-            public const string DeleteAddress = "userprofile/address/delete";
-            public const string GetAddresses = "userprofile/address/get";
+            public const string Get         = "Address/user";
+            public const string Add         = "Address/add";
+            public const string Update      = "Address/update";
+            public const string Delete      = "Address/delete";
         }
         public static class ServiceHistory
         {
@@ -93,22 +93,19 @@ namespace ClientLibrary.Helper
         }
         public static class Professional
         {
-            public const string GetMetrics              = "professional/metrics";        // Not in OpenAPI — backend endpoint
-            public const string GetServiceGroups        = "professional/service-groups"; // Not in OpenAPI — backend endpoint
-            public const string GetTransactions         = "professional/transactions";   // Not in OpenAPI — backend endpoint
+            public const string GetMetrics              = "professional/metrics";        
+            public const string GetServiceGroups        = "professional/service-groups"; 
+            public const string GetTransactions         = "professional/transactions";   
 
-            // Service management → usa los endpoints reales de ServiceOffering
             public const string AddService              = "serviceoffering/add";
             public const string UpdateService           = "serviceoffering/update";
             public const string DeleteService           = "serviceoffering/delete"; // DELETE /api/ServiceOffering/delete/{id}
 
-            // ProfessionalCategory → endpoints reales del OpenAPI
             public const string GetAvailableCategories  = "professionalcategory/all";        // GET /api/ProfessionalCategory/all
             public const string GetMyCategories         = "professionalcategory/by-professional"; // GET /api/ProfessionalCategory/by-professional/{professionalId}
             public const string AddMyCategory           = "professionalcategory/add";        // POST /api/ProfessionalCategory/add
             public const string RemoveMyCategory        = "professionalcategory/delete";     // DELETE /api/ProfessionalCategory/delete/{id}
 
-            // Availability → endpoints reales del OpenAPI
             public const string GetAvailability         = "availability/professional"; // GET /api/Availability/professional/{professionalId}
             public const string AddAvailability         = "availability/add";          // POST /api/Availability/add
             public const string UpdateAvailability      = "availability/update";       // PUT /api/Availability/update
@@ -136,6 +133,20 @@ namespace ClientLibrary.Helper
         public static class AuditLog
         {
             public const string GetAll = "AuditLog/all";
+        }
+
+        public static class Notification
+        {
+            public const string GetAllByUser = "Notification/my-notifications";
+            public const string GetUnreadByUser = "Notification/my-unread-notifications";
+            public const string MarkAsRead = "Notification/mark-as-read";
+        }
+
+        public static class Booking
+        {
+            public const string GetByProfessional = "Booking/professional";
+            public const string Accept = "Booking/accept";
+            public const string Cancel = "Booking/cancel";
         }
     }
 }

@@ -1,30 +1,24 @@
 ﻿using ClientLibrary.Helper;
 using ClientLibrary.Models;
-using ClientLibrary.Models.Category;
-using ClientLibrary.Models.Product;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static ClientLibrary.Helper.Constant;
+using ClientLibrary.Models.ServicioAhora.ServOffering;
+using ClientLibrary.Services.Contracts;
 
-namespace ClientLibrary.Services
+namespace ClientLibrary.Services.Implementations
 {
-    public class CategoryService(IHttpClientHelper httpClient, IApiCallHelper apiHelper) : ICategoryService
+    public class ServOfferingService(IHttpClientHelper httpClient, IApiCallHelper apiHelper) : IServOfferingService
     {
-        public async Task<ServiceResponse> AddAsync(CreateCategory category)
+        public async Task<ServiceResponse> AddAsync(CreateServiceOffering serviceOffering)
         {
             var client = await httpClient.GetPrivateClientAsync();
             var apiCall = new ApiCall
             {
-                Route = Constant.Category.Add,
+                Route = Constant.ServiceOffering.Add,
                 Type = Constant.ApiCallType.Post,
                 Client = client,
                 Id = null!,
-                Model = category
+                Model = serviceOffering
             };
-            var result = await apiHelper.ApiCallTypeCall<CreateCategory>(apiCall);
+            var result = await apiHelper.ApiCallTypeCall<CreateServiceOffering>(apiCall);
             return result == null ? apiHelper.ConnectionError() : await apiHelper.GetServiceResponse<ServiceResponse>(result);
         }
         public async Task<ServiceResponse> DeleteAsync(Guid id)
@@ -32,7 +26,7 @@ namespace ClientLibrary.Services
             var client = await httpClient.GetPrivateClientAsync();
             var apiCall = new ApiCall
             {
-                Route = Constant.Category.Delete,
+                Route = Constant.ServiceOffering.Delete,
                 Type = Constant.ApiCallType.Delete,
                 Client = client,
                 Model = null!
@@ -41,31 +35,28 @@ namespace ClientLibrary.Services
             var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
             return result == null ? apiHelper.ConnectionError() : await apiHelper.GetServiceResponse<ServiceResponse>(result);
         }
-        public async Task<ServiceResponse> UpdateAsync(UpdateCategory category)
+        public async Task<ServiceResponse> UpdateAsync(UpdateServiceOffering serviceOffering)
         {
 
             var client = await httpClient.GetPrivateClientAsync();
             var apiCall = new ApiCall
             {
-                Route = Constant.Category.Update,
+                Route = Constant.ServiceOffering.Update,
                 Type = Constant.ApiCallType.Update,
                 Client = client,
                 Id = null!,
-                Model = category
+                Model = serviceOffering
             };
-            var result = await apiHelper.ApiCallTypeCall<UpdateCategory>(apiCall);
+            var result = await apiHelper.ApiCallTypeCall<UpdateServiceOffering>(apiCall);
             return result == null ? apiHelper.ConnectionError() : await apiHelper.GetServiceResponse<ServiceResponse>(result);
         }
 
-        public async Task<IEnumerable<GetCategory>> GetAllAsync()
+        public async Task<IEnumerable<GetServiceOffering>> GetAllAsync()
         {
             var client = httpClient.GetPublicClient();
-            if (client == null)
-                return [];
-                
             var apiCall = new ApiCall
             {
-                Route = Constant.Category.GetAll,
+                Route = Constant.ServiceOffering.GetAll,
                 Type = Constant.ApiCallType.Get,
                 Client = client,
                 Model = null!,
@@ -74,44 +65,58 @@ namespace ClientLibrary.Services
             var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
 
             if (result.IsSuccessStatusCode)
-                return await apiHelper.GetServiceResponse<IEnumerable<GetCategory>>(result);
+                return await apiHelper.GetServiceResponse<IEnumerable<GetServiceOffering>>(result);
             else
                 return [];
         }
 
-        public async Task<GetCategory> GetByIdAsync(Guid id)
+        public async Task<GetServiceOffering> GetByIdAsync(Guid id)
         {
             var client = httpClient.GetPublicClient();
             var apiCall = new ApiCall
             {
-                Route = Constant.Category.Get,
+                Route = Constant.ServiceOffering.Get,
                 Type = Constant.ApiCallType.Get,
                 Client = client,
                 Model = null!
             };
             apiCall.ToString(id);
             var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
+
             if (result.IsSuccessStatusCode)
-                return await apiHelper.GetServiceResponse<GetCategory>(result);
+                return await apiHelper.GetServiceResponse<GetServiceOffering>(result);
             else
                 return null!;
         }
 
-        public async Task<IEnumerable<GetProduct>> GetServiceByCategory(Guid categoryId)
+        public async Task<IEnumerable<GetServiceOffering>> SearchAsync(string query)
+        {
+            var allServices = await GetAllAsync();
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return allServices;
+            }
+
+            return allServices.Where(s => 
+                s.Name.Contains(query, StringComparison.OrdinalIgnoreCase) || 
+                s.Description != null && s.Description.Contains(query, StringComparison.OrdinalIgnoreCase)
+            );
+        }
+
+        public async Task<IEnumerable<GetServiceOffering>> GetByProfessionalAsync(string professionalId)
         {
             var client = httpClient.GetPublicClient();
             var apiCall = new ApiCall
             {
-                Route = Constant.Category.GetServiceByCategory,
+                Route = Constant.ServiceOffering.GetByProfessional,
                 Type = Constant.ApiCallType.Get,
-                Client = client,
-                Model = null!
+                Client = client
             };
-            apiCall.ToString(categoryId);
+            apiCall.ToString(professionalId);
             var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
 
             if (result.IsSuccessStatusCode)
-                return await apiHelper.GetServiceResponse<IEnumerable<GetProduct>>(result);
+                return await apiHelper.GetServiceResponse<IEnumerable<GetServiceOffering>>(result);
             else
                 return [];
         }

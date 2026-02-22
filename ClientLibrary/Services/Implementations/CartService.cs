@@ -2,8 +2,9 @@
 using ClientLibrary.Models;
 using ClientLibrary.Models.Cart;
 using ClientLibrary.Models.Category;
+using ClientLibrary.Services.Contracts;
 
-namespace ClientLibrary.Services
+namespace ClientLibrary.Services.Implementations
 {
     public class CartService(IHttpClientHelper httpClient, IApiCallHelper apiHelper) : ICartService
     {

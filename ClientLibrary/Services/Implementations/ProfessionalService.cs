@@ -1,6 +1,7 @@
 using ClientLibrary.Helper;
 using ClientLibrary.Models;
 using ClientLibrary.Models.Authentication.Rol.Professional;
+using ClientLibrary.Services.Contracts;
 
 namespace ClientLibrary.Services.Implementations
 {

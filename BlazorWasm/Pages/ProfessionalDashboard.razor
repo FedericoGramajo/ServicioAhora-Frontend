@@ -31,8 +31,13 @@
                 </button>
             </li>
             <li class="nav-item">
+                <button class="nav-link @(ActiveTab == "bookings" ? "active fw-bold" : "")" @onclick='() => ActiveTab = "bookings"'>
+                    <i class="fa-solid fa-calendar-check me-2"></i>Reservas
+                </button>
+            </li>
+            <li class="nav-item">
                 <button class="nav-link @(ActiveTab == "availability" ? "active fw-bold" : "")" @onclick='() => ActiveTab = "availability"'>
-                    <i class="fa-regular fa-calendar-check me-2"></i>Disponibilidad
+                    <i class="fa-regular fa-clock me-2"></i>Disponibilidad
                 </button>
             </li>
             <li class="nav-item">
@@ -52,6 +57,10 @@
         {
             <CategoryManager MyCategories="@MyCategories" OnCategoryChanged="@RefreshCategories" />
             <ServiceManager @ref="ServiceManagerComponent" MyServices="@MyServices" MyCategories="@MyCategories" OnServiceChanged="@RefreshServices" />
+        }
+        else if (ActiveTab == "bookings")
+        {
+            <BookingManager ProfessionalId="@ProfessionalId" OnStatusChanged="@RefreshMetrics" />
         }
         else if (ActiveTab == "availability")
         {
@@ -114,6 +123,7 @@
             ActiveTab = Tab.ToLower() switch
             {
                 "services" => "services",
+                "bookings" => "bookings",
                 "availability" => "availability",
                 "certifications" => "certifications",
                 _ => "resume"
@@ -177,5 +187,10 @@
     {
         Console.WriteLine("[Dashboard] Refreshing availability...");
         await LoadAvailabilityAsync();
+    }
+
+    private async Task RefreshMetrics()
+    {
+        await LoadMetricsAsync();
     }
 }

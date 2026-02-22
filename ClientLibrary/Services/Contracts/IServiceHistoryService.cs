@@ -1,6 +1,6 @@
 using ClientLibrary.Models.Landing;
 
-namespace ClientLibrary.Services
+namespace ClientLibrary.Services.Contracts
 {
     public interface IServiceHistoryService
     {

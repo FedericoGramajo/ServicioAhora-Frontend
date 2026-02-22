@@ -15,7 +15,6 @@
 @inject IProductService productService
 @inject NavigationManager NavManager
 @using ClientLibrary.Models.Authentication
-@using NetcodeHub.Packages.Components.Validations.OnInput
 @using Blazored.Typeahead
 @using System.Security.Claims
 @using ClientLibrary.Models.Product
@@ -24,10 +23,7 @@
 @inject ICartService cartService
 @using System.Text.Json
 
-@using NetcodeHub.Packages.Components.DataGrid
-@using NetcodeHub.Packages.Components.Modal
 @using ClientLibrary.Models.Cart
 @attribute [Authorize(Roles = Constant.Administration.AdminRole)]
 @using ClientLibrary.Models
-@using NetcodeHub.Packages.Components.FileUpload
 @inject IServOfferingService servOfferingService

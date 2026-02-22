@@ -1,6 +1,6 @@
 ﻿using ClientLibrary.Helper;
 using ClientLibrary.Models;
-using ClientLibrary.Services;
+using ClientLibrary.Services.Contracts;
 
 namespace BlazorWasm.Authentication
 {

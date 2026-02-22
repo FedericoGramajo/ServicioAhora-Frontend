@@ -1,8 +1,8 @@
 ﻿using ClientLibrary.Models.Category;
-using ClientLibrary.Models;
 using ClientLibrary.Models.Product;
+using ClientLibrary.Models;
 
-namespace ClientLibrary.Services
+namespace ClientLibrary.Services.Contracts
 {
     public interface ICategoryService
     {
@@ -10,7 +10,7 @@ namespace ClientLibrary.Services
         Task<GetCategory> GetByIdAsync(Guid id);
         Task<ServiceResponse> AddAsync(CreateCategory category);
         Task<ServiceResponse> UpdateAsync(UpdateCategory category);
-        Task<ServiceResponse> DeleteAsync(Guid id);
         Task<IEnumerable<GetProduct>> GetServiceByCategory(Guid categoryId);
+        Task<ServiceResponse> DeleteAsync(Guid id);
     }
 }

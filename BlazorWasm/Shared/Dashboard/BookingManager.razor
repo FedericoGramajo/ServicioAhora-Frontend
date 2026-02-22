@@ -1,0 +1,188 @@
+@using ClientLibrary.Models.Booking
+@using ClientLibrary.Services.Contracts
+@inject IProfessionalDashboardService DashboardService
+@inject IJSRuntime JS
+
+<div class="surface-card mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="mb-1">Gestión de Reservas</h4>
+            <p class="text-muted mb-0">Revisá y gestioná las solicitudes de tus clientes</p>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2 text-muted">Obteniendo reservas...</p>
+        </div>
+    }
+    else if (Bookings == null || !Bookings.Any())
+    {
+        <div class="text-center py-5 bg-light rounded-3 border border-dashed">
+            <i class="fa-regular fa-calendar-xmark fa-3x text-muted mb-3"></i>
+            <h5>Sin reservas pendientes</h5>
+            <p class="text-muted">Cuando un cliente reserve uno de tus servicios, aparecerá aquí.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Servicio</th>
+                        <th>Categoría</th>
+                        <th>Fecha y Hora</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var booking in Bookings)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-bold">@booking.CustomerName</div>
+                            </td>
+                            <td>@booking.ServiceName</td>
+                            <td>
+                                <span class="badge bg-soft-success text-success rounded-pill px-2 py-1">
+                                    @booking.CategoryName
+                                </span>
+                            </td>
+                            <td>
+                                <div><i class="fa-regular fa-calendar me-1 small"></i> @booking.ScheduledDate.ToShortDateString()</div>
+                                <div class="text-muted small"><i class="fa-regular fa-clock me-1 small"></i> @booking.ScheduledDate.ToShortTimeString() hs</div>
+                            </td>
+                            <td>
+                                <span class="badge @GetStatusBadgeClass(booking.Status)">
+                                    @booking.Status
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    @if (booking.Status.ToLower() == "pending" || booking.Status.ToLower() == "pendiente")
+                                    {
+                                        <button class="btn btn-sm btn-outline-success" @onclick="() => AcceptBooking(booking.Id)" title="Aceptar">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => CancelBooking(booking.Id)" title="Cancelar">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-light" disabled>
+                                            <i class="fa-solid fa-ellipsis"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string ProfessionalId { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnStatusChanged { get; set; }
+
+    private List<BookingDto> Bookings { get; set; } = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBookings();
+    }
+
+    private async Task LoadBookings()
+    {
+        isLoading = true;
+        try
+        {
+            var response = await DashboardService.GetBookingsAsync(ProfessionalId);
+            if (response != null && response.success && response.Data != null)
+            {
+                Bookings = response.Data.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading bookings: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task AcceptBooking(Guid id)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "¿Estás seguro de que querés aceptar esta reserva?");
+        if (!confirmed) return;
+
+        var result = await DashboardService.AcceptBookingAsync(id);
+        if (result.success)
+        {
+            await LoadBookings();
+            await OnStatusChanged.InvokeAsync();
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", result.Message);
+        }
+    }
+
+    private async Task CancelBooking(Guid id)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "¿Estás seguro de que querés cancelar esta reserva?");
+        if (!confirmed) return;
+
+        var result = await DashboardService.CancelBookingAsync(id);
+        if (result.success)
+        {
+            await LoadBookings();
+            await OnStatusChanged.InvokeAsync();
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", result.Message);
+        }
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "pending" or "pendiente" => "bg-warning text-dark",
+            "confirmed" or "confirmada" or "aceptada" => "bg-success",
+            "cancelled" or "cancelada" => "bg-danger",
+            "completed" or "completada" => "bg-info text-dark",
+            _ => "bg-secondary"
+        };
+    }
+}
+
+<style>
+    .bg-soft-success {
+        background-color: rgba(74, 124, 89, 0.1);
+        color: #4a7c59 !important;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,0,0,0.02);
+    }
+    
+    .badge {
+        font-weight: 500;
+        letter-spacing: 0.3px;
+    }
+</style>

@@ -1,6 +1,7 @@
 @using System
 @using BlazorWasm.Shared.Landing
 @using ClientLibrary.Models.Landing
+@using ClientLibrary.Services.Implementations
 
 <style>
     .user-greeting {
@@ -169,7 +170,10 @@
     private CartStore CartState { get; set; } = default!;
 
     [Inject]
-    private NotificationService NotificationState { get; set; } = default!;
+    private INotificationService NotificationState { get; set; } = default!;
+
+    [Inject]
+    private IHttpClientHelper HttpClientHelper { get; set; } = default!;
 
     [Parameter]
     public string HeaderId { get; set; } = string.Empty;
@@ -195,10 +199,16 @@
 
     private string searchTerm = string.Empty;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         CartState.OnChange += StateHasChanged;
         NotificationState.OnChange += StateHasChanged;
+
+        var userId = await HttpClientHelper.GetUserIdAsync();
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await NotificationState.LoadInitialNotifications(userId);
+        }
     }
 
     public void Dispose()
@@ -207,14 +217,16 @@
         NotificationState.OnChange -= StateHasChanged;
     }
 
-    private void ReadNotification(Guid id)
+    private async Task ReadNotification(Guid id)
     {
-        NotificationState.MarkAsRead(id);
+        await NotificationState.MarkAsReadAsync(id);
     }
     
     private void MarkAllRead()
     {
-        NotificationState.MarkAllAsRead();
+        // El backend no provee un endpoint de "marcar todas" por ahora,
+        // pero podemos implementar un bucle local si es necesario o dejarlo para un futuro.
+        // Por ahora lo deshabilitamos o marcamos una por una si la lista es corta.
     }
 
     private void OnSearch()

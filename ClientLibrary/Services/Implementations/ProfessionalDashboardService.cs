@@ -314,4 +314,46 @@ public class ProfessionalDashboardService(IHttpClientHelper httpClient, IApiCall
         var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
         return await apiHelper.GetServiceResponse<ServiceResponse>(result);
     }
+
+    // Booking Management
+    public async Task<ServiceResponse<IEnumerable<BookingDto>>> GetBookingsAsync(string professionalId)
+    {
+        var client = await httpClient.GetPrivateClientAsync();
+        var apiCall = new ApiCall
+        {
+            Route = $"{Constant.Booking.GetByProfessional}/{professionalId}",
+            Type = Constant.ApiCallType.Get,
+            Client = client
+        };
+        var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
+        return await apiHelper.GetServiceResponse<ServiceResponse<IEnumerable<BookingDto>>>(result);
+    }
+
+    public async Task<ServiceResponse> AcceptBookingAsync(Guid bookingId)
+    {
+        var client = await httpClient.GetPrivateClientAsync();
+        var apiCall = new ApiCall
+        {
+            Route = $"{Constant.Booking.Accept}/{bookingId}",
+            Type = Constant.ApiCallType.Post,
+            Client = client
+        };
+        var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
+        var response = result == null ? apiHelper.ConnectionError() : await apiHelper.GetServiceResponse<ServiceResponse>(result);
+        return response ?? new ServiceResponse(false, "Error inesperado al aceptar la reserva");
+    }
+
+    public async Task<ServiceResponse> CancelBookingAsync(Guid bookingId)
+    {
+        var client = await httpClient.GetPrivateClientAsync();
+        var apiCall = new ApiCall
+        {
+            Route = $"{Constant.Booking.Cancel}/{bookingId}",
+            Type = Constant.ApiCallType.Post,
+            Client = client
+        };
+        var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
+        var response = result == null ? apiHelper.ConnectionError() : await apiHelper.GetServiceResponse<ServiceResponse>(result);
+        return response ?? new ServiceResponse(false, "Error inesperado al cancelar la reserva");
+    }
 }

@@ -12,5 +12,5 @@ public class Notification
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     public Guid? ReferenceId { get; set; } 
-    public string ReferenceType { get; set; } = string.Empty;
+    public string? ReferenceType { get; set; } 
 }
