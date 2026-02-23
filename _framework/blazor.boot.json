@@ -1,11 +1,11 @@
 {
   "mainAssemblyName": "BlazorWasm",
   "resources": {
-    "hash": "sha256-DhUf5VFytCi/NbvPYiMwr77LyflD41US+nShbCr4d0I=",
+    "hash": "sha256-0qLG45nhyA3jweyJc+vysPDXoW+WgG9qj9nXIZoM+yk=",
     "fingerprinting": {
-      "BlazorWasm.o92vudulxy.wasm": "BlazorWasm.wasm",
+      "BlazorWasm.6m51ohp1pg.wasm": "BlazorWasm.wasm",
       "Blazored.Typeahead.5g65vcuhxb.wasm": "Blazored.Typeahead.wasm",
-      "ClientLibrary.y5rsbx8al6.wasm": "ClientLibrary.wasm",
+      "ClientLibrary.m8pgg4hd6h.wasm": "ClientLibrary.wasm",
       "Microsoft.AspNetCore.Authorization.g1oxyo3inu.wasm": "Microsoft.AspNetCore.Authorization.wasm",
       "Microsoft.AspNetCore.Components.Authorization.n24yv9groz.wasm": "Microsoft.AspNetCore.Components.Authorization.wasm",
       "Microsoft.AspNetCore.Components.Forms.sxuye9wrru.wasm": "Microsoft.AspNetCore.Components.Forms.wasm",
@@ -93,9 +93,9 @@
       "System.Runtime.InteropServices.JavaScript.86ud3rg0f2.wasm": "sha256-AAnORgj9Ao176Q0otUTy5BKaRjOgxF7p4H8d6UP6Ks0="
     },
     "assembly": {
-      "BlazorWasm.o92vudulxy.wasm": "sha256-PG85+6dbKMITRacOVm56tjqX962bhAT3h0jZFJEVOvg=",
+      "BlazorWasm.6m51ohp1pg.wasm": "sha256-UmEDevbuysORcEM7b1cZK6YXxNrkkHyZRYVkrOgerds=",
       "Blazored.Typeahead.5g65vcuhxb.wasm": "sha256-GwHvrw5VqXbXdYF+BX0dOWgR9mMoIh0SLjRrafirlyY=",
-      "ClientLibrary.y5rsbx8al6.wasm": "sha256-engO6oqsWhj9JTPsTws5Z0LZdc1eXtAzHT8Nt+PFJ1c=",
+      "ClientLibrary.m8pgg4hd6h.wasm": "sha256-xtPDkvF5/oZAgWvXLrRYOuawKA7GNHIL7M5l2BqZV50=",
       "Microsoft.AspNetCore.Authorization.g1oxyo3inu.wasm": "sha256-DJaE/NNDlRaFFfrK4mGF0eH+kQ2O142+xMJ1V2f6Jmo=",
       "Microsoft.AspNetCore.Components.Authorization.n24yv9groz.wasm": "sha256-4bNn6pSlV8GBadS2yPl7edvb4tRuWbFx2E4AsWJ4WE8=",
       "Microsoft.AspNetCore.Components.Forms.sxuye9wrru.wasm": "sha256-ICPVStvyBHUWeKThNMH8G4t0RL/D+hjNislw0SppkG0=",
