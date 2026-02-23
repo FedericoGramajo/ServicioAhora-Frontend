@@ -54,3 +54,17 @@ window.ShowConfirmationModal = function () {
 window.HideConfirmationModal = function () {
     bootstrap.Modal.getOrCreateInstance(document.getElementById('bsConfirmationModal')).hide();
 }
+
+window.ShowModal = function (id) {
+    var element = document.getElementById(id);
+    if (element) {
+        bootstrap.Modal.getOrCreateInstance(element).show();
+    }
+}
+
+window.HideModal = function (id) {
+    var element = document.getElementById(id);
+    if (element) {
+        bootstrap.Modal.getOrCreateInstance(element).hide();
+    }
+}

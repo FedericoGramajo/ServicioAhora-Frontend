@@ -334,6 +334,7 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
 }
 
 .hero-section {
@@ -437,6 +438,12 @@ body {
     border: 1px solid rgba(22, 163, 74, 0.08);
 }
 
+@media (max-width: 575.98px) {
+    .surface-card {
+        padding: 1.25rem;
+    }
+}
+
 .service-card,
 .professional-card {
     border: none;
@@ -499,11 +506,21 @@ body {
 }
 
 .carousel-control-prev {
-    left: -24px;
+    left: 0px;
 }
 
 .carousel-control-next {
-    right: -24px;
+    right: 0px;
+}
+
+@media (min-width: 1200px) {
+    .carousel-control-prev {
+        left: -24px;
+    }
+
+    .carousel-control-next {
+        right: -24px;
+    }
 }
 
 .trust-grid {
