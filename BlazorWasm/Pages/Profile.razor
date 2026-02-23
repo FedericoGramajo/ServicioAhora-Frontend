@@ -107,6 +107,10 @@
 </style>
 
 @code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "tab")]
+    public string? TabParam { get; set; }
+
     private UserDto? UserProfile { get; set; }
     private string userId = string.Empty;
     private string activeTab = "cuenta";
@@ -117,6 +121,10 @@
         userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value 
                  ?? authState.User.FindFirst("nameid")?.Value 
                  ?? string.Empty;
+
+        // Si llega con ?tab=addresses desde el flujo de reserva, abrir la tab de direcciones
+        if (!string.IsNullOrEmpty(TabParam) && TabParam.ToLower() == "addresses")
+            activeTab = "direcciones";
 
         await LoadProfile();
     }

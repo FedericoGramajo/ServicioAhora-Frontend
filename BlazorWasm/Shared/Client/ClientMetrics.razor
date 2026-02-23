@@ -1,32 +1,46 @@
 @using System.Globalization
 
 <div class="row g-3 mb-4">
-    <div class="col-md-3 col-6">
+    <div class="col-lg-2 col-md-4 col-6">
         <div class="dashboard-card h-100 border-start border-4 border-primary">
-            <p class="text-muted small mb-1">Total Invertido</p>
-            <h4 class="mb-0 text-primary">@TotalInvested.ToString("C0", new System.Globalization.CultureInfo("es-AR"))</h4>
-            <small class="text-secondary">En servicios finalizados</small>
+            <p class="text-muted small mb-1">Invertido</p>
+            <h4 class="mb-0 text-primary">@TotalInvested.ToString("C0", new CultureInfo("es-AR"))</h4>
+            <small class="text-secondary">Servicios finalizados</small>
         </div>
     </div>
-    <div class="col-md-3 col-6">
-        <div class="dashboard-card h-100 border-start border-4 border-info">
-            <p class="text-muted small mb-1">Próximos</p>
-            <h4 class="mb-0">@UpcomingCount</h4>
-            <small class="text-secondary">Agendados para esta semana</small>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
+    <div class="col-lg-2 col-md-4 col-6">
         <div class="dashboard-card h-100 border-start border-4 border-warning">
-            <p class="text-muted small mb-1">En curso</p>
-            <h4 class="mb-0">@InProgressCount</h4>
-            <small class="text-secondary">Técnicos trabajando ahora</small>
+            <p class="text-muted small mb-1">Pendientes</p>
+            <h4 class="mb-0">@UpcomingCount</h4>
+            <small class="text-secondary">En espera</small>
         </div>
     </div>
-    <div class="col-md-3 col-6">
+    <div class="col-lg-2 col-md-4 col-6">
         <div class="dashboard-card h-100 border-start border-4 border-success">
+            <p class="text-muted small mb-1">Confirmados</p>
+            <h4 class="mb-0 text-success">@ConfirmedCount</h4>
+            <small class="text-secondary">Agendados</small>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-6">
+        <div class="dashboard-card h-100 border-start border-4 border-info">
+            <p class="text-muted small mb-1">En curso</p>
+            <h4 class="mb-0 text-info">@InProgressCount</h4>
+            <small class="text-secondary">Trabajando ahora</small>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-6">
+        <div class="dashboard-card h-100 border-start border-4 border-primary">
             <p class="text-muted small mb-1">Finalizados</p>
             <h4 class="mb-0">@CompletedCount</h4>
-            <small class="text-secondary">Servicios cerrados con éxito</small>
+            <small class="text-secondary">Cerrados con éxito</small>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-6">
+        <div class="dashboard-card h-100 border-start border-4 border-danger">
+            <p class="text-muted small mb-1">Cancelados</p>
+            <h4 class="mb-0 text-danger">@CancelledCount</h4>
+            <small class="text-secondary">No realizados</small>
         </div>
     </div>
 </div>
@@ -34,6 +48,8 @@
 @code {
     [Parameter] public decimal TotalInvested { get; set; }
     [Parameter] public int UpcomingCount { get; set; }
+    [Parameter] public int ConfirmedCount { get; set; }
     [Parameter] public int InProgressCount { get; set; }
     [Parameter] public int CompletedCount { get; set; }
+    [Parameter] public int CancelledCount { get; set; }
 }

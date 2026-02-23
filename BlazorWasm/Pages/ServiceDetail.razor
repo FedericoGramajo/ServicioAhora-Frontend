@@ -2,6 +2,7 @@
 @using ClientLibrary.Helper
 @inject NavigationManager Navigation
 @inject IBookingService BookingService
+@inject IAddressService AddressService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IJSRuntime JS
 
@@ -155,6 +156,34 @@
             </div>
         </div>
     }
+
+    @* Modal: sin dirección registrada *@
+    @if (showNoAddressModal)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 pb-0">
+                        <button type="button" class="btn-close" @onclick="CloseNoAddressModal"></button>
+                    </div>
+                    <div class="modal-body text-center px-4 pb-2">
+                        <div class="mb-3" style="font-size: 3rem;">📍</div>
+                        <h5 class="mb-2">Necesitás una dirección</h5>
+                        <p class="text-muted mb-0">
+                            Para reservar un turno necesitamos saber dónde se realizará el servicio.
+                            Agregá una dirección desde tu perfil y volvé a intentarlo.
+                        </p>
+                    </div>
+                    <div class="modal-footer border-0 d-flex gap-2 justify-content-center pb-4">
+                        <button class="btn btn-outline-secondary" @onclick="CloseNoAddressModal">Cancelar</button>
+                        <button class="btn btn-primary" @onclick="GoToProfile">
+                            <i class="fa-solid fa-location-dot me-2"></i>Ir a mi perfil
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
     </main>
 
 
@@ -203,6 +232,7 @@
     private void BackToSearch() => Navigation.NavigateTo(RouteConstants.Search);
 
     private bool showBookingModal = false;
+    private bool showNoAddressModal = false;
     private bool isConfirming = false;
     
     private DateTime? SelectedAppointmentTime { get; set; }
@@ -217,8 +247,30 @@
             return;
         }
 
+        // Verificar si el cliente tiene al menos una dirección registrada
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                  ?? authState.User.FindFirst("nameid")?.Value;
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            var addressResult = await AddressService.GetAddressesAsync(userId);
+            if (!addressResult.success || !(addressResult.Data?.Any() ?? false))
+            {
+                showNoAddressModal = true;
+                return;
+            }
+        }
+
         showBookingModal = true;
         SelectedAppointmentTime = null;
+    }
+
+    private void CloseNoAddressModal() => showNoAddressModal = false;
+
+    private void GoToProfile()
+    {
+        showNoAddressModal = false;
+        Navigation.NavigateTo(RouteConstants.Profile + "?tab=addresses");
     }
 
     private void CloseBookingModal()

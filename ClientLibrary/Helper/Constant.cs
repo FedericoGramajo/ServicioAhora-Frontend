@@ -93,9 +93,9 @@ namespace ClientLibrary.Helper
         }
         public static class Professional
         {
-            public const string GetMetrics              = "professional/metrics";        
+            public const string GetMetrics              = "dashboard/metrics";           
             public const string GetServiceGroups        = "professional/service-groups"; 
-            public const string GetTransactions         = "professional/transactions";   
+            public const string GetTransactions         = "dashboard/transactions";      
 
             public const string AddService              = "serviceoffering/add";
             public const string UpdateService           = "serviceoffering/update";

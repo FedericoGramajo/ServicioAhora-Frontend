@@ -34,8 +34,10 @@
             <!-- Metrics -->
             <ClientMetrics TotalInvested="@TotalInvested"
                            UpcomingCount="@UpcomingCount" 
+                           ConfirmedCount="@ConfirmedCount"
                            InProgressCount="@InProgressCount" 
-                           CompletedCount="@CompletedCount" />
+                           CompletedCount="@CompletedCount"
+                           CancelledCount="@CancelledCount" />
 
             <!-- Navigation Tabs -->
             <ul class="nav nav-tabs mb-4">
@@ -50,6 +52,7 @@
             @if (ActiveTab == "history")
             {
                 <ClientServiceHistory History="History" />
+                <ClientReportsSection History="History" />
             }
         }
     </main>
@@ -63,10 +66,19 @@
     private List<ServiceHistoryItem> History { get; set; } = new();
 
     // Metrics Calculation
-    private decimal TotalInvested => History.Where(h => h.Status.ToLower().Contains("Finalizado") || h.Status.ToLower().Contains("finished")).Sum(h => h.Total);
-    private int UpcomingCount => History.Count(h => h.Status.ToLower().Contains("pendiente") || h.Status.ToLower().Contains("pending") || h.Status.ToLower().Contains("confirmed"));
-    private int InProgressCount => History.Count(h => h.Status.ToLower().Contains("En curso") || h.Status.ToLower().Contains("progress"));
-    private int CompletedCount => History.Count(h => h.Status.ToLower().Contains("Finalizado") || h.Status.ToLower().Contains("finished") || h.Status.ToLower().Contains("completed"));
+    private decimal TotalInvested => History
+        .Where(h => h.Status.ToLower().Contains("completado") || h.Status.ToLower().Contains("finalizado") || h.Status.ToLower().Contains("completed") || h.Status.ToLower().Contains("finished"))
+        .Sum(h => h.Total);
+
+    private int UpcomingCount => History.Count(h => h.Status.ToLower() == "pending" || h.Status.ToLower() == "pendiente");
+    
+    private int ConfirmedCount => History.Count(h => h.Status.ToLower() == "confirmed" || h.Status.ToLower() == "confirmado" || h.Status.ToLower() == "confirmada");
+
+    private int InProgressCount => History.Count(h => h.Status.ToLower().Contains("inprogress") || h.Status.ToLower().Contains("en curso"));
+
+    private int CompletedCount => History.Count(h => h.Status.ToLower().Contains("completed") || h.Status.ToLower().Contains("completado") || h.Status.ToLower().Contains("finalizado"));
+
+    private int CancelledCount => History.Count(h => h.Status.ToLower().Contains("canceled") || h.Status.ToLower().Contains("cancelado"));
 
 
     [Parameter]

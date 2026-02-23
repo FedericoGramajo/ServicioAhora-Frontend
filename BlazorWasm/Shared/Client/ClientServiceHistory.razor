@@ -10,18 +10,24 @@
             <button class="btn btn-sm @(FilterStatus == "pendiente" ? "btn-warning text-white" : "btn-outline-secondary")" @onclick='() => SetFilter("pendiente")'>
                 Pendientes
             </button>
+            <button class="btn btn-sm @(FilterStatus == "confirmado" ? "btn-success" : "btn-outline-secondary")" @onclick='() => SetFilter("confirmado")'>
+                Confirmados
+            </button>
             <button class="btn btn-sm @(FilterStatus == "en-curso" ? "btn-info text-white" : "btn-outline-secondary")" @onclick='() => SetFilter("en-curso")'>
                 En curso
             </button>
             <button class="btn btn-sm @(FilterStatus == "completado" ? "btn-primary" : "btn-outline-secondary")" @onclick='() => SetFilter("completado")'>
                 Completados
             </button>
+            <button class="btn btn-sm @(FilterStatus == "cancelado" ? "btn-danger" : "btn-outline-secondary")" @onclick='() => SetFilter("cancelado")'>
+                Cancelados
+            </button>
         </div>
 
         <div class="search-bar small" role="search">
-            <div class="input-group">
-                <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
-                <input class="form-control" type="search" placeholder="Buscar por servicio o profesional" @bind="Term" @bind:event="oninput" />
+            <div class="input-group" style="border: 1px solid #dee2e6; border-radius: 0.375rem; overflow: hidden;">
+                <span class="input-group-text bg-white border-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input class="form-control border-0 shadow-none" type="search" placeholder="Buscar por servicio o profesional" @bind="Term" @bind:event="oninput" />
             </div>
         </div>
     </div>
@@ -83,8 +89,10 @@
         return filter switch
         {
             "pendiente" => c == "pending" || c == "pendiente",
+            "confirmado" => c == "confirmed" || c == "confirmado",
             "en-curso" => c == "inprogress" || c == "en curso",
             "completado" or "finalizado" => c == "completed" || c == "completado" || c == "finalizado",
+            "cancelado" => c == "canceled" || c == "cancelado",
             _ => c == filter
         };
     }

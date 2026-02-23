@@ -45,11 +45,10 @@ public class ProfessionalDashboardService(IHttpClientHelper httpClient, IApiCall
     public async Task<List<ServiceTransaction>> GetTransactionsAsync(DateTime start, DateTime end, string? status, string? city)
     {
         var client = await httpClient.GetPrivateClientAsync();
-        // Construct query string manually or via helper if available
-        // Simple manual construction for now
-        string query = $"?start={start:yyyy-MM-dd}&end={end:yyyy-MM-dd}";
-        if (!string.IsNullOrEmpty(status)) query += $"&status={status}";
-        if (!string.IsNullOrEmpty(city)) query += $"&city={city}";
+        // El backend espera startDate y endDate (nombres del [FromQuery] del DashboardController)
+        string query = $"?startDate={start:yyyy-MM-dd}&endDate={end:yyyy-MM-dd}";
+        if (!string.IsNullOrEmpty(status)) query += $"&status={Uri.EscapeDataString(status)}";
+        if (!string.IsNullOrEmpty(city)) query += $"&city={Uri.EscapeDataString(city)}";
 
         var apiCall = new ApiCall
         {
