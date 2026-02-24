@@ -1,6 +1,6 @@
 @inject IJSRuntime js
 
-<div class="modal fade" id="bsConfirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+<div class="modal fade" id="@ModalId" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -31,6 +31,7 @@
 </div>
 
 @code {
+    [Parameter] public string ModalId { get; set; } = "bsConfirmationModal";
     [Parameter] public string Title { get; set; } = "Confirmación";
     [Parameter] public string Message { get; set; } = "¿Estás seguro?";
     [Parameter] public string ButtonText { get; set; } = "Confirmar";
@@ -42,12 +43,12 @@
 
     public async Task Show()
     {
-        await js.InvokeVoidAsync("ShowConfirmationModal");
+        await js.InvokeVoidAsync("ShowModal", ModalId);
     }
 
     public async Task Hide()
     {
-        await js.InvokeVoidAsync("HideConfirmationModal");
+        await js.InvokeVoidAsync("HideModal", ModalId);
     }
 
     private async Task Confirm()

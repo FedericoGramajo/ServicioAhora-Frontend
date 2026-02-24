@@ -10,9 +10,10 @@ namespace ClientLibrary.Models.Authentication
     public class ChangePassword
     {
         public string Token { get; set; } = string.Empty;
-        [Required]
+        public string? Email { get; set; } = string.Empty;
+        [Required(ErrorMessage = "La contraseña obligatoria.")]
         public string? Password { get; set; }
-        [Required, Compare(nameof(Password))]
+        [Required(ErrorMessage = "Por favor, repita la contraseña."), Compare(nameof(Password))]
         public string? ConfirmPassword { get; set; }
 
     }

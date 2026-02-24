@@ -17,9 +17,9 @@ public interface IProfessionalDashboardService
     Task<DashboardMetrics> GetDashboardMetricsAsync();
     Task<List<ServiceGroup>> GetServiceGroupsAsync();
     Task<List<ServiceTransaction>> GetTransactionsAsync(DateTime start, DateTime end, string? status, string? city);
-    Task AddServiceAsync(CreateServiceOffering service);
+    Task<ServiceResponse> AddServiceAsync(CreateServiceOffering service);
     Task<ServiceResponse> UpdateServiceAsync(UpdateServiceOffering service);
-    Task DeleteServiceAsync(string serviceSlug);
+    Task<ServiceResponse> DeleteServiceAsync(string serviceSlug);
     Task<List<GetServiceOffering>> GetServiceOfferingsByProfessionalAsync(string professionalId);
 
     // Category Management

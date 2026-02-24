@@ -60,7 +60,7 @@ public class ProfessionalDashboardService(IHttpClientHelper httpClient, IApiCall
         return await apiHelper.GetServiceResponse<List<ServiceTransaction>>(result) ?? new List<ServiceTransaction>();
     }
 
-    public async Task AddServiceAsync(CreateServiceOffering service)
+    public async Task<ServiceResponse> AddServiceAsync(CreateServiceOffering service)
     {
         var client = await httpClient.GetPrivateClientAsync();
         var apiCall = new ApiCall
@@ -70,7 +70,8 @@ public class ProfessionalDashboardService(IHttpClientHelper httpClient, IApiCall
             Client = client,
             Model = service
         };
-        await apiHelper.ApiCallTypeCall<CreateServiceOffering>(apiCall);
+        var result = await apiHelper.ApiCallTypeCall<CreateServiceOffering>(apiCall);
+        return result == null ? apiHelper.ConnectionError() : await apiHelper.GetServiceResponse<ServiceResponse>(result);
     }
 
     public async Task<ServiceResponse> UpdateServiceAsync(UpdateServiceOffering service)
@@ -87,7 +88,7 @@ public class ProfessionalDashboardService(IHttpClientHelper httpClient, IApiCall
         return result == null ? apiHelper.ConnectionError() : await apiHelper.GetServiceResponse<ServiceResponse>(result);
     }
 
-    public async Task DeleteServiceAsync(string serviceSlug)
+    public async Task<ServiceResponse> DeleteServiceAsync(string serviceSlug)
     {
         var client = await httpClient.GetPrivateClientAsync();
         var apiCall = new ApiCall
@@ -97,7 +98,8 @@ public class ProfessionalDashboardService(IHttpClientHelper httpClient, IApiCall
             Client = client
         };
         apiCall.ToString(serviceSlug);
-        await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
+        var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
+        return result == null ? apiHelper.ConnectionError() : await apiHelper.GetServiceResponse<ServiceResponse>(result);
     }
 
     public async Task<List<GetServiceOffering>> GetServiceOfferingsByProfessionalAsync(string professionalId)

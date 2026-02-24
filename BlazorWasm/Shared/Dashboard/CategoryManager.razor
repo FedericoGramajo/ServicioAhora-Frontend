@@ -46,7 +46,7 @@
                 <div class="col-md-6">
                     <div class="d-flex justify-content-between align-items-center p-3 border rounded bg-light">
                         <span class="fw-semibold">@category.CategoryName</span>
-                        <button class="btn btn-outline-danger btn-sm" @onclick="() => RemoveCategory(category.ProfessionalId, category.CategoryId)">
+                        <button class="btn btn-outline-danger btn-sm" @onclick="() => RequestRemoveCategory(category)">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -95,6 +95,14 @@
     </div>
 }
 
+<ConfirmationModal @ref="deleteCategoryModal"
+                   ModalId="deleteCategoryModal"
+                   Title="Eliminar Categoría"
+                   Message="@($"¿Estás seguro de que deseas eliminar la categoría '{categoryToDelete?.CategoryName}'? Esto podría afectar a los servicios asociados.")"
+                   ButtonText="Eliminar"
+                   IsProcessing="@isDeleting"
+                   OnConfirm="ConfirmRemoveCategory" />
+
 @code {
     [Parameter] public List<GetProfessionalCategory> MyCategories { get; set; } = new();
     [Parameter] public EventCallback OnCategoryChanged { get; set; }
@@ -138,17 +146,43 @@
         }
     }
 
-    private async Task RemoveCategory(string professionalId, Guid categoryId)
+    private ConfirmationModal deleteCategoryModal = default!;
+    private GetProfessionalCategory? categoryToDelete;
+    private bool isDeleting = false;
+
+    private async Task RequestRemoveCategory(GetProfessionalCategory category)
     {
-        var response = await DashboardService.RemoveMyCategoryAsync(professionalId, categoryId);
-        if (response.success)
+        categoryToDelete = category;
+        await deleteCategoryModal.Show();
+    }
+
+    private async Task ConfirmRemoveCategory()
+    {
+        if (categoryToDelete == null) return;
+        
+        isDeleting = true;
+        try
         {
-            await OnCategoryChanged.InvokeAsync();
-            await JS.ToastrSuccess("Categoría eliminada correctamente.");
+            var response = await DashboardService.RemoveMyCategoryAsync(categoryToDelete.ProfessionalId, categoryToDelete.CategoryId);
+            if (response.success)
+            {
+                await deleteCategoryModal.Hide();
+                await OnCategoryChanged.InvokeAsync();
+                await JS.ToastrSuccess("Categoría eliminada correctamente.");
+            }
+            else
+            {
+                await JS.ToastrError(response.Message);
+            }
         }
-        else
+        catch (Exception ex)
         {
-            await JS.ToastrError(response.Message);
+            Console.WriteLine(ex);
+            await JS.ToastrError("Error al eliminar la categoría.");
+        }
+        finally
+        {
+            isDeleting = false;
         }
     }
 }

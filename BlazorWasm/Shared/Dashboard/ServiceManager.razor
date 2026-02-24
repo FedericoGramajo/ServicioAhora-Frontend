@@ -1,6 +1,7 @@
 @using ClientLibrary.Models.ServicioAhora.ServOffering
 @using ClientLibrary.Models.Landing
 @using ClientLibrary.Models.ProfessionalCat
+@using ClientLibrary.Models
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
 @inject IProfessionalDashboardService DashboardService
@@ -139,6 +140,14 @@
     </div>
 }
 
+<ConfirmationModal @ref="deleteServiceModal"
+                   ModalId="deleteServiceModal"
+                   Title="Eliminar Servicio"
+                   Message="@($"¿Estás seguro de que deseas eliminar el servicio '{serviceToDelete?.Name}'? Esta acción no se puede deshacer.")"
+                   ButtonText="Eliminar"
+                   IsProcessing="@isDeleting"
+                   OnConfirm="ConfirmDeleteService" />
+
 @code {
     [Parameter] public List<GetServiceOffering> MyServices { get; set; } = new();
     [Parameter] public List<GetProfessionalCategory> MyCategories { get; set; } = new();
@@ -149,6 +158,10 @@
     private bool isEditingService = false;
     private bool IsLoading = false;
     private Guid selectedCategoryId;
+
+    private ConfirmationModal deleteServiceModal = default!;
+    private GetServiceOffering? serviceToDelete;
+    private bool isDeleting = false;
 
     private async Task HandleImageUpload(InputFileChangeEventArgs e)
     {
@@ -279,8 +292,37 @@
 
     private async Task DeleteService(GetServiceOffering service)
     {
-         await DashboardService.DeleteServiceAsync(service.Id.ToString());
-         await JS.ToastrSuccess("Servicio eliminado.");
-         await OnServiceChanged.InvokeAsync();
+        serviceToDelete = service;
+        await deleteServiceModal.Show();
+    }
+
+    private async Task ConfirmDeleteService()
+    {
+        if (serviceToDelete == null) return;
+
+        isDeleting = true;
+        try
+        {
+            ClientLibrary.Models.ServiceResponse response = await DashboardService.DeleteServiceAsync(serviceToDelete.Id.ToString());
+            if (response.success)
+            {
+                await deleteServiceModal.Hide();
+                await OnServiceChanged.InvokeAsync();
+                await JS.ToastrSuccess("Servicio eliminado correctamente.");
+            }
+            else
+            {
+                await JS.ToastrError(response.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            await JS.ToastrError("Error al eliminar el servicio.");
+        }
+        finally
+        {
+            isDeleting = false;
+        }
     }
 }
