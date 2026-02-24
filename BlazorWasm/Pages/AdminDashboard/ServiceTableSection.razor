@@ -87,7 +87,7 @@
 <AdminServiceModal ShowModal="ShowModal"
                    IsEditing="true"
                    Model="EditingModel"
-                   Categories="Categories.ToList()"
+                   Categories="FilteredCategoriesForModal"
                    IsLoading="IsLoading"
                    OnClose="CloseModal"
                    OnSave="SaveService" />
@@ -103,6 +103,7 @@
 @code {
     [Parameter] public IEnumerable<GetCategory> Categories { get; set; } = Enumerable.Empty<GetCategory>();
     [Parameter] public IEnumerable<GetServiceOffering> Services { get; set; } = Enumerable.Empty<GetServiceOffering>();
+    [Parameter] public IEnumerable<GetProfessional> Professionals { get; set; } = Enumerable.Empty<GetProfessional>();
     [Parameter] public CultureInfo LocalCulture { get; set; } = CultureInfo.InvariantCulture;
     [Parameter] public EventCallback OnServiceChanged { get; set; }
 
@@ -112,6 +113,7 @@
     // Edit Modal State
     private bool ShowModal { get; set; }
     private UpdateServiceOffering EditingModel { get; set; } = new();
+    private List<GetCategory> FilteredCategoriesForModal { get; set; } = new();
     private bool IsLoading { get; set; }
 
     // Delete Confirmation Modal State
@@ -126,6 +128,20 @@
 
     private void OpenEditModal(GetServiceOffering service)
     {
+        // Filter categories based on professional's assigned categories
+        var professional = Professionals.FirstOrDefault(p => p.AppUserId == service.ProfessionalId);
+        if (professional != null && professional.Categories.Any())
+        {
+            FilteredCategoriesForModal = Categories
+                .Where(c => professional.Categories.Contains(c.Name))
+                .ToList();
+        }
+        else
+        {
+            // Fallback: all categories if professional not found or has none (should not happen)
+            FilteredCategoriesForModal = Categories.ToList();
+        }
+
         EditingModel = new UpdateServiceOffering
         {
             Id = service.Id,

@@ -3,6 +3,7 @@
 @using ClientLibrary.Helper
 @inject IAdminDashboardService adminService
 @inject IJSRuntime js
+@inject NavigationManager Nav
 
 <section class="surface-card mb-4">
     <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center mb-3">
@@ -57,19 +58,20 @@
                             <td class="text-center">@professional.ServicesCount</td>
                             <td class="text-center">@professional.BookingsCount</td>
                             <td class="text-end">
-                                <div class="d-flex justify-content-end gap-2">
-                                    <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1">
+                                <div class="d-flex justify-content-end align-items-center gap-2">
+                                    <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" 
+                                            @onclick='() => Nav.NavigateTo(RouteConstants.Create(RouteConstants.ProfessionalDetail, professional.AppUserId))'>
                                         <i class="fa-solid fa-eye small"></i> Ver perfil
                                     </button>
                                     @if(professional.IsActive)
                                     {
-                                         <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" @onclick="() => ToggleStatus(professional)">
+                                         <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" @onclick="() => ToggleStatus(professional)" style="width: 110px; justify-content: center;">
                                              <i class="fa-solid fa-user-slash small"></i> Suspender
                                          </button>
                                     }
                                     else
                                     {
-                                         <button class="btn btn-outline-success btn-sm d-flex align-items-center gap-1" @onclick="() => ToggleStatus(professional)">
+                                         <button class="btn btn-outline-success btn-sm d-flex align-items-center gap-1" @onclick="() => ToggleStatus(professional)" style="width: 110px; justify-content: center;">
                                              <i class="fa-solid fa-user-check small"></i> Activar
                                          </button>
                                     }
