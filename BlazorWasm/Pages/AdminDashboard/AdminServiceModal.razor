@@ -47,12 +47,14 @@
                              <div class="col-md-6">
                                 <label class="form-label small fw-bold text-muted">Duración Estimada</label>
                                 <select class="form-select" value="@Model.EstimatedDuration" @onchange="HandleDurationChange">
+                                    <option value="">-- Seleccionar --</option>
                                     <option value="60">1 hora</option>
                                     <option value="120">2 horas</option>
                                     <option value="180">3 horas</option>
                                     <option value="240">4 horas</option>
                                     <option value="300">5 horas</option>
                                 </select>
+                                <ValidationMessage For="@(() => Model.EstimatedDuration)" />
                             </div>
                             <div class="col-md-6 d-flex align-items-end">
                                 <div class="form-check form-switch mb-2">
@@ -115,10 +117,7 @@
 
     private void HandleDurationChange(ChangeEventArgs e)
     {
-        if (int.TryParse(e.Value?.ToString(), out var duration))
-        {
-            Model.EstimatedDuration = duration;
-        }
+        Model.EstimatedDuration = int.TryParse(e.Value?.ToString(), out var duration) ? duration : null;
     }
 
     private async Task HandleImageUpload(InputFileChangeEventArgs e)

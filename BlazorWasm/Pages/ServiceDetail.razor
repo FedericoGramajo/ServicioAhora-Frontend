@@ -125,7 +125,7 @@
                         <!-- Calendar Component -->
                         <TimeSlotPicker ProfessionalId="@Service.ProfessionalId.ToString()" 
                                        ServiceId="@Service.Id"
-                                       DurationMinutes="@((int)(Service.EstimatedDuration))" 
+                                       DurationMinutes="@(Service.EstimatedDuration ?? 60)" 
                                        OnSlotSelected="OnTimeSlotSelected" />
                         
                         @if (SelectedAppointmentTime.HasValue)
