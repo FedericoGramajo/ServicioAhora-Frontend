@@ -96,14 +96,13 @@
                 return;
             }
 
-            // Guardar token en cookie
+            
             string cookieValue = tokenService.FormToken(result.Token, result.RefreshToken);
             await tokenService.SetCookie(Constant.Cookie.Name, cookieValue, Constant.Cookie.Days, Constant.Cookie.Path);
 
-            // Notificar autenticación
+            
             (authStateProvider as CustomAuthStateProvider)!.NotifyAuthenticationState();
 
-            // Redirigir según ruta
             NavManager.NavigateTo(Route is null ? RouteConstants.Home : Route, true);
         }
         catch (Exception ex)

@@ -2,8 +2,11 @@
 @attribute [Authorize(Roles = Constant.Administration.ProfessionalRole)]
 @using ClientLibrary.Models.ProfessionalCat
 @using ClientLibrary.Models.ServicioAhora.ServOffering
+@using Microsoft.JSInterop
+@using ClientLibrary.Helper
 @inject IProfessionalDashboardService DashboardService
-
+@inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthStateProvider
 <PageTitle>Panel profesional - ServicioAhora!</PageTitle>
 
 <div class="landing-page">
@@ -87,10 +90,6 @@
     </main>
 </div>
 
-@using Microsoft.JSInterop
-@using ClientLibrary.Helper
-@inject IJSRuntime JS
-@inject AuthenticationStateProvider AuthStateProvider
 
 @code {
     private readonly CultureInfo LocalCulture = new("es-AR");
@@ -104,7 +103,7 @@
 
     // Data
     private ServiceManager ServiceManagerComponent;
-    private ClientLibrary.Models.Landing.DashboardMetrics Metrics { get; set; } = new(0, 0, 0, 0);
+    private ClientLibrary.Models.Landing.DashboardMetrics Metrics { get; set; } = new(0, 0, 0, 0, 0);
     private List<GetServiceOffering> MyServices { get; set; } = new();
     private List<GetProfessionalCategory> MyCategories { get; set; } = new();
 
@@ -134,8 +133,7 @@
 
     private async Task LoadDataAsync()
     {
-        // Load critical data first or all in parallel
-        // For tabs, we could lazy load, but for simplicity let's load core data
+
         var t1 = LoadMetricsAsync();
         var t2 = LoadServicesAsync();
         var t3 = LoadCategoriesAsync(); 
@@ -163,9 +161,7 @@
     {
         if (!string.IsNullOrEmpty(ProfessionalId))
         {
-            Console.WriteLine($"[Dashboard] Loading availability for {ProfessionalId}...");
             Availabilities = await DashboardService.GetAvailabilityAsync(ProfessionalId);
-            Console.WriteLine($"[Dashboard] Loaded {Availabilities.Count} availability items.");
             StateHasChanged();
         }
     }
@@ -185,7 +181,6 @@
 
     private async Task RefreshAvailability()
     {
-        Console.WriteLine("[Dashboard] Refreshing availability...");
         await LoadAvailabilityAsync();
     }
 

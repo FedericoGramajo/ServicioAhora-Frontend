@@ -26,7 +26,7 @@ public class ProfessionalDashboardService(IHttpClientHelper httpClient, IApiCall
             Client = client
         };
         var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
-        return await apiHelper.GetServiceResponse<DashboardMetrics>(result) ?? new DashboardMetrics(0, 0, 0, 0.0);
+        return await apiHelper.GetServiceResponse<DashboardMetrics>(result) ?? new DashboardMetrics(0, 0, 0, 0.0, 0);
     }
 
     public async Task<List<ServiceGroup>> GetServiceGroupsAsync()

@@ -8,9 +8,8 @@ namespace ClientLibrary.Services.Contracts;
 
 public interface IAdminDashboardService
 {
-    Task<List<AdminMetric>> GetMetricsAsync();
-    Task<List<ReportBar>> GetCategoryReportAsync();
-    Task<List<ReportBar>> GetStatusReportAsync();
+    Task<DashboardMetrics> GetMetricsAsync();
+    Task<List<ServiceTransaction>> GetTransactionsAsync(DateTime? start = null, DateTime? end = null, string? status = null, string? city = null);
     Task<List<GetProfessional>> GetProfessionalsAsync();
     Task<ServiceResponse> UpdateProfessionalAsync(GetProfessional professional);
 }

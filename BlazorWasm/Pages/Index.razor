@@ -121,7 +121,6 @@
             await CategoryStore.LoadCategoriesAsync();
             FeaturedCategories = CategoryStore.Categories?.Where(c => c.IsFeatured).Take(6).ToList() ?? new List<GetCategory>();
 
-            // Load Real Professionals
             var realProfessionals = await ProfessionalService.GetActiveProfessionalsAsync();
             var activeProfessionalIds = realProfessionals?.Select(p => p.AppUserId).ToHashSet() ?? new HashSet<string>();
 
@@ -138,7 +137,6 @@
                 )).ToList();
             }
 
-            // Load Real Services
             var realServices = await ServiceOfferingService.GetAllAsync();
             if (realServices != null)
             {

@@ -123,9 +123,8 @@ namespace ClientLibrary.Helper
         }
         public static class Admin
         {
-            public const string GetMetrics              = "admin/metrics";
-            public const string GetCategoryReport       = "admin/reports/categories";
-            public const string GetStatusReport         = "admin/reports/status";
+            public const string GetMetrics              = "dashboard/metrics";
+            public const string GetTransactions         = "dashboard/transactions";
             public const string GetProfessionals        = "Professional/all";
             public const string UpdateProfessional      = "Professional/update";
         }

@@ -98,6 +98,7 @@
                 links.Add(new("Panel profesional", RouteConstants.ProfessionalDashboard));
             }
 
+            links.Add(new("Buscar", RouteConstants.Search));
             links.Add(new("Cerrar sesión", RouteConstants.Logout));
         }
         else
@@ -105,6 +106,7 @@
             UserName = string.Empty;
             UserInitial = string.Empty;
 
+            links.Add(new("Buscar", RouteConstants.Search));
             links.Add(new("Iniciar sesión", RouteConstants.Login));
             links.Add(new("Registrarse", RouteConstants.Register));
         }

@@ -10,7 +10,7 @@ namespace ClientLibrary.Services.Implementations;
 
 public class AdminDashboardService(IHttpClientHelper httpClient, IApiCallHelper apiHelper) : IAdminDashboardService
 {
-    public async Task<List<AdminMetric>> GetMetricsAsync()
+    public async Task<DashboardMetrics> GetMetricsAsync()
     {
         var client = await httpClient.GetPrivateClientAsync();
         var apiCall = new ApiCall
@@ -20,33 +20,26 @@ public class AdminDashboardService(IHttpClientHelper httpClient, IApiCallHelper 
             Client = client
         };
         var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
-        return await apiHelper.GetServiceResponse<List<AdminMetric>>(result) ?? new List<AdminMetric>();
+        return await apiHelper.GetServiceResponse<DashboardMetrics>(result) ?? new DashboardMetrics(0, 0, 0, 0, 0);
     }
 
-    public async Task<List<ReportBar>> GetCategoryReportAsync()
+    public async Task<List<ServiceTransaction>> GetTransactionsAsync(DateTime? start = null, DateTime? end = null, string? status = null, string? city = null)
     {
         var client = await httpClient.GetPrivateClientAsync();
+        var query = "";
+        if (start.HasValue) query += $"{(string.IsNullOrEmpty(query) ? "?" : "&")}startDate={start.Value:yyyy-MM-dd}";
+        if (end.HasValue) query += $"{(string.IsNullOrEmpty(query) ? "?" : "&")}endDate={end.Value:yyyy-MM-dd}";
+        if (!string.IsNullOrEmpty(status)) query += $"{(string.IsNullOrEmpty(query) ? "?" : "&")}status={Uri.EscapeDataString(status)}";
+        if (!string.IsNullOrEmpty(city)) query += $"{(string.IsNullOrEmpty(query) ? "?" : "&")}city={Uri.EscapeDataString(city)}";
+
         var apiCall = new ApiCall
         {
-            Route = Constant.Admin.GetCategoryReport,
+            Route = Constant.Admin.GetTransactions + query,
             Type = Constant.ApiCallType.Get,
             Client = client
         };
         var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
-        return await apiHelper.GetServiceResponse<List<ReportBar>>(result) ?? new List<ReportBar>();
-    }
-
-    public async Task<List<ReportBar>> GetStatusReportAsync()
-    {
-        var client = await httpClient.GetPrivateClientAsync();
-        var apiCall = new ApiCall
-        {
-            Route = Constant.Admin.GetStatusReport,
-            Type = Constant.ApiCallType.Get,
-            Client = client
-        };
-        var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
-        return await apiHelper.GetServiceResponse<List<ReportBar>>(result) ?? new List<ReportBar>();
+        return await apiHelper.GetServiceResponse<List<ServiceTransaction>>(result) ?? new List<ServiceTransaction>();
     }
 
     public async Task<List<GetProfessional>> GetProfessionalsAsync()
@@ -56,9 +49,7 @@ public class AdminDashboardService(IHttpClientHelper httpClient, IApiCallHelper 
         {
             Route = Constant.Admin.GetProfessionals,
             Type = Constant.ApiCallType.Get,
-            Client = client,
-            Model = null!,
-            Id = null!
+            Client = client
         };
         var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
         return await apiHelper.GetServiceResponse<List<GetProfessional>>(result) ?? new List<GetProfessional>();

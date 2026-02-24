@@ -1,54 +1,106 @@
 @using ClientLibrary.Models.ServicioAhora.ServOffering
 @using ClientLibrary.Models.Category
+@using Microsoft.AspNetCore.Components.Forms
+@inject IJSRuntime js
 
 @if (ShowModal)
 {
-    <div class="modal fade show" style="display:block; background-color: rgba(0,0,0,0.5);" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">@(IsEditing ? "Editar Servicio" : "Nuevo Servicio")</h5>
-                    <button type="button" class="btn-close" @onclick="OnClose" disabled="@IsLoading"></button>
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold">@(IsEditing ? "Editar Servicio" : "Nuevo Servicio")</h5>
+                    <button type="button" class="btn-close shadow-none" @onclick="OnClose" disabled="@IsLoading"></button>
                 </div>
 
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Nombre del servicio</label>
-                        <input class="form-control" @bind="Model.Name" placeholder="Ej. Reparación de aire acondicionado" />
-                    </div>
+                <EditForm Model="Model" OnValidSubmit="OnSave">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body pt-3">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Nombre del servicio</label>
+                            <InputText class="form-control" @bind-Value="Model.Name" placeholder="Ej. Reparación de aire acondicionado" />
+                            <ValidationMessage For="@(() => Model.Name)" />
+                        </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Rubro (Categoría)</label>
-                        <select class="form-select" @bind="Model.CategoryId">
-                            <option value="">Seleccionar rubro...</option>
-                            @foreach (var cat in Categories)
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Rubro (Categoría)</label>
+                            <InputSelect class="form-select" @bind-Value="Model.CategoryId">
+                                <option value="@Guid.Empty">Seleccionar rubro...</option>
+                                @foreach (var cat in Categories)
+                                {
+                                    <option value="@cat.Id">@cat.Name</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => Model.CategoryId)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Precio base</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">$</span>
+                                <InputNumber class="form-control border-start-0 ps-0 shadow-none" @bind-Value="Model.BasePrice" />
+                            </div>
+                            <ValidationMessage For="@(() => Model.BasePrice)" />
+                        </div>
+
+                        <div class="row mb-3">
+                             <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Duración Estimada</label>
+                                <select class="form-select" value="@Model.EstimatedDuration" @onchange="HandleDurationChange">
+                                    <option value="60">1 hora</option>
+                                    <option value="120">2 horas</option>
+                                    <option value="180">3 horas</option>
+                                    <option value="240">4 horas</option>
+                                    <option value="300">5 horas</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="form-check form-switch mb-2">
+                                    <InputCheckbox class="form-check-input" role="switch" id="adminServiceStatus" @bind-Value="Model.Status" />
+                                    <label class="form-check-label small fw-medium text-muted" for="adminServiceStatus">
+                                        @(Model.Status ? "Publicado" : "Oculto")
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Imagen del servicio</label>
+                            <InputFile OnChange="HandleImageUpload" class="form-control form-control-sm" accept="image/*" />
+                            @if (!string.IsNullOrEmpty(Model.Image))
                             {
-                                <option value="@cat.Id">@cat.Name</option>
+                                <div class="mt-2 text-center position-relative">
+                                    <img src="@Model.Image" alt="Vista previa" class="img-thumbnail rounded-3" style="max-height: 120px; object-fit: cover;" />
+                                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 rounded-circle" @onclick="RemoveImage" style="width: 24px; height: 24px; padding: 0;">&times;</button>
+                                </div>
                             }
-                        </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Descripción</label>
+                            <InputTextArea class="form-control" rows="3" @bind-Value="Model.Description" placeholder="Detalles sobre el servicio ofrecido..." />
+                            <ValidationMessage For="@(() => Model.Description)" />
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Precio base</label>
-                        <input type="number" class="form-control" @bind="Model.BasePrice" />
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-link text-muted text-decoration-none" @onclick="OnClose" disabled="@IsLoading">Cancelar</button>
+                        <button type="submit" class="btn btn-success px-4" disabled="@IsLoading" style="background-color: #198754; border-color: #198754;">
+                            @if (IsLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Procesando...</span>
+                            }
+                            else
+                            {
+                                <span>Guardar cambios</span>
+                            }
+                        </button>
                     </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Descripción</label>
-                        <textarea class="form-control" rows="3" @bind="Model.Description"></textarea>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-outline-secondary" @onclick="OnClose" disabled="@IsLoading">Cancelar</button>
-                    <button class="btn btn-primary" @onclick="OnSave" disabled="@IsLoading">
-                        @(IsLoading ? "Guardando..." : "Guardar cambios")
-                    </button>
-                </div>
+                </EditForm>
             </div>
         </div>
     </div>
-    <div class="modal-backdrop fade show"></div>
 }
 
 @code {
@@ -60,4 +112,37 @@
     
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback OnSave { get; set; }
+
+    private void HandleDurationChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var duration))
+        {
+            Model.EstimatedDuration = duration;
+        }
+    }
+
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            try
+            {
+                var resizedFile = await file.RequestImageFileAsync(file.ContentType, 600, 400);
+                var buffer = new byte[resizedFile.Size];
+                await resizedFile.OpenReadStream().ReadAsync(buffer);
+                var base64 = Convert.ToBase64String(buffer);
+                Model.Image = $"data:{file.ContentType};base64,{base64}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error uploading image: {ex.Message}");
+            }
+        }
+    }
+
+    private void RemoveImage()
+    {
+        Model.Image = null;
+    }
 }

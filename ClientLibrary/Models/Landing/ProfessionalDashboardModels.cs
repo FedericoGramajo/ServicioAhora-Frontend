@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ClientLibrary.Models.Landing;
 
-public record DashboardMetrics(int ActiveServices, int NewRequests, int InProgress, double Rating);
+public record DashboardMetrics(int ActiveServices, int NewRequests, int InProgress, double Rating, int NewProfessionals);
 public record ServiceTransaction(DateTime Date, decimal Amount, string Category, string Status, string City);
 public record ServiceGroup(string Category, List<ServiceSummary> Services);
 public record ServiceSummary(string Slug, string Name, decimal Price, string Description, string? Image);

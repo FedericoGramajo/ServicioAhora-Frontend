@@ -46,7 +46,6 @@ namespace ClientLibrary.Helper
         public const string PaymentSuccess = "/payment-success";
         public const string PaymentCancel = "/payment-cancel";
 
-        public const string MainProductCategory = "/main/products/category/{categoryId}";
         
         // Anchor Links (hashes)
         public const string HashInicio = "/#inicio";

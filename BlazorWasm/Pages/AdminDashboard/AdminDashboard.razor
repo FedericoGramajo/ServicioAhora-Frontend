@@ -56,8 +56,9 @@
         <!-- Content -->
         @if (ActiveTab == "resume")
         {
-            <AdminSummaryCards Metrics="SummaryMetrics" />
             <AdminReportsSection Categories="Categories"
+                                  SummaryMetrics="SummaryMetrics"
+                                  Transactions="Transactions"
                                  CategoryReportData="CategoryReportData"
                                  StatusReportData="StatusReportData"
                                  CategoryMax="CategoryMax"
@@ -100,6 +101,7 @@
     private List<GetServiceOffering> Services { get; set; } = new();
     private List<GetProfessional> Professionals { get; set; } = new();
     private List<AdminMetric> SummaryMetrics { get; set; } = new();
+    private List<ServiceTransaction> Transactions { get; set; } = new();
     private List<ReportBar> CategoryReportData { get; set; } = new();
     private List<ReportBar> StatusReportData { get; set; } = new();
 
@@ -149,18 +151,40 @@
 
     private async Task LoadMetrics()
     {
-        SummaryMetrics = await dashboardService.GetMetricsAsync();
+        var metrics = await dashboardService.GetMetricsAsync();
+        SummaryMetrics = new List<AdminMetric>
+        {
+            new AdminMetric("Servicios Activos", metrics.ActiveServices.ToString(), "Servicios publicados"),
+            new AdminMetric("Nuevas Solicitudes", metrics.NewRequests.ToString(), "Pendientes de atención"),
+            new AdminMetric("En Curso", metrics.InProgress.ToString(), "Servicios ejecutándose"),
+            new AdminMetric("Nuevos Profesionales", metrics.NewProfessionals.ToString(), "Registrados recientemente")
+        };
     }
 
     private async Task LoadReports()
     {
-        var catTask = dashboardService.GetCategoryReportAsync();
-        var statusTask = dashboardService.GetStatusReportAsync();
+        // Default to last 6 months as requested
+        var start = DateTime.Now.AddMonths(-6);
+        var end = DateTime.Now;
         
-        await Task.WhenAll(catTask, statusTask);
-
-        CategoryReportData = await catTask;
-        StatusReportData = await statusTask;
+        var result = await dashboardService.GetTransactionsAsync(start, end);
+        Transactions = result ?? new List<ServiceTransaction>();
+        
+        if (Transactions.Any())
+        {
+            // Group by Category
+            CategoryReportData = Transactions
+                .GroupBy(t => t.Category)
+                .Select(g => new ReportBar(g.Key, g.Count()))
+                .OrderByDescending(r => r.Count)
+                .ToList();
+            // Group by Status
+            StatusReportData = Transactions
+                .GroupBy(t => t.Status)
+                .Select(g => new ReportBar(g.Key, g.Count()))
+                .OrderByDescending(r => r.Count)
+                .ToList();
+        }
     }
 
     private async Task LoadProfessionals()
