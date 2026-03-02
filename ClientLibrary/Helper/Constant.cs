@@ -21,6 +21,7 @@ namespace ClientLibrary.Helper
             public const string Deactivate  = "serviceoffering/deactivate"; // PATCH /api/ServiceOffering/deactivate/{id}
             public const string Delete      = "serviceoffering/delete";
             public const string GetByProfessional = "serviceoffering/by-professional"; // GET /api/ServiceOffering/by-professional/{professionalId}
+            public const string GetAdminByDate = "serviceoffering/admin/all-by-date";
         }
         public static class Category
         {
@@ -127,6 +128,9 @@ namespace ClientLibrary.Helper
             public const string GetTransactions         = "dashboard/transactions";
             public const string GetProfessionals        = "Professional/all";
             public const string UpdateProfessional      = "Professional/update";
+            public const string GetAdminReports         = "dashboard/admin-reports";
+            public const string GetProfessionalReports  = "dashboard/professional-reports";
+            public const string GetCustomerReports      = "dashboard/customer-reports";
         }
 
         public static class AuditLog
@@ -159,6 +163,7 @@ namespace ClientLibrary.Helper
             public const string UpdateStatus = "Booking/update-status";
             public const string Accept = "Booking/accept";
             public const string Cancel = "Booking/cancel";
+            public const string GetAdminGlobal = "Booking/admin/global";
         }
 
         public static class Availability
@@ -172,6 +177,13 @@ namespace ClientLibrary.Helper
             public const string InProgress = "En curso";
             public const string Completed = "Finalizado";
             public const string Canceled = "Cancelado";
+        }
+
+        public static class Rating
+        {
+            public const string Post = "Rating";
+            public const string GetByProfessional = "Rating/professional";
+            public const string GetByService = "Rating/service";
         }
     }
 }

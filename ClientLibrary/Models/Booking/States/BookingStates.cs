@@ -9,6 +9,7 @@ namespace ClientLibrary.Models.Booking.States
         public bool CanCancel => true;
         public bool CanStart => false;
         public bool CanFinish => false;
+        public bool CanRate => false;
     }
 
     public class ConfirmedState : IBookingState
@@ -20,6 +21,7 @@ namespace ClientLibrary.Models.Booking.States
         public bool CanCancel => true;
         public bool CanStart => true;
         public bool CanFinish => false;
+        public bool CanRate => false;
     }
 
     public class InProgressState : IBookingState
@@ -31,6 +33,7 @@ namespace ClientLibrary.Models.Booking.States
         public bool CanCancel => false;
         public bool CanStart => false;
         public bool CanFinish => true;
+        public bool CanRate => false;
     }
 
     public class CompletedState : IBookingState
@@ -42,6 +45,7 @@ namespace ClientLibrary.Models.Booking.States
         public bool CanCancel => false;
         public bool CanStart => false;
         public bool CanFinish => false;
+        public bool CanRate => true;
     }
 
     public class CanceledState : IBookingState
@@ -53,6 +57,7 @@ namespace ClientLibrary.Models.Booking.States
         public bool CanCancel => false;
         public bool CanStart => false;
         public bool CanFinish => false;
+        public bool CanRate => false;
     }
 
     public class UnknownState : IBookingState
@@ -64,5 +69,6 @@ namespace ClientLibrary.Models.Booking.States
         public bool CanCancel => false;
         public bool CanStart => false;
         public bool CanFinish => false;
+        public bool CanRate => false;
     }
 }

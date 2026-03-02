@@ -29,13 +29,13 @@
                 </button>
             </li>
             <li class="nav-item">
-                <button class="nav-link @(ActiveTab == "services" ? "active fw-bold" : "")" @onclick='() => ActiveTab = "services"'>
-                    <i class="fa-solid fa-briefcase me-2"></i>Servicios
+                <button class="nav-link @(ActiveTab == "bookings" ? "active fw-bold" : "")" @onclick='() => ActiveTab = "bookings"'>
+                    <i class="fa-solid fa-calendar-check me-2"></i>Reservas
                 </button>
             </li>
             <li class="nav-item">
-                <button class="nav-link @(ActiveTab == "bookings" ? "active fw-bold" : "")" @onclick='() => ActiveTab = "bookings"'>
-                    <i class="fa-solid fa-calendar-check me-2"></i>Reservas
+                <button class="nav-link @(ActiveTab == "services" ? "active fw-bold" : "")" @onclick='() => ActiveTab = "services"'>
+                    <i class="fa-solid fa-briefcase me-2"></i>Servicios
                 </button>
             </li>
             <li class="nav-item">
@@ -51,10 +51,20 @@
         </ul>
 
         <!-- Content -->
-        @if (ActiveTab == "resume")
+        @if (isLoading)
+        {
+            <div class="row g-3 mb-4">
+                <div class="col-md-3"><LoadingSkeleton Height="100" /></div>
+                <div class="col-md-3"><LoadingSkeleton Height="100" /></div>
+                <div class="col-md-3"><LoadingSkeleton Height="100" /></div>
+                <div class="col-md-3"><LoadingSkeleton Height="100" /></div>
+            </div>
+            <LoadingSkeleton Height="400" />
+        }
+        else if (ActiveTab == "resume")
         {
             <DashboardMetrics Metrics="@Metrics" />
-            <FinancialReports />
+            <ProfessionalAdvancedReports />
         }
         else if (ActiveTab == "services")
         {
@@ -96,6 +106,7 @@
 
     // Tab State
     private string ActiveTab { get; set; } = "resume";
+    private bool isLoading = true;
 
     [Parameter]
     [SupplyParameterFromQuery]
@@ -133,13 +144,21 @@
 
     private async Task LoadDataAsync()
     {
-
-        var t1 = LoadMetricsAsync();
-        var t2 = LoadServicesAsync();
-        var t3 = LoadCategoriesAsync(); 
-        var t4 = LoadAvailabilityAsync();
-
-        await Task.WhenAll(t1, t2, t3, t4);
+        isLoading = true;
+        try 
+        {
+            // Sequential loading to avoid overwhelming WASM and ensure tokens are refreshed if needed
+            await LoadCategoriesAsync(); 
+            await LoadServicesAsync();
+            await LoadAvailabilityAsync();
+            
+            // Metrics are loaded inside the specific components if needed, or here if used globally
+            await LoadMetricsAsync();
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private async Task LoadMetricsAsync()

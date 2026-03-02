@@ -1,46 +1,50 @@
-﻿@attribute [Route(RouteConstants.MyCart)]
-@using ClientLibrary.Helper
-@inject ICookieStorageService cookieStorageService
+﻿@using ClientLibrary.State
+@implements IDisposable
+@inject CartStore CartStore
 @inject IJSRuntime js
+
 <div class="container">
+    @* ... (rest of the HTML remains the same as I already updated it partially but I'll make sure it's correct) ... *@
     <div class="row">
-        @if (SelectedProducts.Any())
+        @if (CartStore.Items.Any())
         {
             <div class="col-lg-12">
                 <div class=" p-2 mt-3 w-100 bg-warning">
                     <div class="card m-2">
                         <div class="card-header">
-                            <h3 class=" text-center">My Cart</h3>
+                            <h3 class=" text-center">Mi Carrito</h3>
                         </div>
                         <div class="card-body">
                             <table class="table table-light">
                                 <thead>
                                     <tr>
-                                        <th>Image</th>
-                                        <th style="width:150px">Name</th>
-                                        <th>Price</th>
-                                        <th>Quantity</th>
+                                        <th>Imagen</th>
+                                        <th style="width:150px">Nombre</th>
+                                        <th>Precio</th>
+                                        <th>Cantidad</th>
                                         <th>Total</th>
-                                        <th class="text-center">Manage</th>
+                                        <th class="text-center">Gestionar</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var item in SelectedProducts)
+                                    @foreach (var item in CartStore.Items)
                                     {
-                                        Guid productId = item.Id;
+                                        var productId = item.ServiceId;
                                         <tr>
-                                            <td style="width:150px">@item.Image</td>
+                                            <td style="width:150px">
+                                                <img src="@item.ImageUrl" alt="@item.Name" style="width: 100px; height: auto; border-radius: 4px;" />
+                                            </td>
                                             <td style="width:250px">@item.Name</td>
-                                            <td style="width:250px">$@item.Price</td>
+                                            <td style="width:250px">@item.Price.ToString("C0", new CultureInfo("es-AR"))</td>
                                             <td>
                                                 <div class="hstack gap-1">
-                                                    <input class="form-control w-25" type="number" value="@(GetProductQuantity(productId))"
+                                                    <input class="form-control w-25" type="number" value="@item.Quantity"
                                                     min="1" @oninput="(e) => HandleInputChange(e, productId)" id="@productId" />
                                                 </div>
                                             </td>
-                                            <td>@(GetProductTotalPrice(item.Id))</td>
+                                            <td>@item.TotalPrice.ToString("C0", new CultureInfo("es-AR"))</td>
                                             <td class="text-center">
-                                                <i class="fa fa-trash text-danger buy_bt" @onclick="() => DeleteCartItem(item.Id)" title="Delete"></i>
+                                                <i class="fa fa-trash text-danger buy_bt" @onclick="() => DeleteCartItem(productId)" title="Eliminar"></i>
                                             </td>
                                         </tr>
                                     }
@@ -48,8 +52,8 @@
                             </table>
                         </div>
                         <div class="card-footer">
-                            <div class="fs-3 mb-3">Grand total: $@(GetGrandTotal(SelectedProducts))</div>
-                            <button class=" btn btn-danger btn-lg" @onclick="Checkout">Checkout</button>
+                            <div class="fs-3 mb-3">Total General: @CartStore.Total.ToString("C0", new CultureInfo("es-AR"))</div>
+                            <button class=" btn btn-danger btn-lg" @onclick="Checkout">Pagar ahora</button>
                         </div>
                     </div>
                 </div>
@@ -58,18 +62,17 @@
         else
         {
             <div class="col-lg-4 offset-4 m-5 p-5">
-                <div class="text-center alert alert-info">Cart is Empty!</div>
+                <div class="text-center alert alert-info">¡El carrito está vacío!</div>
             </div>
         }
         @if (ShowPaymentDialog)
         {
-            <!-- Modal nativo Bootstrap -->
             <div class="modal-backdrop fade show"></div>
             <div class="modal d-block" tabindex="-1">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content border-warning">
                         <div class="modal-header">
-                            <h5 class="modal-title">Select Payment Method</h5>
+                            <h5 class="modal-title">Seleccionar Método de Pago</h5>
                         </div>
                         <div class="modal-body">
                             @if (PaymentMethods.Any())
@@ -90,90 +93,46 @@
                             {
                                 <button class="btn btn-outline-success">@Paying</button>
                             }
-                            <button class="btn btn-danger" @onclick="Cancel">Cancel</button>
+                            <button class="btn btn-danger" @onclick="Cancel">Cancelar</button>
                         </div>
                     </div>
                 </div>
             </div>
         }
-
     </div>
 </div>
-
-
 
 @code {
     string Paying = null!;
     bool ShowPaymentDialog = false;
     IEnumerable<GetPaymentMethod> PaymentMethods = [];
-    List<GetProduct> SelectedProducts = [];
-    IEnumerable<GetProduct> Products = [];
-    List<ProcessCart> MyCarts = [];
 
     protected override async Task OnInitializedAsync()
     {
+        CartStore.OnChange += StateHasChanged;
+        await CartStore.InitializeAsync();
         PaymentMethods = await paymentService.GetPaymentMethods();
-        Products = await productService.GetAllAsync();
-        string? cartString = await cookieStorageService.GetCookieAsync(Constant.Cart.Name);
-        if (string.IsNullOrEmpty(cartString))
-            return;
-
-        MyCarts = JsonSerializer.Deserialize<List<ProcessCart>>(cartString)!;
-        if (!MyCarts.Any()) return;
-        GetCart();
     }
-    void GetCart()
+
+    public void Dispose()
     {
-        SelectedProducts?.Clear();
-        foreach (var item in MyCarts)
+        CartStore.OnChange -= StateHasChanged;
+    }
+
+    async Task HandleInputChange(ChangeEventArgs e, string productId)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newQuantity))
         {
-            var product = Products.FirstOrDefault(x => x.Id == item.ProductId);
-            if (product != null && !SelectedProducts!.Contains(product))
-                SelectedProducts.Add(product);         
+            await CartStore.UpdateQuantityAsync(productId, newQuantity);
         }
-        SelectedProducts!.OrderBy(x => x.Name);
     }
 
-    int GetProductQuantity(Guid productId) => GetCartItem(productId).Quantity;
-    ProcessCart GetCartItem(Guid productId) => MyCarts.FirstOrDefault(x => x.ProductId == productId)!;
-    decimal GetProductTotalPrice(Guid productId)
+    async Task DeleteCartItem(string productId)
     {
-        int quantity = GetProductQuantity(productId);
-        decimal price = Products.FirstOrDefault(x => x.Id == productId)!.Price;
-        return quantity * price;
+        await CartStore.RemoveFromCartAsync(productId);
+        await js.ToastrWarning("Producto eliminado del carrito");
     }
 
-    async Task HandleInputChange(ChangeEventArgs e, Guid productId)
-    {
-        int newQuantity = int.Parse(e.Value?.ToString()!);
-        MyCarts.FirstOrDefault(x => x.ProductId == productId)!.Quantity = newQuantity;
-        await SaveCart(MyCarts);
-        GetCart();
-        StateHasChanged();
-    }
-
-    async Task SaveCart(List<ProcessCart> myCarts)
-    => await cookieStorageService.SetCookieAsync(Constant.Cart.Name, JsonSerializer.Serialize(myCarts), 7, "/");
-
-    decimal GetGrandTotal(List<GetProduct> products)
-    {
-        decimal grandTotal = 0.00m;
-        foreach (var product in products)
-            grandTotal += GetProductTotalPrice(product.Id);
-
-        return grandTotal;
-
-    }
-    async Task DeleteCartItem(Guid producId)
-    {
-        var cartItem = GetCartItem(producId);
-        MyCarts.Remove(cartItem);
-        var product = SelectedProducts.FirstOrDefault(x => x.Id == producId);
-        SelectedProducts.Remove(product!);
-        await cookieStorageService.RemoveCookieAsync(Constant.Cookie.Name);
-        await SaveCart(MyCarts);
-        await js.ToastrError("Product deleted!");
-    }
     [CascadingParameter] public Task<AuthenticationState>? UserAuthState { get; set; }
 
     async Task Checkout()
@@ -188,7 +147,6 @@
         }
         catch
         {
-
             NavManager.NavigateTo($"{RouteConstants.AuthenticationLogin}/{Constant.Cart.Name}");
         }
     }
@@ -196,25 +154,33 @@
     async Task SelectPaymentMethod(GetPaymentMethod paymentMethod)
     {
         if (paymentMethod == null) return;
-        Paying = "Processing... please wait";
+        Paying = "Procesando... por favor espere";
+
+        var checkoutItems = CartStore.Items.Select(i => new ProcessCart 
+        { 
+            ProductId = Guid.Parse(i.ServiceId), 
+            Quantity = i.Quantity 
+        }).ToList();
 
         var checkout = new Checkout
             {
                 PaymentMethodId = paymentMethod.Id,
-                Carts = MyCarts
+                Carts = checkoutItems
             };
-        var (success, paymentLink) = await cartService.Checkout(checkout); 
-        if (success)
+
+        var response = await cartService.Checkout(checkout); 
+        if (response.success)
         {
             Paying = null!;
-            NavManager.NavigateTo(paymentLink);
+            await CartStore.ClearCartAsync();
+            NavManager.NavigateTo(response.Message);
         }
         else
         {
-            await js.ToastrError(paymentLink);
-            return;
+            await js.ToastrError(response.Message);
+            Paying = null!;
         }
-
     }
-        void Cancel() => ShowPaymentDialog = false;
+
+    void Cancel() => ShowPaymentDialog = false;
 }

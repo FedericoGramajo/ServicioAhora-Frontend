@@ -7,5 +7,8 @@ namespace ClientLibrary.Services.Contracts
     {
         Task<ServiceResponse> CreateBookingAsync(CreateBooking model);
         Task<List<GetBooking>> GetCustomerBookingsAsync(string customerId);
+        Task<ServiceResponse> SubmitRatingAsync(CreateRatingDto rating);
+        Task<GetRatingDto?> GetRatingByServiceAsync(Guid serviceId);
+        Task<List<GetBooking>> GetAdminGlobalBookingsAsync(DateTime startDate, DateTime endDate);
     }
 }

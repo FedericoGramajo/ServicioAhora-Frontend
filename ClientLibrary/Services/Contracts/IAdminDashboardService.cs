@@ -12,4 +12,5 @@ public interface IAdminDashboardService
     Task<List<ServiceTransaction>> GetTransactionsAsync(DateTime? start = null, DateTime? end = null, string? status = null, string? city = null);
     Task<List<GetProfessional>> GetProfessionalsAsync();
     Task<ServiceResponse> UpdateProfessionalAsync(GetProfessional professional);
+    Task<AdminReportsResponse> GetAdminReportsAsync();
 }

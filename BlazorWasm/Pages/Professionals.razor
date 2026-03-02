@@ -21,13 +21,9 @@
                         <h1 class="mb-2">Encontrá la persona ideal para tu hogar</h1>
                         <p class="mb-0 text-muted">Mostrando especialistas hogareños listos para ayudar</p>
                     </div>
-                    <form class="search-bar" role="search" @onsubmit="ApplyFilters" @onsubmit:preventDefault>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
-                            <input class="form-control" type="search" placeholder="Buscar profesionales por nombre o rubro..." aria-label="Buscar" @bind="searchTerm" />
-                            <button class="btn btn-primary" type="submit">Buscar</button>
-                        </div>
-                    </form>
+                    <SearchBar @bind-Value="searchTerm" 
+                               Placeholder="Buscar profesionales por nombre o rubro..." 
+                               OnSearch="ApplyFilters" />
                 </div>
             </div>
 
@@ -52,38 +48,15 @@
                         @foreach (var professional in PaginatedResults)
                         {
                             <div class="col-12">
-                                <div class="card professional-result shadow-sm border-0">
-                                    <div class="row g-0 align-items-center">
-                                        <div class="col-12 col-md-3">
-                                            <div class="ratio ratio-1x1 m-3 rounded shadow-sm overflow-hidden bg-light" style="max-width: 150px;">
-@using BlazorWasm.Shared.Components
-                                                <div class="d-flex align-items-center justify-content-center" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
-                                                    <StaffAvatar ImageUrl="@professional.ProfileImage" Name="@professional.FullName" Size="lg" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-12 col-md-6">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-                                                    @foreach(var cat in professional.Categories.Take(2))
-                                                    {
-                                                        <span class="badge rounded-pill bg-primary-subtle text-primary">@cat</span>
-                                                    }
-                                                    <span class="badge rounded-pill bg-warning-subtle text-warning">
-                                                        <i class="fa-solid fa-star me-1"></i>@professional.AvgRating.ToString("0.0")
-                                                    </span>
-                                                </div>
-                                                <h5 class="card-title fw-bold mb-1">@professional.FullName</h5>
-                                                <p class="mb-2 text-muted small">Especialista en @(string.Join(", ", professional.Categories))</p>
-                                                <p class="card-text text-muted mb-0 small">Profesional verificado con @professional.BookingsCount servicios completados.</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-12 col-md-3 d-flex flex-column align-items-md-end gap-2 p-3">
-                                            <button class="btn btn-outline-primary w-100" @onclick="() => GoToProfessional(professional.AppUserId)">Ver perfil</button>
-                                            <button class="btn btn-primary w-100" @onclick="() => GoToProfessional(professional.AppUserId)">Contactar ahora</button>
-                                        </div>
-                                    </div>
-                                </div>
+                                <ServiceResultCard Title="@professional.FullName"
+                                                 Subtitle="@($"Especialista en {string.Join(", ", professional.Categories)}")"
+                                                 Description="@($"Profesional verificado con {professional.BookingsCount} servicios completados.")"
+                                                 ImageUrl="@professional.ProfileImage"
+                                                 Rating="@professional.AvgRating"
+                                                 Badges="@professional.Categories.Take(2).ToList()"
+                                                 ActionText="Contactar ahora"
+                                                 OnViewDetails="() => GoToProfessional(professional.AppUserId)"
+                                                 OnActionClick="() => GoToProfessional(professional.AppUserId)" />
                             </div>
                         }
 
@@ -99,32 +72,11 @@
                         }
                     </div>
 
-                    @if (TotalPages > 1)
-                    {
                         <div class="d-flex justify-content-center mt-5">
-                            <nav aria-label="Paginación de profesionales">
-                                <ul class="pagination shadow-sm">
-                                    <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
-                                        <button class="page-link" @onclick="() => ChangePage(CurrentPage - 1)">
-                                            <i class="fa-solid fa-chevron-left"></i>
-                                        </button>
-                                    </li>
-                                    @for (int i = 1; i <= TotalPages; i++)
-                                    {
-                                        var p = i;
-                                        <li class="page-item @(CurrentPage == p ? "active" : "")">
-                                            <button class="page-link" @onclick="() => ChangePage(p)">@p</button>
-                                        </li>
-                                    }
-                                    <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
-                                        <button class="page-link" @onclick="() => ChangePage(CurrentPage + 1)">
-                                            <i class="fa-solid fa-chevron-right"></i>
-                                        </button>
-                                    </li>
-                                </ul>
-                            </nav>
+                            <Pagination CurrentPage="CurrentPage" 
+                                        TotalPages="TotalPages" 
+                                        OnPageChanged="ChangePage" />
                         </div>
-                    }
                 }
             </div>
         </div>

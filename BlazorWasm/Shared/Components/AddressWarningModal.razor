@@ -1,0 +1,28 @@
+<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" @onclick="OnClose"></button>
+            </div>
+            <div class="modal-body text-center px-4 pb-2">
+                <div class="mb-3" style="font-size: 3rem;">📍</div>
+                <h5 class="mb-2">Necesitás una dirección</h5>
+                <p class="text-muted mb-0">
+                    Para reservar un turno necesitamos saber dónde se realizará el servicio.
+                    Agregá una dirección desde tu perfil y volvé a intentarlo.
+                </p>
+            </div>
+            <div class="modal-footer border-0 d-flex gap-2 justify-content-center pb-4">
+                <button class="btn btn-outline-secondary" @onclick="OnClose">Cancelar</button>
+                <button class="btn btn-primary" @onclick="OnGoToProfile">
+                    <i class="fa-solid fa-location-dot me-2"></i>Ir a mi perfil
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnGoToProfile { get; set; }
+}

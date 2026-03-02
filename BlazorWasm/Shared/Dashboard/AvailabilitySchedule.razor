@@ -82,10 +82,14 @@
         <div class="p-4 border rounded bg-light h-100">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h6 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-list-check me-2"></i>Mis Horarios</h6>
-                <span class="badge bg-secondary">@Availabilities.Count slots</span>
+                @{
+                    var cutoffDate = DateTime.Today.AddDays(-2);
+                    var filteredSlots = Availabilities.Where(a => a.Date.Date >= cutoffDate).ToList();
+                }
+                <span class="badge bg-secondary">@filteredSlots.Count slots</span>
             </div>
 
-            @if (Availabilities == null || !Availabilities.Any())
+            @if (!filteredSlots.Any())
             {
                 <div class="text-center py-5">
                     <div class="mb-3">
@@ -94,7 +98,7 @@
                           <i class="fas fa-calendar-xmark fa-stack-1x fa-inverse"></i>
                         </span>
                     </div>
-                    <h6 class="text-muted">Aún no tienes horarios configurados</h6>
+                    <h6 class="text-muted">No hay horarios configurados para los próximos días</h6>
                     <p class="text-muted small mb-0">Usá el panel izquierdo para agregar disponibilidad.</p>
                 </div>
             }
@@ -103,7 +107,7 @@
                 <div class="availability-list pe-2" style="max-height: 600px; overflow-y: auto;">
                     @{
                         // Group by Date for cleaner display
-                        var grouped = Availabilities
+                        var grouped = filteredSlots
                             .GroupBy(a => a.Date.Date)
                             .OrderBy(g => g.Key)
                             .ToList();

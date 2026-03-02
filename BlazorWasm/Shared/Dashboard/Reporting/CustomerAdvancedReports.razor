@@ -1,0 +1,248 @@
+@using ApexCharts
+@using ClientLibrary.Models.Dashboard
+@using ClientLibrary.Services.Contracts
+@inject IDashboardService DashboardService
+
+<div class="customer-advanced-reports">
+    @if (IsLoading)
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-md-4"><LoadingSkeleton Height="120" /></div>
+            <div class="col-md-4"><LoadingSkeleton Height="120" /></div>
+            <div class="col-md-4"><LoadingSkeleton Height="120" /></div>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-12"><LoadingSkeleton Height="350" /></div>
+        </div>
+    }
+    else if (HasError)
+    {
+        <ErrorState Message="@ErrorMessage" OnRetry="LoadData" />
+    }
+    else if (Data == null)
+    {
+        <EmptyState />
+    }
+    else
+    {
+        <!-- KPI Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <KpiCard Label="Gasto Último Mes" 
+                         Value="@Data.ExpenseHistory.LastOrDefault()?.TotalSpent.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("es-AR"))" 
+                         Subtitle="Mes de Febrero" 
+                         Icon="fa-receipt" 
+                         Color="#0d6efd" />
+            </div>
+            <div class="col-md-4">
+                <KpiCard Label="Inversión Histórica" 
+                         Value="@Data.ExpenseHistory.Sum(x => x.TotalSpent).ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("es-AR"))" 
+                         Subtitle="Total gastado en la plataforma" 
+                         Icon="fa-piggy-bank" 
+                         Color="#16a34a" />
+            </div>
+            <div class="col-md-4">
+                <KpiCard Label="Total Servicios" 
+                         Value="@Data.StatusSummary.Sum(x => x.Count).ToString()" 
+                         Subtitle="@($"{Data.StatusSummary.FirstOrDefault(x => x.Status == "Confirmado")?.Count} servicios activos")" 
+                         Icon="fa-concierge-bell" 
+                         Color="#6610f2" />
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <!-- Expense History -->
+            <div class="col-lg-8">
+                <ChartCard Title="Historial de Gastos" Subtitle="Inversión mensual en servicios">
+                    <ApexChart TItem="ExpenseHistoryMetric" 
+                               Options="LineOptions">
+                        <ApexPointSeries TItem="ExpenseHistoryMetric"
+                                        Items="Data.ExpenseHistory"
+                                        Name="Gastado"
+                                        SeriesType="SeriesType.Bar"
+                                        XValue="@(e => e.Month)"
+                                        YValue="@(e => (decimal)e.TotalSpent)" />
+                    </ApexChart>
+                </ChartCard>
+            </div>
+
+            <!-- Service Frequency -->
+            <div class="col-lg-4">
+                <ChartCard Title="Rubros más Contratados" Subtitle="Frecuencia por categoría">
+                    <ApexChart TItem="ServiceFrequencyMetric" 
+                               Options="DonutOptions">
+                        <ApexPointSeries TItem="ServiceFrequencyMetric"
+                                        Items="Data.ServiceFrequency"
+                                        Name="Servicios"
+                                        SeriesType="SeriesType.Donut"
+                                        XValue="@(e => e.CategoryName)"
+                                        YValue="@(e => (decimal)e.Count)" />
+                    </ApexChart>
+                </ChartCard>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <!-- Status Summary -->
+            <div class="col-md-6">
+                <ChartCard Title="Estado de Solicitudes" Subtitle="Resumen de actividad">
+                    <ApexChart TItem="StatusSummaryMetric" 
+                               Options="PieOptions">
+                        <ApexPointSeries TItem="StatusSummaryMetric"
+                                        Items="Data.StatusSummary"
+                                        Name="Cantidad"
+                                        SeriesType="SeriesType.Pie"
+                                        XValue="@(e => e.Status)"
+                                        YValue="@(e => (decimal)e.Count)" />
+                    </ApexChart>
+                </ChartCard>
+            </div>
+
+            <!-- Ratings Given -->
+            <div class="col-md-6">
+                <div class="dashboard-card p-4 shadow-sm border-0 surface-card h-100">
+                    <h3 class="h6 mb-3 fw-bold text-dark">Mis Reseñas Enviadas</h3>
+                    <div class="ratings-list overflow-auto" style="max-height: 280px;">
+                        @foreach (var rating in Data.RatingsGiven.OrderByDescending(x => x.Date))
+                        {
+                            <div class="rating-item mb-3 pb-2 border-bottom last-border-0">
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-bold fw-medium">@rating.CustomerName</span>
+                                    <div class="text-warning small">
+                                        @for (int i = 0; i < 5; i++)
+                                        {
+                                            <i class="fa-@(i < rating.Rating ? "solid" : "regular") fa-star"></i>
+                                        }
+                                    </div>
+                                </div>
+                                <p class="text-muted small italic mb-1">"@rating.Comment"</p>
+                                <span class="text-secondary opacity-75" style="font-size: 0.7rem;">@rating.Date.ToShortDateString()</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .last-border-0:last-child { border-bottom: 0 !important; }
+</style>
+
+@code {
+    private ClientLibrary.Models.Dashboard.CustomerReportsResponse? Data { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private bool HasError { get; set; }
+    private string ErrorMessage { get; set; } = string.Empty;
+
+    private ApexChartOptions<ExpenseHistoryMetric> LineOptions = new();
+    private ApexChartOptions<ServiceFrequencyMetric> DonutOptions = new();
+    private ApexChartOptions<StatusSummaryMetric> PieOptions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ConfigureCharts();
+        await LoadData();
+    }
+
+    private void ConfigureCharts()
+    {
+        LineOptions = new ApexChartOptions<ExpenseHistoryMetric>
+        {
+            Chart = new Chart { Toolbar = new Toolbar { Show = false } },
+            Colors = new List<string> { "#0d6efd" },
+            PlotOptions = new PlotOptions { Bar = new PlotOptionsBar { BorderRadius = 6, ColumnWidth = "35%" } }
+        };
+
+        DonutOptions = new ApexChartOptions<ServiceFrequencyMetric>
+        {
+            Legend = new Legend { Position = LegendPosition.Bottom },
+            Stroke = new Stroke { Width = 0 }
+        };
+
+        PieOptions = new ApexChartOptions<StatusSummaryMetric>
+        {
+             Legend = new Legend { Position = LegendPosition.Right },
+             // Matching ClientMetrics: Blue=Finalizado, Red=Cancelado, Green=Confirmado, Cyan=En curso, Yellow=Pendiente
+             Colors = new List<string> { "#0d6efd", "#dc3545", "#198754", "#0dcaf0", "#ffc107" }
+        };
+    }
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        HasError = false;
+        try
+        {
+            var result = await DashboardService.GetCustomerReportsAsync();
+            if (result != null && result.success && result.Data != null)
+            {
+                // Fixed order to match pie chart colors: Finalizado, Cancelado, Confirmado, En curso, Pendiente
+                var statusOrder = new List<string> { 
+                    Constant.BookingStatus.Completed, 
+                    Constant.BookingStatus.Canceled, 
+                    Constant.BookingStatus.Confirmed, 
+                    Constant.BookingStatus.InProgress, 
+                    Constant.BookingStatus.Pending 
+                };
+                
+                result.Data.StatusSummary = result.Data.StatusSummary
+                    .OrderBy(x => {
+                        var index = statusOrder.FindIndex(s => x.Status.Equals(s, StringComparison.OrdinalIgnoreCase));
+                        return index == -1 ? 99 : index;
+                    })
+                    .ToList();
+                
+                Data = result.Data;
+                StateHasChanged();
+            }
+            else
+            {
+                HasError = true;
+                ErrorMessage = result?.Message ?? "No se pudo obtener el reporte del cliente. Verifique su conexión.";
+            }
+        }
+        catch (Exception ex)
+        {
+            HasError = true;
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private ClientLibrary.Models.Dashboard.CustomerReportsResponse MockData() => new ClientLibrary.Models.Dashboard.CustomerReportsResponse
+    {
+        ExpenseHistory = new List<ExpenseHistoryMetric>
+        {
+            new() { Month = "Sep", TotalSpent = 8000 },
+            new() { Month = "Oct", TotalSpent = 15000 },
+            new() { Month = "Nov", TotalSpent = 5000 },
+            new() { Month = "Dec", TotalSpent = 22000 },
+            new() { Month = "Jan", TotalSpent = 10000 },
+            new() { Month = "Feb", TotalSpent = 12000 }
+        },
+        ServiceFrequency = new List<ServiceFrequencyMetric>
+        {
+            new() { CategoryName = "Mascotas", Count = 4 },
+            new() { CategoryName = "Limpieza", Count = 3 },
+            new() { CategoryName = "Reparaciones", Count = 2 },
+            new() { CategoryName = "Belleza", Count = 1 }
+        },
+        StatusSummary = new List<StatusSummaryMetric>
+        {
+            new() { Status = "Finalizado", Count = 8 },
+            new() { Status = "Confirmado", Count = 1 },
+            new() { Status = "Cancelado", Count = 1 }
+        },
+        RatingsGiven = new List<RatingGivenMetric>
+        {
+            new() { CustomerName = "Carlos Repara", Rating = 4, Comment = "Bien, cumplió con lo pactado.", Date = DateTime.Now.AddMonths(-1) },
+            new() { CustomerName = "Maria Limpia", Rating = 5, Comment = "Excelente trabajo, muy detallista.", Date = DateTime.Now.AddMonths(-2) },
+            new() { CustomerName = "Juan Paseos", Rating = 5, Comment = "Mis perros lo aman!", Date = DateTime.Now.AddMonths(-3) }
+        }
+    };
+}

@@ -72,7 +72,7 @@
         if (user.Identity?.IsAuthenticated == true)
         {
             UserProfile = await LoadProfile();
-            var fullName = UserProfile.FullName;
+            var fullName = UserProfile?.FullName ?? "Usuario";
             if (string.IsNullOrEmpty(fullName))
             {
                 fullName = "Usuario";

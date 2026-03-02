@@ -120,5 +120,23 @@ namespace ClientLibrary.Services.Implementations
             else
                 return [];
         }
+
+        public async Task<IEnumerable<GetServiceOffering>> GetAdminServicesByDateAsync(DateTime startDate, DateTime endDate)
+        {
+            var client = await httpClient.GetPrivateClientAsync();
+            var apiCall = new ApiCall
+            {
+                Route = $"{Constant.ServiceOffering.GetAdminByDate}?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}",
+                Type = Constant.ApiCallType.Get,
+                Client = client
+            };
+            
+            var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
+
+            if (result.IsSuccessStatusCode)
+                return await apiHelper.GetServiceResponse<IEnumerable<GetServiceOffering>>(result);
+            else
+                return [];
+        }
     }
 }

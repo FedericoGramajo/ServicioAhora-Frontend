@@ -1,0 +1,27 @@
+<div class="dashboard-card h-100 p-4 shadow-sm border-0 surface-card">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="h6 mb-1 fw-bold text-dark">@Title</h3>
+                @if (!string.IsNullOrEmpty(Subtitle))
+                {
+                    <p class="text-muted small mb-0">@Subtitle</p>
+                }
+            </div>
+            @HeaderContent
+        </div>
+    }
+
+    <div class="chart-container" style="min-height: @(Height)px;">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public int Height { get; set; } = 300;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
+}

@@ -30,14 +30,17 @@ namespace ClientLibrary.Models.Booking
     public class GetBooking
     {
         public Guid Id { get; set; }
+        public string ProfessionalId { get; set; } = string.Empty;
         public string ProfessionalName { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
         public string StatusName { get; set; } = string.Empty;
         public string ClientAddress { get; set; } = string.Empty;
         public DateTime Date { get; set; }
         public List<GetBookingDetail> Details { get; set; } = new();
+        public bool IsRated { get; set; }
 
         // Mapeos de conveniencia para la UI actual e integración con Patrón State
+        public Guid ServiceId => Details.FirstOrDefault()?.ServiceId ?? Guid.Empty;
         public string ServiceName => Details.FirstOrDefault()?.ServiceName ?? "Sin servicio";
         public string CategoryName => Details.FirstOrDefault()?.ServiceCategory ?? "General";
         public decimal TotalAmount => Details.Sum(d => d.UnitPrice * d.Quantity);

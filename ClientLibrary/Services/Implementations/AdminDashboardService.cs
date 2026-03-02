@@ -68,4 +68,17 @@ public class AdminDashboardService(IHttpClientHelper httpClient, IApiCallHelper 
         var result = await apiHelper.ApiCallTypeCall<GetProfessional>(apiCall);
         return await apiHelper.GetServiceResponse<ServiceResponse>(result);
     }
+
+    public async Task<AdminReportsResponse> GetAdminReportsAsync()
+    {
+        var client = await httpClient.GetPrivateClientAsync();
+        var apiCall = new ApiCall
+        {
+            Route = Constant.Admin.GetAdminReports,
+            Type = Constant.ApiCallType.Get,
+            Client = client
+        };
+        var result = await apiHelper.ApiCallTypeCall<Dummy>(apiCall);
+        return await apiHelper.GetServiceResponse<AdminReportsResponse>(result) ?? new AdminReportsResponse();
+    }
 }

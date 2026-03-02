@@ -24,10 +24,15 @@
 
         @if (isLoading)
         {
-            <div class="text-center py-5">
-                <div class="spinner-border text-success" role="status"></div>
-                <p class="mt-2 text-muted">Cargando tus servicios...</p>
+            <div class="row g-3 mb-4">
+                <div class="col-lg-2 col-md-4 col-6"><LoadingSkeleton Height="80" /></div>
+                <div class="col-lg-2 col-md-4 col-6"><LoadingSkeleton Height="80" /></div>
+                <div class="col-lg-2 col-md-4 col-6"><LoadingSkeleton Height="80" /></div>
+                <div class="col-lg-2 col-md-4 col-6"><LoadingSkeleton Height="80" /></div>
+                <div class="col-lg-2 col-md-4 col-6"><LoadingSkeleton Height="80" /></div>
+                <div class="col-lg-2 col-md-4 col-6"><LoadingSkeleton Height="80" /></div>
             </div>
+            <LoadingSkeleton Height="500" />
         }
         else
         {
@@ -42,25 +47,41 @@
             <!-- Navigation Tabs -->
             <ul class="nav nav-tabs mb-4">
                 <li class="nav-item">
-                    <button class="nav-link @(ActiveTab == "history" ? "active fw-bold" : "")" @onclick='() => ActiveTab = "history"'>
-                        <i class="fa-solid fa-chart-line me-2"></i>Mi Actividad
+                    <button class="nav-link @(ActiveTab == "activity" ? "active fw-bold" : "")" @onclick='() => ActiveTab = "activity"'>
+                        <i class="fa-solid fa-list-check me-2"></i>Actividad
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(ActiveTab == "reports" ? "active fw-bold" : "")" @onclick='() => ActiveTab = "reports"'>
+                        <i class="fa-solid fa-chart-pie me-2"></i>Reportes
                     </button>
                 </li>
             </ul>
 
             <!-- Content -->
-            @if (ActiveTab == "history")
+            @if (ActiveTab == "activity")
             {
-                <ClientServiceHistory History="History" />
-                <ClientReportsSection History="History" />
+                <ClientServiceHistory History="History" OnRatingClick="ShowRatingModal" />
+            }
+            else if (ActiveTab == "reports")
+            {
+                <CustomerAdvancedReports />
             }
         }
     </main>
 </div>
 
+<RatingModal @ref="ratingModal" OnRatingSubmitted="LoadDataAsync" />
+
 @code {
-    private string ActiveTab { get; set; } = "history";
+    private string ActiveTab { get; set; } = "activity";
     private bool isLoading = true;
+    private RatingModal ratingModal;
+
+    private void ShowRatingModal((Guid serviceId, string? professionalName) data)
+    {
+        ratingModal.Show(data.serviceId, data.professionalName);
+    }
 
     // Data State
     private List<ServiceHistoryItem> History { get; set; } = new();
@@ -87,9 +108,14 @@
 
     protected override async Task OnInitializedAsync()
     {
+        ActiveTab = "activity";
         if (!string.IsNullOrEmpty(Tab))
         {
-            ActiveTab = Tab.ToLower() == "profile" ? "profile" : "history";
+            ActiveTab = Tab.ToLower() switch
+            {
+                "reports" => "reports",
+                _ => "activity"
+            };
         }
         await LoadDataAsync();
     }
@@ -104,12 +130,14 @@
             {
                 var bookings = await BookingService.GetCustomerBookingsAsync(userId);
                 History = bookings.Select(b => new ServiceHistoryItem(
+                    b.ServiceId,
                     b.ServiceName,
                     b.CategoryName,
                     b.ProfessionalName,
                     b.Date,
                     b.Status,
-                    b.TotalAmount
+                    b.TotalAmount,
+                    b.IsRated
                 )).ToList();
             }
         } 

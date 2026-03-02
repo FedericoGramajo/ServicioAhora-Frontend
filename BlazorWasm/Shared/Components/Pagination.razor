@@ -1,0 +1,30 @@
+<nav aria-label="Paginación">
+    <ul class="pagination shadow-sm @Class">
+        <li class="page-item @(CurrentPage <= 1 ? "disabled" : "")">
+            <button class="page-link" @onclick="() => OnPageChanged.InvokeAsync(CurrentPage - 1)" aria-label="Anterior">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+        </li>
+
+        @for (int i = 1; i <= TotalPages; i++)
+        {
+            var p = i;
+            <li class="page-item @(CurrentPage == p ? "active" : "")">
+                <button class="page-link" @onclick="() => OnPageChanged.InvokeAsync(p)">@p</button>
+            </li>
+        }
+
+        <li class="page-item @(CurrentPage >= TotalPages ? "disabled" : "")">
+            <button class="page-link" @onclick="() => OnPageChanged.InvokeAsync(CurrentPage + 1)" aria-label="Siguiente">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </li>
+    </ul>
+</nav>
+
+@code {
+    [Parameter] public int CurrentPage { get; set; }
+    [Parameter] public int TotalPages { get; set; }
+    [Parameter] public string Class { get; set; } = string.Empty;
+    [Parameter] public EventCallback<int> OnPageChanged { get; set; }
+}

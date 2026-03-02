@@ -1,0 +1,245 @@
+@using ClientLibrary.Models
+@using ClientLibrary.Models.Booking
+@using ClientLibrary.Services.Contracts
+@using ClientLibrary.Helper
+@using System.Globalization
+@inject IBookingService BookingService
+@inject IJSRuntime JS
+
+<div class="surface-card mt-4">
+    <div class="dashboard-card p-4 rounded-4 shadow-sm mb-4 surface-card border-0">
+        <div class="row align-items-center g-3">
+            <div class="col-xl-4 col-lg-12">
+                <h4 class="mb-1 fw-bold text-dark">Gestión de Reservas</h4>
+                <p class="text-muted mb-0 small text-uppercase ls-wide" style="font-size: 0.65rem;">Monitoreo global de solicitudes de clientes</p>
+            </div>
+            
+            <div class="col-xl-9 col-lg-12">
+                <div class="d-flex flex-wrap gap-2 justify-content-xl-end align-items-center">
+                    <!-- Search Customer -->
+                    <div class="input-group input-group-sm" style="max-width: 200px;">
+                        <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-user text-muted"></i></span>
+                        <input type="text" class="form-control border-start-0 bg-light ps-0 shadow-none" placeholder="Cliente..." @bind="SearchCustomer" @bind:event="oninput" />
+                    </div>
+
+                    <!-- Search Professional -->
+                    <div class="input-group input-group-sm" style="max-width: 200px;">
+                        <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-user-tie text-muted"></i></span>
+                        <input type="text" class="form-control border-start-0 bg-light ps-0 shadow-none" placeholder="Profesional..." @bind="SearchProfessional" @bind:event="oninput" />
+                    </div>
+                    
+                    <!-- Date Filters -->
+                    <div class="d-flex align-items-center gap-2 bg-light p-1 rounded-3 border ps-2">
+                        <div class="d-flex align-items-center gap-1">
+                            <i class="fa-solid fa-calendar-day text-primary small"></i>
+                            <input type="date" class="form-control form-control-sm border-0 bg-transparent shadow-none p-1" style="width: 125px;" @bind="StartDate" @bind:format="yyyy-MM-dd" />
+                        </div>
+                        <span class="text-muted small">al</span>
+                        <input type="date" class="form-control form-control-sm border-0 bg-transparent shadow-none p-1" style="width: 125px;" @bind="EndDate" @bind:format="yyyy-MM-dd" />
+                        
+                        <button class="btn btn-primary btn-sm rounded-2 ms-1" @onclick="LoadBookings" disabled="@isLoading" title="Sincronizar">
+                            @if (isLoading) { <span class="spinner-border spinner-border-sm"></span> }
+                            else { <i class="fa-solid fa-rotate"></i> }
+                        </button>
+                    </div>
+
+                    <select class="form-select form-select-sm bg-light border-0 shadow-none px-3 py-2" style="min-width: 160px; width: auto;" @bind="SelectedStatus">
+                        <option value="">Todos los estados</option>
+                        @foreach (var status in StatusList)
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading && !Bookings.Any())
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2 text-muted font-monospace small">Sincronizando registros globales...</p>
+        </div>
+    }
+    else if (!FilteredBookings.Any())
+    {
+        <div class="surface-card p-5 text-center rounded-4 border-2 border-dashed d-flex flex-column align-items-center justify-content-center" style="min-height: 350px;">
+            <div class="mb-4 position-relative">
+                <i class="fa-solid fa-calendar-xmark fa-4x text-muted opacity-10"></i>
+            </div>
+            <h5 class="text-dark fw-bold mb-2">No se encontraron reservas</h5>
+            <p class="text-secondary small mb-4 mx-auto" style="max-width: 300px;">No hay registros para las fechas y filtros seleccionados.</p>
+            <button class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm" @onclick="ResetFilters">
+                <i class="fa-solid fa-filter-circle-xmark me-2"></i>Limpiar filtros
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive bg-white rounded-4 shadow-sm border overflow-hidden">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light border-bottom">
+                    <tr class="small text-uppercase text-muted fw-bold">
+                        <th class="ps-4">Cliente</th>
+                        <th>Profesional</th>
+                        <th>Servicio</th>
+                        <th>Categoría</th>
+                        <th>Fecha y Hora</th>
+                        <th>Estado</th>
+                        <th class="text-end pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var booking in FilteredBookings)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-xs bg-primary-subtle text-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                                        @GetInitials(booking.CustomerName)
+                                    </div>
+                                    <span class="fw-bold text-dark">@booking.CustomerName</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fa-solid fa-user-tie text-muted me-2 small"></i>
+                                    <span class="text-secondary fw-medium">@booking.ProfessionalName</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-dark fw-medium">@booking.ServiceName</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-muted border fw-normal">
+                                    @booking.CategoryName
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="small text-dark"><i class="fa-regular fa-calendar me-1 text-primary"></i> @booking.ScheduledDate.ToString("dd/MM/yyyy")</span>
+                                    <span class="small text-muted"><i class="fa-regular fa-clock me-1"></i> @booking.ScheduledDate.ToString("HH:mm") hs</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge @booking.State.BadgeClass d-inline-flex align-items-center gap-1">
+                                    <i class="@booking.State.IconClass small"></i>
+                                    @booking.State.DisplayName
+                                </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-light border-0 text-muted" title="Ver detalles (Solo lectura)" disabled>
+                                    <i class="fa-solid fa-ellipsis"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-3 p-2 bg-light-subtle rounded border border-info-subtle">
+            <p class="mb-0 small text-muted">
+                <i class="fa-solid fa-circle-info text-info me-2"></i>
+                Como administrador, esta vista es de <strong>monitoreo global</strong>. Los cambios de estado son responsabilidad exclusiva del proveedor y las acciones automáticas del sistema.
+            </p>
+        </div>
+    }
+</div>
+
+<style>
+    .admin-service-manager .ls-wide { letter-spacing: 0.1em; }
+    .border-dashed { border-style: dashed !important; }
+    .avatar-xs { flex-shrink: 0; }
+    .badge { font-weight: 500; }
+</style>
+
+@code {
+    private List<GetBooking> Bookings { get; set; } = new();
+    private bool isLoading = true;
+    
+    // Filters
+    private DateTime StartDate { get; set; } = DateTime.Today;
+    private DateTime EndDate { get; set; } = DateTime.Today;
+    private string SearchCustomer { get; set; } = "";
+    private string SearchProfessional { get; set; } = "";
+    private string SelectedStatus { get; set; } = "";
+
+    private readonly List<string> StatusList = new() 
+    { 
+        "Pendiente", "Confirmado", "En curso", "Finalizado", "Cancelado" 
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBookings();
+    }
+
+    private async Task LoadBookings()
+    {
+        isLoading = true;
+        try
+        {
+            // Set time boundaries for the selected days (00:00:00 to 23:59:59)
+            var start = StartDate.Date;
+            var end = EndDate.Date.AddDays(1).AddTicks(-1);
+
+            var result = await BookingService.GetAdminGlobalBookingsAsync(start, end);
+            Bookings = result ?? new List<GetBooking>();
+        }
+        catch (Exception ex)
+        {
+            await JS.ToastrError("Error al sincronizar reservas globales.");
+            Console.WriteLine(ex);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private IEnumerable<GetBooking> FilteredBookings
+    {
+        get
+        {
+            var query = Bookings.AsEnumerable();
+
+            if (!string.IsNullOrEmpty(SelectedStatus))
+                query = query.Where(b => b.StatusName.Equals(SelectedStatus, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrEmpty(SearchCustomer))
+            {
+                var term = SearchCustomer.ToLower();
+                query = query.Where(b => b.CustomerName.ToLower().Contains(term));
+            }
+
+            if (!string.IsNullOrEmpty(SearchProfessional))
+            {
+                var term = SearchProfessional.ToLower();
+                query = query.Where(b => b.ProfessionalName.ToLower().Contains(term));
+            }
+
+            return query.OrderByDescending(b => b.Date);
+        }
+    }
+
+    private void ResetFilters()
+    {
+        SearchCustomer = "";
+        SearchProfessional = "";
+        SelectedStatus = "";
+        StartDate = DateTime.Today;
+        EndDate = DateTime.Today;
+        _ = LoadBookings();
+    }
+
+    private string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "??";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2) return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        return parts[0].Length >= 2 ? parts[0].Substring(0, 2).ToUpper() : parts[0].ToUpper();
+    }
+}

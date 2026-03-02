@@ -26,13 +26,10 @@
                         <h1 class="mb-2 h3 h1-lg">Explorá servicios hogareños</h1>
                         <p class="mb-0 text-muted small">Mostrando coincidencias para <strong>@(string.IsNullOrWhiteSpace(searchTerm) ? "todas las categorías" : searchTerm)</strong>.</p>
                     </div>
-                    <form class="search-bar w-100 w-lg-auto" role="search" @onsubmit="OnSearch" @onsubmit:preventDefault style="max-width: 500px;">
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
-                            <input class="form-control" type="search" placeholder="Buscar servicios..." aria-label="Buscar" @bind="searchTerm" />
-                            <button class="btn btn-primary" type="submit">Buscar</button>
-                        </div>
-                    </form>
+                    <SearchBar @bind-Value="searchTerm" 
+                               Placeholder="Buscar servicios..." 
+                               Class="w-100 w-lg-auto" 
+                               OnSearch="OnSearch" />
                 </div>
                 <div class="d-flex flex-wrap gap-3 align-items-center mt-3">
                     <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#customSearchModal">
@@ -80,46 +77,15 @@
                         @foreach (var result in PaginatedResults)
                         {
                             <div class="col-12">
-                                <div class="card search-result">
-                                    <div class="row g-0 align-items-center">
-                                        <div class="col-12 col-md-3">
-                                            <div class="ratio ratio-4x3">
-                                                @if (!string.IsNullOrEmpty(result.Image))
-                                                {
-                                                    <img src="@result.Image" alt="@result.Name" class="rounded-start" style="object-fit: cover;" />
-                                                }
-                                                else
-                                                {
-                                                    <div class="d-flex align-items-center justify-content-center bg-light h-100 rounded-start">
-                                                        @if (CategoryIcons.TryGetValue(result.CategoryId, out var icon) && !string.IsNullOrEmpty(icon))
-                                                        {
-                                                            <i class="@icon fa-3x text-muted opacity-50"></i>
-                                                        }
-                                                        else
-                                                        {
-                                                            <i class="fa-solid fa-screwdriver-wrench fa-3x text-muted opacity-50"></i>
-                                                        }
-                                                    </div>
-                                                }
-                                            </div>
-                                        </div>
-                                        <div class="col-12 col-md-6">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center gap-2 mb-2">
-                                                    <span class="badge rounded-pill bg-primary-subtle text-primary">@result.CategoryName</span>
-                                                </div>
-                                                <p class="text-primary fw-bold mb-1 small">@result.ProfessionalFullName</p>
-                                                <h5 class="card-title mb-1">@result.Name</h5>
-                                                <p class="card-text text-muted mb-2">@result.Description</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-12 col-md-3 d-flex flex-column align-items-start align-items-md-end gap-2 p-3">
-                                            <div class="price-tag">@result.BasePrice.ToString("C0", LocalCulture)</div>
-                                            <button class="btn btn-outline-primary w-100" @onclick="() => GoToService(result.Id)">Ver detalles</button>
-                                            <button class="btn btn-primary w-100" @onclick="() => GoToService(result.Id)">Solicitar ahora</button>
-                                        </div>
-                                    </div>
-                                </div>
+                                <ServiceResultCard Title="@result.Name"
+                                                 Subtitle="@result.ProfessionalFullName"
+                                                 Description="@result.Description"
+                                                 ImageUrl="@result.Image"
+                                                 Icon="@(CategoryIcons.TryGetValue(result.CategoryId, out var icon) ? icon : "")"
+                                                 Price="@result.BasePrice"
+                                                 Badges="@(new List<string> { result.CategoryName })"
+                                                 OnViewDetails="() => GoToService(result.Id)"
+                                                 OnActionClick="() => GoToService(result.Id)" />
                             </div>
                         }
 
@@ -131,32 +97,11 @@
                         }
                     </div>
 
-                    @if (TotalPages > 1)
-                    {
                         <div class="d-flex justify-content-center mt-5">
-                            <nav aria-label="Paginación de servicios">
-                                <ul class="pagination shadow-sm">
-                                    <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
-                                        <button class="page-link" @onclick="() => ChangePage(CurrentPage - 1)">
-                                            <i class="fa-solid fa-chevron-left"></i>
-                                        </button>
-                                    </li>
-                                    @for (int i = 1; i <= TotalPages; i++)
-                                    {
-                                        var p = i;
-                                        <li class="page-item @(CurrentPage == p ? "active" : "")">
-                                            <button class="page-link" @onclick="() => ChangePage(p)">@p</button>
-                                        </li>
-                                    }
-                                    <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
-                                        <button class="page-link" @onclick="() => ChangePage(CurrentPage + 1)">
-                                            <i class="fa-solid fa-chevron-right"></i>
-                                        </button>
-                                    </li>
-                                </ul>
-                            </nav>
+                            <Pagination CurrentPage="CurrentPage" 
+                                        TotalPages="TotalPages" 
+                                        OnPageChanged="ChangePage" />
                         </div>
-                    }
                 }
             </div>
         </div>

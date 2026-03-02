@@ -1,0 +1,149 @@
+@using ClientLibrary.Models.Booking
+@using ClientLibrary.Services.Contracts
+@inject IBookingService BookingService
+@inject IJSRuntime js
+
+<div class="modal fade" id="ratingModal" tabindex="-1" aria-labelledby="ratingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="ratingModalLabel">
+                    <i class="fa-solid fa-star me-2"></i>Calificar Servicio
+                </h5>
+                <button type="button" class="btn-close btn-close-white" @onclick="Close" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <h6 class="text-muted mb-3">¿Qué te pareció el servicio de @ProfessionalName?</h6>
+                    <div class="rating-stars d-flex justify-content-center gap-2">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            int starIndex = i;
+                            <i class="@(Model.Score >= starIndex ? "fa-solid" : "fa-regular") fa-star fa-2x cursor-pointer @(Model.Score >= starIndex ? "text-warning" : "text-muted")"
+                               @onclick="() => SetScore(starIndex)"
+                               style="transition: transform 0.2s;"
+                               onmouseover="this.style.transform='scale(1.2)'"
+                               onmouseout="this.style.transform='scale(1)'"></i>
+                        }
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Tu comentario (opcional)</label>
+                    <textarea class="form-control border-focus-primary" 
+                              rows="4" 
+                              placeholder="Cuéntanos más sobre tu experiencia..."
+                              @bind="Model.Comment"
+                              maxlength="500"></textarea>
+                    <div class="text-end mt-1">
+                        <small class="text-muted">@Model.Comment?.Length / 500</small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pb-4 px-4">
+                <button type="button" class="btn btn-outline-secondary px-4" @onclick="Close">Luego</button>
+                <button type="button" class="btn btn-primary px-4 fw-bold" 
+                        @onclick="SubmitRating" 
+                        disabled="@(Model.Score == 0 || IsSubmitting)">
+                    @if (IsSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        <span>Enviando...</span>
+                    }
+                    else
+                    {
+                        <span>Enviar Calificación</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cursor-pointer { cursor: pointer; }
+    .border-focus-primary:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+
+@code {
+    [Parameter] public Guid ServiceId { get; set; }
+    [Parameter] public string? ProfessionalName { get; set; }
+    [Parameter] public EventCallback OnRatingSubmitted { get; set; }
+
+    private CreateRatingDto Model = new();
+    private bool IsSubmitting = false;
+    private bool IsChecking = false;
+
+    public async Task Show(Guid serviceId, string? professionalName)
+    {
+        IsChecking = true;
+        ServiceId = serviceId;
+        ProfessionalName = professionalName;
+        Model = new CreateRatingDto { ServiceId = serviceId, Score = 0, Comment = "" };
+        
+        try 
+        {
+            var existing = await BookingService.GetRatingByServiceAsync(serviceId);
+            if (existing != null)
+            {
+                await js.ToastrWarning("Este servicio ya ha sido calificado.");
+                return;
+            }
+            
+            StateHasChanged();
+            await js.InvokeVoidAsync("ShowModal", "ratingModal");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            await js.ToastrError("Error al verificar el estado de la calificación.");
+        }
+        finally 
+        {
+            IsChecking = false;
+        }
+    }
+
+    private async Task Close()
+    {
+        await js.InvokeVoidAsync("HideModal", "ratingModal");
+    }
+
+    private void SetScore(int score)
+    {
+        Model.Score = score;
+    }
+
+    private async Task SubmitRating()
+    {
+        if (Model.Score == 0) return;
+
+        IsSubmitting = true;
+        try
+        {
+            var response = await BookingService.SubmitRatingAsync(Model);
+            if (response.success)
+            {
+                await js.ToastrSuccess("¡Gracias por tu calificación!");
+                await Close();
+                await OnRatingSubmitted.InvokeAsync();
+            }
+            else
+            {
+                await js.ToastrError(response.Message ?? "Error al enviar la calificación");
+            }
+        }
+        catch (Exception ex)
+        {
+            await js.ToastrError("Ocurrió un error inesperado.");
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+}

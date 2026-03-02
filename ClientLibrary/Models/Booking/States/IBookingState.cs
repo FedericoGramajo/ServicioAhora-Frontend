@@ -10,5 +10,6 @@ namespace ClientLibrary.Models.Booking.States
         bool CanCancel { get; }
         bool CanStart { get; }
         bool CanFinish { get; }
+        bool CanRate { get; }
     }
 }

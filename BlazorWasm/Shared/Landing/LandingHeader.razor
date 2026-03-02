@@ -117,6 +117,18 @@
                     </ul>
                 </div>
                 
+                <AuthorizeView Roles="@Constant.Administration.CustomerRole">
+                    <a href="@RouteConstants.ClientDashboard" class="btn btn-link text-white position-relative p-2 d-flex align-items-center justify-content-center" title="Mis reservas" style="width: 40px; height: 40px;">
+                        <i class="fa-solid fa-calendar-check fa-lg"></i>
+                    </a>
+                </AuthorizeView>
+
+                <AuthorizeView Roles="@Constant.Administration.ProfessionalRole">
+                    <a href="@(RouteConstants.ProfessionalDashboard + "?tab=bookings")" class="btn btn-link text-white position-relative p-2 d-flex align-items-center justify-content-center" title="Mis reservas" style="width: 40px; height: 40px;">
+                         <i class="fa-solid fa-clipboard-list fa-lg"></i>
+                    </a>
+                </AuthorizeView>
+                
                @*  <a href="/cart" class="btn btn-link text-white position-relative p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                     <i class="fa-solid fa-cart-shopping fa-lg"></i>
                     @if (CartState.Count > 0)

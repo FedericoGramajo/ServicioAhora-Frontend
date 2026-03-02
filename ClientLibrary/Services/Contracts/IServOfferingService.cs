@@ -12,5 +12,6 @@ namespace ClientLibrary.Services.Contracts
         Task<ServiceResponse> DeleteAsync(Guid id);
         Task<IEnumerable<GetServiceOffering>> SearchAsync(string query);
         Task<IEnumerable<GetServiceOffering>> GetByProfessionalAsync(string professionalId);
+        Task<IEnumerable<GetServiceOffering>> GetAdminServicesByDateAsync(DateTime startDate, DateTime endDate);
     }
 }

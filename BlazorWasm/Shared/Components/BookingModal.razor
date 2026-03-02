@@ -1,0 +1,108 @@
+@using ClientLibrary.Models.Booking
+@using System.Globalization
+@inject IBookingService BookingService
+@inject IJSRuntime JS
+
+<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reservar Turno</h5>
+                <button type="button" class="btn-close" @onclick="OnClose"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-1">Servicio: <strong>@Service?.Name</strong></p>
+                <p class="text-muted small mb-3">Duración estimada: @(Service?.EstimatedDuration) minutos</p>
+                
+                <!-- Calendar Component -->
+                <TimeSlotPicker ProfessionalId="@(Service?.ProfessionalId.ToString() ?? string.Empty)" 
+                               ServiceId="@(Service?.Id ?? Guid.Empty)"
+                               DurationMinutes="@(Service?.EstimatedDuration ?? 60)" 
+                               OnSlotSelected="OnTimeSlotSelected" />
+                
+                @if (SelectedAppointmentTime.HasValue)
+                {
+                    <div class="alert alert-success mt-3 mb-0">
+                        <i class="fa-regular fa-calendar-check me-2"></i>
+                        Turno seleccionado: <strong>@SelectedAppointmentTime.Value.ToString("dddd d 'de' MMMM, HH:mm", LocalCulture)</strong>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="OnClose" disabled="@isConfirming">Cancelar</button>
+                <button type="button" class="btn btn-primary" 
+                        disabled="@(!SelectedAppointmentTime.HasValue || isConfirming)"
+                        @onclick="ConfirmBooking">
+                    @if (isConfirming)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <span>Enviando...</span>
+                    }
+                    else
+                    {
+                        <span>Confirmar Reserva</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public GetServiceOffering? Service { get; set; }
+    [Parameter] public string CustomerId { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<DateTime> OnBookingConfirmed { get; set; }
+
+    private static readonly CultureInfo LocalCulture = new("es-AR");
+    private DateTime? SelectedAppointmentTime { get; set; }
+    private bool isConfirming = false;
+
+    private void OnTimeSlotSelected(DateTime slot) => SelectedAppointmentTime = slot;
+
+    private async Task ConfirmBooking()
+    {
+        if (SelectedAppointmentTime.HasValue && Service != null && !string.IsNullOrEmpty(CustomerId))
+        {
+            isConfirming = true;
+            try
+            {
+                var createModel = new CreateBooking
+                {
+                    ProfessionalId = Service.ProfessionalId.ToString(),
+                    CustomerId = CustomerId,
+                    Date = SelectedAppointmentTime.Value,
+                    Details = new List<CreateBookingDetailDto>
+                    {
+                        new CreateBookingDetailDto
+                        {
+                            ServiceOfferingId = Service.Id,
+                            Quantity = 1,
+                            ServiceCategory = Service.CategoryName,
+                            UnitPrice = Service.BasePrice
+                        }
+                    }
+                };
+
+                var response = await BookingService.CreateBookingAsync(createModel);
+                if (response.success)
+                {
+                    await OnBookingConfirmed.InvokeAsync(SelectedAppointmentTime.Value);
+                }
+                else
+                {
+                    await JS.ToastrError(response.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al confirmar reserva: {ex.Message}");
+                await JS.ToastrError("Ocurrió un error al enviar la reserva.");
+            }
+            finally
+            {
+                isConfirming = false;
+            }
+        }
+    }
+}

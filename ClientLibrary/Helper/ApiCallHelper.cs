@@ -35,6 +35,7 @@ namespace ClientLibrary.Helper
 
         public async Task<TResponse> GetServiceResponse<TResponse>(HttpResponseMessage message)
         {
+            if (message == null) return default!;
             try
             {
                 var response = await message.Content.ReadFromJsonAsync<TResponse>(
@@ -44,7 +45,7 @@ namespace ClientLibrary.Helper
             catch
             {
                 // If deserialization fails but request was successful (e.g. 204 No Content or empty 200)
-                if (message.IsSuccessStatusCode && typeof(TResponse) == typeof(ServiceResponse))
+                if (message != null && message.IsSuccessStatusCode && typeof(TResponse) == typeof(ServiceResponse))
                 {
                     return (TResponse)(object)new ServiceResponse(true, "Operación completada exitosamente");
                 }

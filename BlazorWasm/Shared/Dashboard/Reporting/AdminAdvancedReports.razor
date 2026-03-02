@@ -1,0 +1,229 @@
+@using ApexCharts
+@using ClientLibrary.Models.Dashboard
+@using ClientLibrary.Services.Contracts
+@inject IDashboardService DashboardService
+
+<div class="admin-advanced-reports">
+    @if (IsLoading)
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-md-4"><LoadingSkeleton Height="120" /></div>
+            <div class="col-md-4"><LoadingSkeleton Height="120" /></div>
+            <div class="col-md-4"><LoadingSkeleton Height="120" /></div>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-6"><LoadingSkeleton Height="350" /></div>
+            <div class="col-lg-6"><LoadingSkeleton Height="350" /></div>
+        </div>
+    }
+    else if (HasError)
+    {
+        <ErrorState Message="@ErrorMessage" OnRetry="LoadData" />
+    }
+    else if (Data == null || (Data.UserGrowth.Count == 0 && Data.CategoryBalance.Count == 0 && Data.AuditSummary.Count == 0))
+    {
+        <EmptyState />
+    }
+    else
+    {
+        <!-- KPI Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <KpiCard Label="Recaudación Total" 
+                         Value="@Data.TotalRevenue.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("es-AR"))" 
+                         Subtitle="Histórico acumulado" 
+                         Icon="fa-money-bill-trend-up" 
+                         Color="#16a34a" />
+            </div>
+            <div class="col-md-4">
+                @{
+                    var lastGrowth = Data.UserGrowth.LastOrDefault();
+                    var totalLast = (lastGrowth?.CustomerCount ?? 0) + (lastGrowth?.ProfessionalCount ?? 0);
+                }
+                <KpiCard Label="Nuevos Usuarios" 
+                         Value="@totalLast.ToString()" 
+                         Subtitle="@($"Mes actual (C: {lastGrowth?.CustomerCount} / P: {lastGrowth?.ProfessionalCount})")" 
+                         Icon="fa-users" 
+                         Color="#0d6efd" />
+            </div>
+            <div class="col-md-4">
+                <KpiCard Label="Acciones de Auditoría" 
+                         Value="@Data.AuditSummary.Sum(x => x.Count).ToString("N0")" 
+                         Subtitle="Total eventos registrados" 
+                         Icon="fa-shield-halved" 
+                         Color="#6610f2" />
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <!-- User Growth -->
+            <div class="col-lg-6">
+                <ChartCard Title="Crecimiento de Usuarios" Subtitle="Clientes vs Profesionales">
+                    <ApexChart TItem="UserGrowthMetric" 
+                               Title=""
+                               Options="LineOptions">
+                        <ApexPointSeries TItem="UserGrowthMetric"
+                                        Items="Data.UserGrowth"
+                                        Name="Clientes"
+                                        SeriesType="SeriesType.Line"
+                                        XValue="@(e => e.Month)"
+                                        YValue="@(e => (decimal)e.CustomerCount)" />
+                        <ApexPointSeries TItem="UserGrowthMetric"
+                                        Items="Data.UserGrowth"
+                                        Name="Profesionales"
+                                        SeriesType="SeriesType.Line"
+                                        XValue="@(e => e.Month)"
+                                        YValue="@(e => (decimal)e.ProfessionalCount)" />
+                    </ApexChart>
+                </ChartCard>
+            </div>
+
+            <!-- Category Balance -->
+            <div class="col-lg-6">
+                <ChartCard Title="Balance de Categorías" Subtitle="Demanda (Pedidos) vs Oferta (Profesionales)">
+                    <ApexChart TItem="CategoryBalanceMetric" 
+                               Options="BarOptions">
+                        <ApexPointSeries TItem="CategoryBalanceMetric"
+                                        Items="Data.CategoryBalance"
+                                        Name="Pedidos"
+                                        SeriesType="SeriesType.Bar"
+                                        XValue="@(e => e.CategoryName)"
+                                        YValue="@(e => (decimal)e.RequestCount)" />
+                        <ApexPointSeries TItem="CategoryBalanceMetric"
+                                        Items="Data.CategoryBalance"
+                                        Name="Profesionales"
+                                        SeriesType="SeriesType.Bar"
+                                        XValue="@(e => e.CategoryName)"
+                                        YValue="@(e => (decimal)e.ProfessionalCount)" />
+                    </ApexChart>
+                </ChartCard>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+             <!-- Audit Summary (Expanded) -->
+            <div class="col-lg-12">
+                <ChartCard Title="Resumen de Auditoría" Subtitle="Distribución global de acciones registrados">
+                    <ApexChart TItem="AuditSummaryMetric" 
+                               Options="DonutOptions">
+                        <ApexPointSeries TItem="AuditSummaryMetric"
+                                         Items="Data.AuditSummary"
+                                         Name="Eventos"
+                                         SeriesType="SeriesType.Donut"
+                                         XValue="@(e => e.Action)"
+                                         YValue="@(e => (decimal)e.Count)" />
+                    </ApexChart>
+                </ChartCard>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private ClientLibrary.Models.Dashboard.AdminReportsResponse? Data { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private bool HasError { get; set; }
+    private string ErrorMessage { get; set; } = string.Empty;
+
+    private ApexChartOptions<UserGrowthMetric> LineOptions = new();
+    private ApexChartOptions<CategoryBalanceMetric> BarOptions = new();
+    private ApexChartOptions<AuditSummaryMetric> DonutOptions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ConfigureCharts();
+        await LoadData();
+    }
+
+    private void ConfigureCharts()
+    {
+        LineOptions = new ApexChartOptions<UserGrowthMetric>
+        {
+            Chart = new Chart { Toolbar = new Toolbar { Show = false }, Zoom = new Zoom { Enabled = false } },
+            Colors = new List<string> { "#0d6efd", "#16a34a" },
+            Stroke = new Stroke { Curve = Curve.Smooth, Width = 3 },
+            Yaxis = new List<YAxis> { new YAxis { Min = 0 } },
+            Markers = new Markers { Size = 5, StrokeWidth = 2, Hover = new MarkersHover { Size = 7 } }
+        };
+
+        BarOptions = new ApexChartOptions<CategoryBalanceMetric>
+        {
+            Chart = new Chart { Toolbar = new Toolbar { Show = false } },
+            PlotOptions = new PlotOptions { Bar = new PlotOptionsBar { Horizontal = false, BorderRadius = 4 } },
+            Colors = new List<string> { "#0d6efd", "#ffc107" }
+        };
+
+        DonutOptions = new ApexChartOptions<AuditSummaryMetric>
+        {
+            Legend = new Legend { Position = LegendPosition.Bottom },
+            PlotOptions = new PlotOptions { Pie = new PlotOptionsPie { Donut = new PlotOptionsDonut { Labels = new DonutLabels { Total = new DonutLabelTotal { Show = true, Label = "Total" } } } } }
+        };
+    }
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        HasError = false;
+        try
+        {
+            var result = await DashboardService.GetAdminReportsAsync();
+            if (result != null && result.success && result.Data != null)
+            {
+                Data = result.Data;
+                StateHasChanged();
+            }
+            else
+            {
+                HasError = true;
+                ErrorMessage = result?.Message ?? "Error al cargar los reportes.";
+            }
+        }
+        catch (Exception ex)
+        {
+            HasError = true;
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private ClientLibrary.Models.Dashboard.AdminReportsResponse MockData() => new ClientLibrary.Models.Dashboard.AdminReportsResponse
+    {
+        TotalRevenue = 250000.50m,
+        UserGrowth = new List<UserGrowthMetric>
+        {
+            new() { Month = "09/2025", CustomerCount = 10, ProfessionalCount = 2 },
+            new() { Month = "10/2025", CustomerCount = 25, ProfessionalCount = 5 },
+            new() { Month = "11/2025", CustomerCount = 40, ProfessionalCount = 8 },
+            new() { Month = "12/2025", CustomerCount = 35, ProfessionalCount = 12 },
+            new() { Month = "01/2026", CustomerCount = 60, ProfessionalCount = 15 },
+            new() { Month = "02/2026", CustomerCount = 50, ProfessionalCount = 10 }
+        },
+        CategoryBalance = new List<CategoryBalanceMetric>
+        {
+            new() { CategoryName = "Limpieza", RequestCount = 100, ProfessionalCount = 5 },
+            new() { CategoryName = "Fontanería", RequestCount = 80, ProfessionalCount = 12 },
+            new() { CategoryName = "Electricidad", RequestCount = 120, ProfessionalCount = 8 },
+            new() { CategoryName = "Mascotas", RequestCount = 45, ProfessionalCount = 3 },
+            new() { CategoryName = "Reparaciones", RequestCount = 150, ProfessionalCount = 20 }
+        },
+        QualityRanking = new List<QualityRankingMetric>
+        {
+            new() { ProfessionalId = Guid.NewGuid().ToString(), FullName = "Juan Perez", AverageRating = 2.5 },
+            new() { ProfessionalId = Guid.NewGuid().ToString(), FullName = "Maria Garcia", AverageRating = 4.8 },
+            new() { ProfessionalId = Guid.NewGuid().ToString(), FullName = "Carlos Rodriguez", AverageRating = 3.2 },
+            new() { ProfessionalId = Guid.NewGuid().ToString(), FullName = "Ana Martinez", AverageRating = 2.9 },
+            new() { ProfessionalId = Guid.NewGuid().ToString(), FullName = "Luis Sanchez", AverageRating = 4.2 }
+        },
+        AuditSummary = new List<AuditSummaryMetric>
+        {
+            new() { Action = "LOGIN", Count = 1500 },
+            new() { Action = "CREATE_SERVICE", Count = 300 },
+            new() { Action = "BOOKING_CONFIRM", Count = 850 },
+            new() { Action = "PAYMENT_SUCCESS", Count = 720 },
+            new() { Action = "ERROR_LOG", Count = 120 }
+        }
+    };
+}

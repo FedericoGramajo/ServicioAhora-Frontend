@@ -3,6 +3,7 @@
 @using ClientLibrary.Models.Authentication
 @using ClientLibrary.Services
 @inject IAuthenticationService authService
+@inject IFileService FileService
 @inject IJSRuntime js
 @inject NavigationManager navManager
 
@@ -152,35 +153,22 @@
     private async Task OnProfileImageChange(InputFileChangeEventArgs e)
     {
         ErrorMessage = null;
-        var file = e.File;
-        if (file != null)
+        try 
         {
-            if (!file.ContentType.StartsWith("image/"))
+            var result = await FileService.ProcessImageAsync(e.File);
+            if (!string.IsNullOrEmpty(result))
             {
-                ErrorMessage = "El archivo debe ser una imagen.";
-                return;
-            }
-
-            if (file.Size > 2 * 1024 * 1024)
-            {
-                ErrorMessage = "La imagen no debe superar los 2MB.";
-                return;
-            }
-
-            try 
-            {
-                // Resize to reasonable size for profile
-                var resizedFile = await file.RequestImageFileAsync(file.ContentType, 400, 400);
-                var buffer = new byte[resizedFile.Size];
-                await resizedFile.OpenReadStream(2 * 1024 * 1024).ReadAsync(buffer);
-                User.ProfileImage = $"data:{resizedFile.ContentType};base64,{Convert.ToBase64String(buffer)}";
+                User.ProfileImage = result;
                 StateHasChanged();
             }
-            catch (Exception ex)
-            {
-                ErrorMessage = "Error al procesar la imagen. Intenta con otra.";
-                Console.WriteLine(ex.Message);
-            }
+        }
+        catch (ArgumentException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "Error al procesar la imagen. Intentá con otra.";
         }
     }
 
@@ -189,15 +177,10 @@
         ErrorMessage = null;
         ShowManualErrors = true;
 
-        // Compose FullName BEFORE validation
         User.FullName = $"{FirstName.Trim()} {LastName.Trim()}".Trim();
 
         bool isValid = editContext.Validate();
-
-        if (string.IsNullOrWhiteSpace(FirstName) || string.IsNullOrWhiteSpace(LastName) || !AcceptedTerms)
-        {
-            isValid = false;
-        }
+        if (!AcceptedTerms) isValid = false;
 
         if (!isValid) return;
 

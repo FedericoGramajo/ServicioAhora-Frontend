@@ -47,6 +47,11 @@
                 </button>
             </li>
             <li class="nav-item">
+                <button class="nav-link @(ActiveTab == "bookings" ? "active fw-bold" : "")" @onclick='() => ActiveTab = "bookings"'>
+                    <i class="fa-solid fa-calendar-check me-2"></i>Reservas
+                </button>
+            </li>
+            <li class="nav-item">
                 <button class="nav-link @(ActiveTab == "audit" ? "active fw-bold" : "")" @onclick='() => ActiveTab = "audit"'>
                     <i class="fa-solid fa-shield-halved me-2"></i>Auditoría
                 </button>
@@ -54,15 +59,19 @@
         </ul>
 
         <!-- Content -->
-        @if (ActiveTab == "resume")
+        @if (isLoading)
         {
-            <AdminReportsSection Categories="Categories"
-                                  SummaryMetrics="SummaryMetrics"
-                                  Transactions="Transactions"
-                                 CategoryReportData="CategoryReportData"
-                                 StatusReportData="StatusReportData"
-                                 CategoryMax="CategoryMax"
-                                 StatusMax="StatusMax" />
+            <div class="row g-3 mb-4">
+                <div class="col-md-3"><LoadingSkeleton Height="100" /></div>
+                <div class="col-md-3"><LoadingSkeleton Height="100" /></div>
+                <div class="col-md-3"><LoadingSkeleton Height="100" /></div>
+                <div class="col-md-3"><LoadingSkeleton Height="100" /></div>
+            </div>
+            <LoadingSkeleton Height="500" />
+        }
+        else if (ActiveTab == "resume")
+        {
+            <AdminAdvancedReports />
         }
         else if (ActiveTab == "categories")
         {
@@ -80,6 +89,10 @@
         {
             <ProfessionalTableSection Professionals="Professionals" />
         }
+        else if (ActiveTab == "bookings")
+        {
+             <AdminBookingManager />
+        }
         else if (ActiveTab == "audit")
         {
             <AuditLogSection />
@@ -93,6 +106,7 @@
 
     // Tab State
     private string ActiveTab { get; set; } = "resume";
+    private bool isLoading = true;
 
     [Parameter]
     [SupplyParameterFromQuery]
@@ -118,6 +132,8 @@
                 "categories" => "categories",
                 "services" => "services",
                 "professionals" => "professionals",
+                "bookings" => "bookings",
+                "audit" => "audit",
                 _ => "resume"
             };
         }
@@ -126,17 +142,20 @@
 
     private async Task LoadAllData()
     {
-        // Parallel loading for efficiency
-        var tasks = new List<Task>
+        isLoading = true;
+        try 
         {
-            LoadCategories(),
-            LoadServices(),
-            LoadMetrics(),
-            LoadReports(),
-            LoadProfessionals()
-        };
-
-        await Task.WhenAll(tasks);
+            // Sequential loading to avoid overwhelming WASM and ensure tokens are refreshed if needed
+            await LoadCategories();
+            await LoadServices();
+            await LoadMetrics();
+            await LoadReports();
+            await LoadProfessionals();
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private async Task LoadCategories()

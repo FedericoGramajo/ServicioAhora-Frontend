@@ -1,0 +1,26 @@
+<form class="search-bar @Class" role="search" @onsubmit="HandleSubmit" @onsubmit:preventDefault>
+    <div class="input-group">
+        <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+        <input class="form-control" 
+               type="search" 
+               placeholder="@Placeholder" 
+               aria-label="Buscar" 
+               @bind="Value" 
+               @bind:event="oninput" />
+        <button class="btn btn-primary" type="submit">@ButtonText</button>
+    </div>
+</form>
+
+@code {
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public string Placeholder { get; set; } = "Buscar...";
+    [Parameter] public string ButtonText { get; set; } = "Buscar";
+    [Parameter] public string Class { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> OnSearch { get; set; }
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    private async Task HandleSubmit()
+    {
+        await OnSearch.InvokeAsync(Value);
+    }
+}

@@ -1,0 +1,261 @@
+@using ApexCharts
+@using ClientLibrary.Models.Dashboard
+@using ClientLibrary.Services.Contracts
+@inject IDashboardService DashboardService
+
+<div class="professional-advanced-reports">
+    @if (IsLoading)
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-md-4"><LoadingSkeleton Height="120" /></div>
+            <div class="col-md-4"><LoadingSkeleton Height="120" /></div>
+            <div class="col-md-4"><LoadingSkeleton Height="120" /></div>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-12"><LoadingSkeleton Height="350" /></div>
+        </div>
+    }
+    else if (HasError)
+    {
+        <ErrorState Message="@ErrorMessage" OnRetry="LoadData" />
+    }
+    else if (Data == null)
+    {
+        <EmptyState />
+    }
+    else
+    {
+        <!-- KPI Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <KpiCard Label="Ingresos Último Mes" 
+                         Value="@Data.MonthlyIncome.LastOrDefault()?.Income.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("es-AR"))" 
+                         Subtitle="Período actual" 
+                         Icon="fa-wallet" 
+                         Color="#0f766e" />
+            </div>
+            <div class="col-md-4">
+                <KpiCard Label="Eficiencia de Agenda" 
+                         Value="@(Data.ScheduleEfficiency.ToString("P0"))" 
+                         Subtitle="Disponibilidad ocupada" 
+                         Icon="fa-calendar-check" 
+                         Color="#16a34a" />
+            </div>
+            <div class="col-md-4">
+                <div class="dashboard-card h-100 p-3 shadow-sm border-0 surface-card d-flex flex-column align-items-center justify-content-center">
+                    <p class="text-uppercase text-muted small mb-2 fw-bold">Tasa de Conversión</p>
+                    <div style="height: 140px; width: 100%;">
+                        <ApexChart TItem="RadialMetric" 
+                                   Options="RadialOptions"
+                                   Height="140">
+                            <ApexPointSeries TItem="RadialMetric"
+                                            Items="new List<RadialMetric> { new() { Value = (double)Math.Round(Data.ConversionRate * 100, 1) } }"
+                                            SeriesType="SeriesType.RadialBar"
+                                            XValue='@(e => "Conversión")'
+                                            YValue="@(e => (decimal)e.Value)" />
+                        </ApexChart>
+                    </div>
+                    <small class="text-secondary mt-1">Solicitudes aceptadas</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <!-- Monthly Income -->
+            <div class="col-lg-8">
+                <ChartCard Title="Evolución de Ingresos" Subtitle="Facturación mensual">
+                    <ApexChart TItem="MonthlyIncomeMetric" 
+                               Options="LineOptions">
+                        <ApexPointSeries TItem="MonthlyIncomeMetric"
+                                        Items="Data.MonthlyIncome"
+                                        Name="Ingresos"
+                                        SeriesType="SeriesType.Bar"
+                                        XValue="@(e => e.Month)"
+                                        YValue="@(e => (decimal)e.Income)" />
+                    </ApexChart>
+                </ChartCard>
+            </div>
+
+            <!-- Category Performance -->
+            <div class="col-lg-4">
+                <ChartCard Title="Rendimiento por Rubro" Subtitle="Distribución de ganancias">
+                    <ApexChart TItem="CategoryPerformanceMetric" 
+                               Options="BarOptions">
+                        <ApexPointSeries TItem="CategoryPerformanceMetric"
+                                        Items="Data.CategoryPerformance"
+                                        Name="Ganancias"
+                                        SeriesType="SeriesType.Bar"
+                                        XValue="@(e => e.CategoryName)"
+                                        YValue="@(e => (decimal)e.Earnings)" />
+                    </ApexChart>
+                </ChartCard>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Customer Feedback -->
+            <div class="col-12">
+                <div class="dashboard-card p-4 shadow-sm border-0 surface-card">
+                    <h3 class="h6 mb-3 fw-bold text-dark">Últimos Comentarios de Clientes</h3>
+                    <div class="feedback-list">
+                        @foreach (var feedback in Data.CustomerFeedback.OrderByDescending(x => x.Date))
+                        {
+                            <div class="feedback-item mb-3 pb-3 border-bottom last-border-0">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div class="fw-bold">@feedback.CustomerName</div>
+                                    <div class="text-warning small">
+                                        @for (int i = 0; i < 5; i++)
+                                        {
+                                            <i class="fa-@(i < feedback.Rating ? "solid" : "regular") fa-star"></i>
+                                        }
+                                    </div>
+                                </div>
+                                <p class="mb-1 text-muted small">@feedback.Comment</p>
+                                <div class="text-secondary" style="font-size: 0.7rem;">@feedback.Date.ToString("dd MMM yyyy, HH:mm")</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .last-border-0:last-child { border-bottom: 0 !important; }
+</style>
+
+@code {
+    private ClientLibrary.Models.Dashboard.ProfessionalReportsResponse? Data { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private bool HasError { get; set; }
+    private string ErrorMessage { get; set; } = string.Empty;
+
+    private ApexChartOptions<MonthlyIncomeMetric> LineOptions = new();
+    private ApexChartOptions<CategoryPerformanceMetric> BarOptions = new();
+    private ApexChartOptions<RadialMetric> RadialOptions = new();
+
+    public class RadialMetric { public double Value { get; set; } }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ConfigureCharts();
+        await LoadData();
+    }
+
+    private void ConfigureCharts()
+    {
+        LineOptions = new ApexChartOptions<MonthlyIncomeMetric>
+        {
+            Chart = new Chart { Toolbar = new Toolbar { Show = false } },
+            Colors = new List<string> { "#0f766e" },
+            PlotOptions = new PlotOptions {
+                Bar = new PlotOptionsBar {
+                    BorderRadius = 6,
+                    ColumnWidth = "20%",
+                    Distributed = false
+                }
+            },
+            Yaxis = new List<YAxis> { 
+                new YAxis { 
+                    Min = 0, 
+                    Labels = new() { Formatter = "function(value) { return '$' + value.toLocaleString(); }" } 
+                } 
+            },
+            Markers = new Markers { Size = 0 }
+        };
+
+        BarOptions = new ApexChartOptions<CategoryPerformanceMetric>
+        {
+            Chart = new Chart { Toolbar = new Toolbar { Show = false } },
+            PlotOptions = new PlotOptions { 
+                Bar = new PlotOptionsBar { 
+                    Horizontal = true, 
+                    BorderRadius = 4,
+                    BarHeight = "40%"
+                } 
+            },
+            Colors = new List<string> { "#16a34a" },
+            Yaxis = new List<YAxis> { 
+                new YAxis { 
+                    Labels = new() { Formatter = "function(value) { return '$' + value.toLocaleString(); }" } 
+                } 
+            }
+        };
+
+        RadialOptions = new ApexChartOptions<RadialMetric>
+        {
+            Chart = new Chart { Sparkline = new ChartSparkline { Enabled = true } },
+            PlotOptions = new PlotOptions {
+                RadialBar = new PlotOptionsRadialBar {
+                    Hollow = new Hollow { Size = "60%" },
+                    DataLabels = new RadialBarDataLabels {
+                        Name = new RadialBarDataLabelsName { Show = false },
+                        Value = new RadialBarDataLabelsValue { 
+                            FontSize = "18px", 
+                            FontWeight = "700",
+                            OffsetY = 5,
+                            Formatter = "function(val) { return val + '%'; }"
+                        }
+                    }
+                }
+            },
+            Colors = new List<string> { "#ffc107" }
+        };
+    }
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        HasError = false;
+        try
+        {
+            var result = await DashboardService.GetProfessionalReportsAsync();
+            if (result != null && result.success && result.Data != null)
+            {
+                Data = result.Data;
+                StateHasChanged();
+            }
+            else
+            {
+                HasError = true;
+                ErrorMessage = result?.Message ?? "No se pudo obtener el reporte profesional. Verifique su conexión.";
+            }
+        }
+        catch (Exception ex)
+        {
+            HasError = true;
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private ClientLibrary.Models.Dashboard.ProfessionalReportsResponse MockData() => new ClientLibrary.Models.Dashboard.ProfessionalReportsResponse
+    {
+        ScheduleEfficiency = 0.85,
+        ConversionRate = 0.75,
+        MonthlyIncome = new List<MonthlyIncomeMetric>
+        {
+            new() { Month = "Sep", Income = 32000 },
+            new() { Month = "Oct", Income = 38000 },
+            new() { Month = "Nov", Income = 35000 },
+            new() { Month = "Dec", Income = 42000 },
+            new() { Month = "Jan", Income = 40000 },
+            new() { Month = "Feb", Income = 45000 }
+        },
+        CategoryPerformance = new List<CategoryPerformanceMetric>
+        {
+            new() { CategoryName = "Reparaciones", Earnings = 30000 },
+            new() { CategoryName = "Mantenimiento", Earnings = 15000 }
+        },
+        CustomerFeedback = new List<CustomerFeedbackMetric>
+        {
+            new() { CustomerName = "Ana Silva", Rating = 5, Comment = "Excelente servicio, muy puntual y profesional.", Date = DateTime.Now.AddDays(-2) },
+            new() { CustomerName = "Pedro Gomez", Rating = 4, Comment = "Buen trabajo, aunque tardó un poco más de lo esperado.", Date = DateTime.Now.AddDays(-5) },
+            new() { CustomerName = "Lucia Fernandez", Rating = 5, Comment = "Altamente recomendado. Volvería a contratar.", Date = DateTime.Now.AddDays(-10) }
+        }
+    };
+}

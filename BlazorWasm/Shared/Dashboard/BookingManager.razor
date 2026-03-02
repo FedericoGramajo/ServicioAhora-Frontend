@@ -1,6 +1,7 @@
 @using ClientLibrary.Models
 @using ClientLibrary.Models.Booking
 @using ClientLibrary.Services.Contracts
+@using ClientLibrary.Helper
 @inject IProfessionalDashboardService DashboardService
 @inject IJSRuntime JS
 
@@ -60,7 +61,6 @@
                                 <div><i class="fa-regular fa-calendar me-1 small"></i> @booking.ScheduledDate.ToShortDateString()</div>
                                 <div class="text-muted small"><i class="fa-regular fa-clock me-1 small"></i> @booking.ScheduledDate.ToShortTimeString() hs</div>
                             </td>
-@using ClientLibrary.Helper
                             <td>
                                 <span class="badge @booking.State.BadgeClass">
                                     <i class="@booking.State.IconClass me-1 small"></i>

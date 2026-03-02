@@ -1,0 +1,61 @@
+@using ClientLibrary.Helper
+<div class="card search-result shadow-sm border-0 @Class">
+    <div class="row g-0 align-items-center">
+        <div class="col-12 col-md-3">
+            <div class="ratio ratio-4x3">
+                @if (!string.IsNullOrEmpty(ImageUrl))
+                {
+                    <img src="@ImageUrl" alt="@Title" class="rounded-start" style="object-fit: cover;" />
+                }
+                else
+                {
+                    <div class="d-flex align-items-center justify-content-center bg-light h-100 rounded-start">
+                        <i class="@(string.IsNullOrEmpty(Icon) ? "fa-solid fa-screwdriver-wrench" : Icon) fa-3x text-muted opacity-50"></i>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                    @foreach (var badge in Badges)
+                    {
+                        <span class="badge rounded-pill bg-primary-subtle text-primary">@badge</span>
+                    }
+                    @if (Rating > 0)
+                    {
+                         <span class="badge rounded-pill bg-warning-subtle text-warning">
+                            <i class="fa-solid fa-star me-1"></i>@Rating.ToString("0.0")
+                        </span>
+                    }
+                </div>
+                <p class="text-primary fw-bold mb-1 small">@Subtitle</p>
+                <h5 class="card-title mb-1 fw-bold">@Title</h5>
+                <p class="card-text text-muted mb-2 small">@Description</p>
+            </div>
+        </div>
+        <div class="col-12 col-md-3 d-flex flex-column align-items-start align-items-md-end gap-2 p-3">
+            @if (Price > 0)
+            {
+                <div class="price-tag mb-1">@Price.ToString("C0", new System.Globalization.CultureInfo("es-AR"))</div>
+            }
+            <button class="btn btn-outline-primary w-100" @onclick="OnViewDetails">Ver detalles</button>
+            <button class="btn btn-primary w-100" @onclick="OnActionClick">@ActionText</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Subtitle { get; set; } = string.Empty;
+    [Parameter] public string Description { get; set; } = string.Empty;
+    [Parameter] public string ImageUrl { get; set; } = string.Empty;
+    [Parameter] public string Icon { get; set; } = "fa-solid fa-screwdriver-wrench";
+    [Parameter] public decimal Price { get; set; }
+    [Parameter] public double Rating { get; set; }
+    [Parameter] public List<string> Badges { get; set; } = new();
+    [Parameter] public string ActionText { get; set; } = "Solicitar ahora";
+    [Parameter] public string Class { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnViewDetails { get; set; }
+    [Parameter] public EventCallback OnActionClick { get; set; }
+}

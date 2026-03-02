@@ -12,15 +12,19 @@
             <h4 class="mb-1">Servicios</h4>
             <p class="text-muted mb-0">ABM y seguimiento de catálogo</p>
         </div>
-        <div class="d-flex gap-2 flex-wrap">
-            <select class="form-select" @bind="SelectedCategory" @bind:event="onchange">
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <div class="input-group input-group-sm" style="max-width: 250px;">
+                <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" class="form-control border-start-0 ps-0 shadow-none" placeholder="Buscar servicio o profesional..." @bind="SearchTerm" @bind:event="oninput" />
+            </div>
+            <select class="form-select form-select-sm w-auto" @bind="SelectedCategory" @bind:event="onchange">
                 <option value="">Todos los rubros</option>
                 @foreach (var category in Categories)
                 {
                     <option value="@category.Name">@category.Name</option>
                 }
             </select>
-            <select class="form-select" @bind="SelectedStatus" @bind:event="onchange">
+            <select class="form-select form-select-sm w-auto" @bind="SelectedStatus" @bind:event="onchange">
                 <option value="">Estado</option>
                 <option value="true">Publicado</option>
                 <option value="false">Oculto</option>
@@ -31,10 +35,16 @@
         <table class="table align-middle table-borderless mb-0">
             <thead class="text-muted small">
                 <tr>
-                    <th>Servicio</th>
-                    <th>Profesional</th>
+                    <th @onclick='() => Sort("Name")' style="cursor: pointer;">
+                        Servicio <i class="fa-solid @GetSortIcon("Name") ms-1 small text-muted"></i>
+                    </th>
+                    <th @onclick='() => Sort("Professional")' style="cursor: pointer;">
+                        Profesional <i class="fa-solid @GetSortIcon("Professional") ms-1 small text-muted"></i>
+                    </th>
                     <th>Rubro</th>
-                    <th>Precio</th>
+                    <th @onclick='() => Sort("Price")' style="cursor: pointer;">
+                        Precio <i class="fa-solid @GetSortIcon("Price") ms-1 small text-muted"></i>
+                    </th>
                     <th>Estado</th>
                     <th class="text-end">Acciones</th>
                 </tr>
@@ -109,7 +119,12 @@
 
     private string SelectedCategory { get; set; } = "";
     private string SelectedStatus { get; set; } = "";
+    private string SearchTerm { get; set; } = "";
     
+    // Sorting State
+    private string SortColumn { get; set; } = "Name";
+    private bool SortAscending { get; set; } = true;
+
     // Edit Modal State
     private bool ShowModal { get; set; }
     private UpdateServiceOffering EditingModel { get; set; } = new();
@@ -122,9 +137,59 @@
     private string DeleteConfirmMessage { get; set; } = "";
     private bool IsDeleting { get; set; }
 
-    private IEnumerable<GetServiceOffering> FilteredServices => Services
-        .Where(s => string.IsNullOrEmpty(SelectedCategory) || s.CategoryName == SelectedCategory)
-        .Where(s => string.IsNullOrEmpty(SelectedStatus) || s.Status.ToString().ToLower() == SelectedStatus.ToLower());
+    private IEnumerable<GetServiceOffering> FilteredServices
+    {
+        get
+        {
+            var query = Services.AsEnumerable();
+
+            // Apply Filters
+            if (!string.IsNullOrEmpty(SelectedCategory))
+                query = query.Where(s => s.CategoryName == SelectedCategory);
+            
+            if (!string.IsNullOrEmpty(SelectedStatus))
+                query = query.Where(s => s.Status.ToString().ToLower() == SelectedStatus.ToLower());
+
+            if (!string.IsNullOrEmpty(SearchTerm))
+            {
+                var term = SearchTerm.ToLower();
+                query = query.Where(s => 
+                    s.Name.ToLower().Contains(term) || 
+                    s.ProfessionalFullName.ToLower().Contains(term) ||
+                    (s.Description != null && s.Description.ToLower().Contains(term)));
+            }
+
+            // Apply Sort
+            query = SortColumn switch
+            {
+                "Name" => SortAscending ? query.OrderBy(s => s.Name) : query.OrderByDescending(s => s.Name),
+                "Professional" => SortAscending ? query.OrderBy(s => s.ProfessionalFullName) : query.OrderByDescending(s => s.ProfessionalFullName),
+                "Price" => SortAscending ? query.OrderBy(s => s.BasePrice) : query.OrderByDescending(s => s.BasePrice),
+                _ => query
+            };
+
+            return query.ToList();
+        }
+    }
+
+    private void Sort(string column)
+    {
+        if (SortColumn == column)
+        {
+            SortAscending = !SortAscending;
+        }
+        else
+        {
+            SortColumn = column;
+            SortAscending = true;
+        }
+    }
+
+    private string GetSortIcon(string column)
+    {
+        if (SortColumn != column) return "fa-sort";
+        return SortAscending ? "fa-sort-up" : "fa-sort-down";
+    }
 
     private void OpenEditModal(GetServiceOffering service)
     {

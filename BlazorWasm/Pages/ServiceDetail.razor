@@ -109,80 +109,18 @@
             </div>
         }
 
-    @if (showBookingModal)
+    @if (showBookingModal && Service != null)
     {
-        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Reservar Turno</h5>
-                        <button type="button" class="btn-close" @onclick="CloseBookingModal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="mb-1">Servicio: <strong>@Service?.Name</strong></p>
-                        <p class="text-muted small mb-3">Duración estimada: @(Service?.EstimatedDuration) minutos</p>
-                        
-                        <!-- Calendar Component -->
-                        <TimeSlotPicker ProfessionalId="@Service.ProfessionalId.ToString()" 
-                                       ServiceId="@Service.Id"
-                                       DurationMinutes="@(Service.EstimatedDuration ?? 60)" 
-                                       OnSlotSelected="OnTimeSlotSelected" />
-                        
-                        @if (SelectedAppointmentTime.HasValue)
-                        {
-                            <div class="alert alert-success mt-3 mb-0">
-                                <i class="fa-regular fa-calendar-check me-2"></i>
-                                Turno seleccionado: <strong>@SelectedAppointmentTime.Value.ToString("dddd d 'de' MMMM, HH:mm", LocalCulture)</strong>
-                            </div>
-                        }
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="CloseBookingModal" disabled="@isConfirming">Cancelar</button>
-                        <button type="button" class="btn btn-primary" 
-                                disabled="@(!SelectedAppointmentTime.HasValue || isConfirming)"
-                                @onclick="ConfirmBooking">
-                            @if (isConfirming)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                <span>Enviando...</span>
-                            }
-                            else
-                            {
-                                <span>Confirmar Reserva</span>
-                            }
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <BookingModal Service="Service" 
+                      CustomerId="@customerId" 
+                      OnClose="CloseBookingModal" 
+                      OnBookingConfirmed="HandleBookingConfirmed" />
     }
 
-    @* Modal: sin dirección registrada *@
     @if (showNoAddressModal)
     {
-        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header border-0 pb-0">
-                        <button type="button" class="btn-close" @onclick="CloseNoAddressModal"></button>
-                    </div>
-                    <div class="modal-body text-center px-4 pb-2">
-                        <div class="mb-3" style="font-size: 3rem;">📍</div>
-                        <h5 class="mb-2">Necesitás una dirección</h5>
-                        <p class="text-muted mb-0">
-                            Para reservar un turno necesitamos saber dónde se realizará el servicio.
-                            Agregá una dirección desde tu perfil y volvé a intentarlo.
-                        </p>
-                    </div>
-                    <div class="modal-footer border-0 d-flex gap-2 justify-content-center pb-4">
-                        <button class="btn btn-outline-secondary" @onclick="CloseNoAddressModal">Cancelar</button>
-                        <button class="btn btn-primary" @onclick="GoToProfile">
-                            <i class="fa-solid fa-location-dot me-2"></i>Ir a mi perfil
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <AddressWarningModal OnClose="CloseNoAddressModal" 
+                            OnGoToProfile="GoToProfile" />
     }
     </main>
 
@@ -233,9 +171,7 @@
 
     private bool showBookingModal = false;
     private bool showNoAddressModal = false;
-    private bool isConfirming = false;
-    
-    private DateTime? SelectedAppointmentTime { get; set; }
+    private string customerId = string.Empty;
 
     private async Task ShowBookingModal()
     {
@@ -247,13 +183,12 @@
             return;
         }
 
-        // Verificar si el cliente tiene al menos una dirección registrada
-        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                  ?? authState.User.FindFirst("nameid")?.Value;
+        customerId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                  ?? authState.User.FindFirst("nameid")?.Value ?? string.Empty;
 
-        if (!string.IsNullOrEmpty(userId))
+        if (!string.IsNullOrEmpty(customerId))
         {
-            var addressResult = await AddressService.GetAddressesAsync(userId);
+            var addressResult = await AddressService.GetAddressesAsync(customerId);
             if (!addressResult.success || !(addressResult.Data?.Any() ?? false))
             {
                 showNoAddressModal = true;
@@ -262,7 +197,6 @@
         }
 
         showBookingModal = true;
-        SelectedAppointmentTime = null;
     }
 
     private void CloseNoAddressModal() => showNoAddressModal = false;
@@ -273,79 +207,11 @@
         Navigation.NavigateTo(RouteConstants.Profile + "?tab=addresses");
     }
 
-    private void CloseBookingModal()
+    private void CloseBookingModal() => showBookingModal = false;
+
+    private async Task HandleBookingConfirmed(DateTime selectedTime)
     {
         showBookingModal = false;
-    }
-    
-    private void OnTimeSlotSelected(DateTime slot)
-    {
-        SelectedAppointmentTime = slot;
-    }
-
-    private async Task ConfirmBooking()
-    {
-        if (SelectedAppointmentTime.HasValue && Service != null)
-        {
-            isConfirming = true;
-            StateHasChanged();
-
-            try
-            {
-                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-                if (!authState.User.Identity?.IsAuthenticated ?? true)
-                {
-                    Navigation.NavigateTo(RouteConstants.Login);
-                    return;
-                }
-
-                var customerId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value 
-                                 ?? authState.User.FindFirst("nameid")?.Value;
-
-                if (string.IsNullOrEmpty(customerId))
-                {
-                    await JS.ToastrError("No se pudo obtener tu ID de usuario. Reintentá iniciando sesión.");
-                    Navigation.NavigateTo(RouteConstants.Login);
-                    return;
-                }
-
-                var createModel = new CreateBooking
-                {
-                    ProfessionalId = Service.ProfessionalId.ToString(),
-                    CustomerId = customerId,
-                    Date = SelectedAppointmentTime.Value,
-                    Details = new List<CreateBookingDetailDto>
-                    {
-                        new CreateBookingDetailDto
-                        {
-                            ServiceOfferingId = Service.Id,
-                            Quantity = 1,
-                            ServiceCategory = Service.CategoryName,
-                            UnitPrice = Service.BasePrice
-                        }
-                    }
-                };
-
-                var response = await BookingService.CreateBookingAsync(createModel);
-                if (response.success)
-                {
-                    showBookingModal = false;
-                    await JS.ToastrSuccess($"¡Reserva enviada! Turno solicitado para el {SelectedAppointmentTime.Value.ToString("dddd d/M HH:mm", LocalCulture)}. Te avisaremos cuando el profesional confirme.");
-                }
-                else
-                {
-                    await JS.ToastrError(response.Message);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error al confirmar reserva: {ex.Message}");
-                await JS.ToastrError("Ocurrió un error al enviar la reserva. Intentá de nuevo.");
-            }
-            finally
-            {
-                isConfirming = false;
-            }
-        }
+        await JS.ToastrSuccess($"¡Reserva enviada! Turno solicitado para el {selectedTime.ToString("dddd d/M HH:mm", LocalCulture)}. Te avisaremos cuando el profesional confirme.");
     }
 }

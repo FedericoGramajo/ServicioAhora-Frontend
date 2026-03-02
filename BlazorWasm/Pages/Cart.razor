@@ -101,14 +101,14 @@
         CartState.OnChange -= StateHasChanged;
     }
 
-    private void RemoveItem(string id)
+    private async Task RemoveItem(string id)
     {
-        CartState.RemoveFromCart(id);
+        await CartState.RemoveFromCartAsync(id);
     }
 
-    private void UpdateQuantity(CartItem item, int change)
+    private async Task UpdateQuantity(CartItem item, int change)
     {
-        CartState.UpdateQuantity(item.ServiceId, item.Quantity + change);
+        await CartState.UpdateQuantityAsync(item.ServiceId, item.Quantity + change);
     }
 
     private void Checkout()

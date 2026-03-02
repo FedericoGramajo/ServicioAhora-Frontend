@@ -1,6 +1,8 @@
 @using ClientLibrary.Models.Landing
 @using ClientLibrary.Models.Category
 @using System.Globalization
+@using ClientLibrary.Services.Contracts
+@inject IDashboardService DashboardService
 
 <section class="admin-reports">
     <header class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
@@ -52,8 +54,8 @@
             <div class="bar-chart-card h-100 p-4 shadow-sm border-0">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h3 class="h6 mb-1 fw-bold text-dark">Evolución de actividad</h3>
-                        <p class="text-muted small mb-0">Volumen de órdenes histórico</p>
+                        <h3 class="h6 mb-1 fw-bold text-dark">Evolución de Órdenes</h3>
+                        <p class="text-muted small mb-0">Cantidad de servicios solicitados por mes</p>
                     </div>
                     @if (TrendData.Count > 1)
                     {
@@ -74,21 +76,37 @@
                                 <stop offset="100%" stop-color="#0d6efd" stop-opacity="0" />
                             </linearGradient>
                         </defs>
-                        <!-- Grid lines -->
-                        <line x1="0" y1="45" x2="100" y2="45" stroke="#f0f0f0" stroke-width="0.5" />
-                        <line x1="0" y1="25" x2="100" y2="25" stroke="#f0f0f0" stroke-width="0.5" />
-                        <line x1="0" y1="5" x2="100" y2="5" stroke="#f0f0f0" stroke-width="0.5" />
+                        <!-- Grid lines and labels -->
+                        <g class="grid-lines">
+                            <line x1="0" y1="45" x2="100" y2="45" stroke="#f0f0f0" stroke-width="0.5" />
+                            <text x="-2" y="46" text-anchor="end" font-size="3" fill="#999">0</text>
+                            
+                            <line x1="0" y1="25" x2="100" y2="25" stroke="#f0f0f0" stroke-width="0.5" />
+                            <text x="-2" y="26" text-anchor="end" font-size="3" fill="#999">@MidTrendValue</text>
+                            
+                            <line x1="0" y1="5" x2="100" y2="5" stroke="#f0f0f0" stroke-width="0.5" />
+                            <text x="-2" y="6" text-anchor="end" font-size="3" fill="#999">@MaxTrendValue</text>
+                        </g>
+
+                        <!-- Y-Axis Title -->
+                        <text x="-12" y="25" text-anchor="middle" font-size="3" fill="#666" transform="rotate(-90, -12, 25)">Órdenes</text>
 
                         <!-- Area -->
                         <path d="@TrendAreaPath" fill="url(#trendGradient)" />
 
                         <!-- Line -->
-                        <path d="@TrendLinePath" fill="none" stroke="#0d6efd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="@TrendLinePath" fill="none" stroke="#0d6efd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         
-                        <!-- Intersections -->
-                        @foreach(var point in TrendDots)
+                        <!-- Intersections & Values -->
+                        @for (int i = 0; i < TrendDots.Count; i++)
                         {
-                            <circle cx="@point.X" cy="@point.Y" r="2.5" fill="#0d6efd" stroke="#fff" stroke-width="1.5" />
+                            var point = TrendDots[i];
+                            var val = TrendData[i].Value;
+                            <g class="chart-point">
+                                <circle cx="@point.X" cy="@point.Y" r="2" fill="#0d6efd" stroke="#fff" stroke-width="1" />
+                                <text x="@point.X" y="@((decimal.Parse(point.Y, CultureInfo.InvariantCulture) - 3).ToString(CultureInfo.InvariantCulture))" 
+                                      text-anchor="middle" font-size="3.5" font-weight="bold" fill="#0d6efd">@val</text>
+                            </g>
                         }
                     </svg>
                 </div>
@@ -148,39 +166,137 @@
     </div> 
     
     <!-- Status Progress -->
-    <article class="surface-card p-4 shadow-sm border-0 mb-2">
-        <header class="mb-4">
-            <h3 class="h6 mb-1 fw-bold text-dark">Cumplimiento de objetivos</h3>
-            <p class="text-muted small mb-0">Estado operativo de las órdenes del sistema</p>
-        </header>
 
-        <div class="row g-4">
-            @foreach (var item in StatusReportData)
-            {
-                var colors = new Dictionary<string, string> {
-                    { "Pendiente", "#ffc107" },
-                    { "Confirmado", "#198754" },
-                    { "En curso", "#0dcaf0" },
-                    { "Completado", "#0d6efd" },
-                    { "Cancelado", "#dc3545" }
-                };
-                var color = colors.GetValueOrDefault(item.Label, "#6c757d");
-                var percentage = StatusMax > 0 ? (double)item.Count * 100 / StatusMax : 0;
+    @if (IsLoadingReports)
+    {
+        <div class="d-flex justify-content-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando reportes detallados...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Advanced Finacial Summary -->
+        <article class="surface-card p-4 shadow-sm border-0 mb-4 bg-gradient-finance">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h3 class="h5 fw-bold text-white mb-1">Recaudación Total</h3>
+                    <p class="text-white-50 small mb-0">Basado en servicios completados exitosamente</p>
+                    <h2 class="display-5 fw-bold text-white mt-2 mb-0">@DetailedReports.TotalRevenue.ToString("C0", CultureInfo.GetCultureInfo("es-AR"))</h2>
+                </div>
+            </div>
+        </article>
 
-                <div class="col-md-6 col-lg-4">
-                    <div class="p-3 border rounded-3 bg-light-subtle">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="small fw-bold">@item.Label</span>
-                            <span class="text-muted fw-bold small">@item.Count</span>
-                        </div>
-                        <div class="progress" style="height: 6px;" role="progressbar" aria-valuenow="@((int)percentage)" aria-valuemin="0" aria-valuemax="100">
-                            <div class="progress-bar" style="width: @percentage.ToString(CultureInfo.InvariantCulture)%; background-color: @color; border-radius: 4px;"></div>
-                        </div>
+        <div class="row g-4 mb-4">
+            <!-- Growth Chart -->
+            <article class="col-lg-6">
+                <div class="surface-card p-4 shadow-sm border-0 h-100">
+                    <h3 class="h6 mb-3 fw-bold text-dark"><i class="fa-solid fa-chart-line text-primary me-2"></i>Crecimiento de Usuarios</h3>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Mes</th>
+                                    <th class="text-center">Clientes</th>
+                                    <th class="text-center">Profesionales</th>
+                                    <th class="text-center">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in DetailedReports.UserGrowth)
+                                {
+                                    <tr>
+                                        <td class="fw-medium">@item.Month</td>
+                                        <td class="text-center">@item.CustomerCount</td>
+                                        <td class="text-center">@item.ProfessionalCount</td>
+                                        <td class="text-center fw-bold text-primary">@(item.CustomerCount + item.ProfessionalCount)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            }
+            </article>
+
+            <!-- Balance vs Categories -->
+            <article class="col-lg-6">
+                <div class="surface-card p-4 shadow-sm border-0 h-100">
+                    <h3 class="h6 mb-3 fw-bold text-dark"><i class="fa-solid fa-scale-balanced text-warning me-2"></i>Balance de Categorías</h3>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Rubro</th>
+                                    <th class="text-center">Pedidos</th>
+                                    <th class="text-center">Profesionales</th>
+                                    <th class="text-center">Ratio P/P</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in DetailedReports.CategoryBalance)
+                                {
+                                    <tr>
+                                        <td class="fw-medium text-truncate" style="max-width: 150px;">@item.CategoryName</td>
+                                        <td class="text-center">@item.RequestCount</td>
+                                        <td class="text-center">@item.ProfessionalCount</td>
+                                        <td class="text-center">
+                                            @{
+                                                var ratio = item.ProfessionalCount > 0 ? (double)item.RequestCount / item.ProfessionalCount : item.RequestCount;
+                                                var badgeColor = ratio > 5 ? "bg-danger" : ratio > 2 ? "bg-warning text-dark" : "bg-success";
+                                            }
+                                            <span class="badge @badgeColor">@ratio.ToString("N1")</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </article>
         </div>
-    </article>
+
+        <!-- Audit Summary (Expanded) -->
+        <article class="surface-card p-4 shadow-sm border-0 mb-4">
+             <div class="row items-center mb-3">
+                <div class="col-8">
+                    <h3 class="h6 mb-0 fw-bold text-dark"><i class="fa-solid fa-user-shield text-danger me-2"></i>Resumen de Acciones de Sistema</h3>
+                </div>
+                <div class="col-4 text-end">
+                     <span class="badge bg-light text-muted fw-normal">Histórico</span>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="bg-light">
+                        <tr class="small text-uppercase text-muted">
+                            <th>Acción</th>
+                            <th class="text-center">Frecuencia</th>
+                            <th class="text-end">Impacto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var audit in DetailedReports.AuditSummary)
+                        {
+                            <tr>
+                                <td class="fw-medium">@audit.Action</td>
+                                <td class="text-center fw-bold text-primary">@audit.Count.ToString("N0")</td>
+                                <td class="text-end">
+                                    <div class="progress" style="height: 6px; width: 100px; display: inline-flex;">
+                                        @{
+                                            var maxAudit = DetailedReports.AuditSummary.Max(x => x.Count);
+                                            var pct = maxAudit > 0 ? (double)audit.Count / maxAudit * 100 : 0;
+                                        }
+                                        <div class="progress-bar bg-primary" style="width: @pct.ToString("F0")%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </article>
+    }
 </section>
 
 <style>
@@ -195,6 +311,13 @@
     .admin-reports .ls-wide { letter-spacing: 0.05em; }
     .admin-reports .last-border-0:last-child { border-bottom: 0 !important; }
     .admin-reports .bar-chart-card { border-radius: 20px; }
+    .bg-gradient-finance {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        border-radius: 20px;
+    }
+    .border-white-10 { border-color: rgba(255,255,255,0.1) !important; }
+    .fs-small { font-size: 0.75rem; }
+    .btn-xs { padding: 0.1rem 0.4rem; font-size: 0.75rem; }
 </style>
 
 @code {
@@ -206,7 +329,35 @@
     [Parameter] public int CategoryMax { get; set; }
     [Parameter] public int StatusMax { get; set; }
 
+    private ClientLibrary.Models.Dashboard.AdminReportsResponse DetailedReports { get; set; } = new();
+    private bool IsLoadingReports { get; set; } = true;
     private string SelectedPeriod { get; set; } = "30";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDetailedReports();
+    }
+
+    private async Task LoadDetailedReports()
+    {
+        IsLoadingReports = true;
+        try
+        {
+            var response = await DashboardService.GetAdminReportsAsync();
+            if (response != null && response.success)
+            {
+                DetailedReports = response.Data ?? new();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading reports: {ex.Message}");
+        }
+        finally
+        {
+            IsLoadingReports = false;
+        }
+    }
 
     private (string Icon, string Color) GetMetricConfig(string label) => label switch
     {
@@ -273,27 +424,42 @@
                 .ToList()
             : new() { ("Sin datos", 0) };
 
+    private int MaxTrendValue => TrendData.Any() ? TrendData.Max(x => x.Value) : 0;
+    private int MidTrendValue => MaxTrendValue / 2;
+
     private string TrendLinePath
     {
         get
         {
             var data = TrendData;
-            if (data.Count < 2) return "M 0 45 L 100 45";
+            if (data.Count == 0) return "M 0 45 L 100 45";
             
             var maxCount = data.Max(x => x.Value);
-            var chartMax = maxCount > 0 ? maxCount * 1.2 : 10;
+            
+            if (data.Count == 1)
+            {
+                var y = CalculateY(data[0].Value, maxCount);
+                return $"M 0 {y.ToString(CultureInfo.InvariantCulture)} L 100 {y.ToString(CultureInfo.InvariantCulture)}";
+            }
+
             var points = new List<string>();
             decimal stepX = 100m / (data.Count - 1);
 
             for (int i = 0; i < data.Count; i++)
             {
                 var x = i * stepX;
-                var y = 50 - ((decimal)data[i].Value / (decimal)chartMax * 40) - 5;
+                var y = CalculateY(data[i].Value, maxCount);
                 points.Add(i == 0 ? "M" : "L");
                 points.Add($"{x.ToString(CultureInfo.InvariantCulture)} {y.ToString(CultureInfo.InvariantCulture)}");
             }
             return string.Join(" ", points);
         }
+    }
+
+    private decimal CalculateY(int value, int maxCount)
+    {
+        decimal chartMax = maxCount > 0 ? (decimal)maxCount * 1.2m : 10m;
+        return 50m - ((decimal)value / chartMax * 40m) - 5m;
     }
 
     private string TrendAreaPath => TrendData.Count >= 2 ? $"{TrendLinePath} L 100 50 L 0 50 Z" : "M 0 50 L 100 50 Z";
@@ -306,14 +472,13 @@
             if (data.Count < 1) return new();
             
             var maxCount = data.Max(x => x.Value);
-            var chartMax = maxCount > 0 ? maxCount * 1.2 : 10;
             var dots = new List<(string, string)>();
             decimal stepX = data.Count > 1 ? 100m / (data.Count - 1) : 0;
 
             for (int i = 0; i < data.Count; i++)
             {
                 var x = i * stepX;
-                var y = 50 - ((decimal)data[i].Value / (decimal)chartMax * 40) - 5;
+                var y = CalculateY(data[i].Value, maxCount);
                 dots.Add((x.ToString(CultureInfo.InvariantCulture), y.ToString(CultureInfo.InvariantCulture)));
             }
             return dots;
